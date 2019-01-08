@@ -20,7 +20,7 @@ typedef struct ReStress_s
 	STG_float * re_vv;
 	STG_float * re_ww;
 	STG_float * re_uv;
-	STG_float * re_uw;
+    STG_float * re_uw;
 	STG_float * re_vw;
 
 } ReStress;

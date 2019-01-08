@@ -1,5 +1,6 @@
 #include "common.h"
 #include <stdlib.h>
+#include <math.h>
 
 
 // Функция возвращает массив заданного числа точек равномерно распределенных на заданном интервале
@@ -45,7 +46,7 @@ STG_float bisection(STG_float x1, STG_float x2, STG_float (*mono_func)(STG_float
         STG_float x_end = x2;
         STG_float x_inter = (x2 + x1) / 2;
         STG_int count = 0;
-        STG_float r = 10;
+        STG_float r = x_end - x_start;
 
         while (r > eps) {
             dx = (x_end - x_start) / 2;
@@ -57,6 +58,7 @@ STG_float bisection(STG_float x1, STG_float x2, STG_float (*mono_func)(STG_float
                 x_start = x_inter;
             }
             count += 1;
+            r = x_end - x_start;
             if (count > max_iter){
                 break;
             }
