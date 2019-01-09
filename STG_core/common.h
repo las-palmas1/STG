@@ -1,6 +1,18 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include "precompiled.h"
+
+#ifdef OS_WIN
+	#ifdef STG_SHARED_LIB_EXPORTS
+		#define STG_SHARED_LIB_API __declspec(dllexport)
+	#else
+		#define STG_SHARED_LIB_API __declspec(dllimport)
+	#endif
+#else
+    #define STG_SHARED_LIB_API 
+#endif // OS_WIN
+
 #define GET_INDEX(i, j, k, is, js, ks) ks*js*i + ks*j + k  
 
 typedef float STG_float;
@@ -55,13 +67,17 @@ typedef struct OutData_s
 } OutData;
 
 
-STG_float * get_uniform(STG_float min, STG_float max, STG_int num);
+STG_SHARED_LIB_API STG_float * get_uniform(STG_float min, STG_float max, STG_int num);
 
-STG_float bisection(STG_float x1, STG_float x2, STG_float (*mono_func)(STG_float), STG_float eps, STG_int max_iter);
+STG_SHARED_LIB_API STG_float bisection(STG_float x1, STG_float x2, STG_float(*func)(STG_float), STG_float a, STG_float eps, STG_int max_iter);
 
-//STG_float * get_normal(STG_float mu, STG_float sigma, STG_int num);
+STG_float box_muller();
 
+STG_SHARED_LIB_API STG_float * get_normal(STG_float mu, STG_float sigma, STG_int num);
 
+//STG_float inverse_transform(STG_float u, STG_float(*cdf)(STG_float));
+
+STG_SHARED_LIB_API STG_float * get_trigon(STG_int num);
 
 
 
