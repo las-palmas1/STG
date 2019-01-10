@@ -48,7 +48,7 @@ def get_trigon(num):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     get_trigon_ctypes = ctypes.CDLL(stg_lib_fname).get_trigon
     get_trigon_ctypes.restype = ctypes.POINTER(ctypes.c_float)
-    get_trigon_ctypes.argtypes = ctypes.c_uint32
+    get_trigon_ctypes.argtypes = ctypes.c_uint32,
 
     res_p = get_trigon_ctypes(num)
     res = np.zeros(num)

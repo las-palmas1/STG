@@ -35,7 +35,32 @@ static void bisection_wrap(
     printf("Result:   %.4f\n", res);
     printf("Expected:   %.4f\n", expect_res);
     printf("\n");
+}
 
+static void test_eig_values_computing(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23)
+{
+	printf("Eigvalues test.\n");
+	printf("Matrix: \n");
+	printf("%.3f  %.3f  %.3f \n", m11, m12, m13);
+	printf("%.3f  %.3f  %.3f \n", m12, m22, m23);
+	printf("%.3f  %.3f  %.3f \n", m13, m23, m33);
+	STG_float * eig = eig_3x3_sym(m11, m22, m33, m12, m13, m23);
+
+	STG_float M1[3][3] = {
+		{ m11 - eig[0], m12, m13 },
+		{ m12, m22 - eig[1], m23 },
+		{ m13, m23, m33 - eig[2] },
+	};
+	STG_float det = (
+		M1[0][0] * M1[1][1] * M1[2][2] - M1[0][0] * M1[1][2] * M1[2][1] - M1[0][1] * M1[1][0] * M1[2][2] +
+		M1[0][1] * M1[1][2] * M1[2][0] + M1[0][2] * M1[1][0] * M1[2][1] - M1[0][2] * M1[1][1] * M1[2][0]
+	);
+	printf("\n");
+	printf("eig1 = %.3f\n", eig[0]);
+	printf("eig2 = %.3f\n", eig[1]);
+	printf("eig3 = %.3f\n", eig[2]);
+	printf("det(M - eig*I) = %.4f\n", det);
+	printf("\n");
 }
 
 static void test_bisection()
@@ -98,6 +123,11 @@ int main(int argc, char * argv[])
 	test_uniform(20, -5, 5);
 	test_normal(20, 0, 1);
 	test_trigon(20);
+
+	test_eig_values_computing(1, 1, 1, 1, 1, 1);
+	test_eig_values_computing(1, 1, 1, 2, 1, 1);
+	test_eig_values_computing(1, 1, 3, 3, 1, 4);
+	test_eig_values_computing(2, 3, 9, 0, 0, 4);
 
 	return 0;
 }

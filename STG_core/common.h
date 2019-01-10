@@ -18,6 +18,7 @@
 typedef float STG_float;
 typedef unsigned long int STG_int;
 
+
 typedef struct Mesh_s
 {
 	STG_float * x;
@@ -79,6 +80,7 @@ STG_SHARED_LIB_API STG_float * get_normal(STG_float mu, STG_float sigma, STG_int
 
 STG_SHARED_LIB_API STG_float * get_trigon(STG_int num);
 
+STG_float * eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23);
 
 
 #endif // !COMMON_H
