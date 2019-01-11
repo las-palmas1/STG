@@ -80,7 +80,27 @@ STG_SHARED_LIB_API STG_float * get_normal(STG_float mu, STG_float sigma, STG_int
 
 STG_SHARED_LIB_API STG_float * get_trigon(STG_int num);
 
-STG_float * eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23);
+void eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23, STG_float * eig_vals);
 
+void compute_eig_vector1(
+	STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
+	STG_float eig_val1, STG_float * eig_vec1
+);
+
+void compute_ort_component(STG_float W[3], STG_float * U, STG_float * V);
+
+void compute_eig_vector2(
+	STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
+	STG_float eig_vec1[3], STG_float eig_val2, STG_float U[3], STG_float V[3], STG_float * eig_vec2
+);
+
+void cross(STG_float v1[3], STG_float v2[3], STG_float *cross);
+
+STG_float dot(STG_float v1[3], STG_float v2[3]);
+
+void compute_eig(
+	STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
+	STG_float * eig_vals, STG_float * eig_vec1, STG_float * eig_vec2, STG_float * eig_vec3
+);
 
 #endif // !COMMON_H

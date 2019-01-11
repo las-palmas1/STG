@@ -2,6 +2,7 @@
 #include "common.h"
 #include <stdlib.h>
 #include <math.h>
+#include <stdio.h>
 
 
 // Функция возвращает массив заданного числа точек равномерно распределенных на заданном интервале
@@ -105,15 +106,14 @@ STG_float * get_trigon(STG_int num)
 }
 
 // Расчет собственных значений симметричной матрицы размером 3 x 3.
-STG_float * eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23)
+void eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23, STG_float * eig_vals)
 {
 	STG_float p1 = m12 * m12 + m13 * m13 + m23 * m23;
-	STG_float * eig = (STG_float*)malloc(3 * sizeof(STG_float));
 	if (p1 == 0)
 	{
-		eig[0] = m11;
-		eig[1] = m22;
-		eig[2] = m33;
+		eig_vals[0] = m11;
+		eig_vals[1] = m22;
+		eig_vals[2] = m33;
 	}
 	else
 	{
@@ -142,23 +142,22 @@ STG_float * eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m
 			phi = (STG_float)acos(r) / (STG_float)3;
 		}
 
-		eig[0] = q + 2 * p * cos(phi);
-		eig[2] = q + 2 * p * cos(phi + (STG_float)2 * pi / (STG_float)3);
-		eig[1] = 3 * q - eig[0] - eig[2];
-	}
-	return eig; 
+		eig_vals[0] = q + 2 * p * cos(phi);
+		eig_vals[2] = q + 2 * p * cos(phi + (STG_float)2 * pi / (STG_float)3);
+		eig_vals[1] = 3 * q - eig_vals[0] - eig_vals[2];
+	} 
 }
 
 // Векторное произведение векторов в 3-х мерном пространстве
-static void cross(STG_float v1[3], STG_float v2[3], STG_float *cross)
+void cross(STG_float v1[3], STG_float v2[3], STG_float *cross)
 {
 	cross[0] = v1[1] * v2[2] - v2[1] * v1[2];
 	cross[1] = v2[0] * v1[2] - v1[0] * v2[2];
 	cross[2] = v1[0] * v2[1] - v2[0] * v1[1];
 }
 
-// Скалаярное произведение 3-х мерных векторов.
-static STG_float dot(STG_float v1[3], STG_float v2[3])
+// Скалярное произведение 3-х мерных векторов.
+STG_float dot(STG_float v1[3], STG_float v2[3])
 {
 	return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
@@ -205,7 +204,7 @@ void compute_eig_vector1(
 	}
 }
 
-// Расчет пары единичных взаимноперпендикулярных векторов, перпендикулярных первому собственному вектору w.
+// Расчет пары единичных взаимноперпендикулярных векторов, перпендикулярных первому собственному вектору W.
 void compute_ort_component(STG_float W[3], STG_float * U, STG_float * V)
 {
 	STG_float inv_length;
@@ -226,11 +225,100 @@ void compute_ort_component(STG_float W[3], STG_float * U, STG_float * V)
 	cross(W, U, V);
 }
 
+// Расчет собственного вектора, соотвествующего второму по величине собственному значению.
 void compute_eig_vector2(
 	STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23, 
-	STG_float eig_vec1[3], STG_float eig_val2, STG_float * eig_vec2
+	STG_float eig_vec1[3], STG_float eig_val2, STG_float U[3], STG_float V[3], STG_float * eig_vec2
 )
 {
+	STG_float MU[3] = {
+		m11 * U[0] + m12 * U[1] + m13 * U[2],
+		m12 * U[0] + m22 * U[1] + m23 * U[2],
+		m13 * U[0] + m23 * U[1] + m33 * U[2],
+	};
+	STG_float MV[3] = {
+		m11 * V[0] + m12 * V[1] + m13 * V[2],
+		m12 * V[0] + m22 * V[1] + m23 * V[2],
+		m13 * V[0] + m23 * V[1] + m33 * V[2],
+	};
+	STG_float k11 = dot(U, MU) - eig_val2;
+	STG_float k12 = dot(U, MV);
+	STG_float k22 = dot(V, MV) - eig_val2;
 
+	STG_float absK11 = fabs(k11), absK12 = fabs(k12), absK22 = fabs(k22);
+	if (absK11 >= absK22)
+	{
+		STG_float maxAbsComp = max(absK11, absK12);
+		if (maxAbsComp > 0)
+		{
+			if (absK11 >= absK12)
+			{
+				k12 /= k11;   k11 = (STG_float)1 / sqrt(1 + k12 * k12);   k12 *= k11;
+			}
+			else
+			{
+				k11 /= k12;   k12 = (STG_float)1 / sqrt(1 + k11 * k11);   k11 *= k12;
+			}
+			eig_vec2[0] = k12 * U[0] - k11 * V[0];
+			eig_vec2[1] = k12 * U[1] - k11 * V[1];
+			eig_vec2[2] = k12 * U[2] - k11 * V[2];
+		}
+		else
+		{
+			eig_vec2[0] = U[0];
+			eig_vec2[1] = U[1];
+			eig_vec2[2] = U[2];
+		}
+	}
+	else
+	{
+		STG_float maxAbsComp = max(absK22, absK12);
+		if (maxAbsComp > 0)
+		{
+			if (absK22 >= absK12)
+			{
+				k12 /= k22;   k22 = (STG_float)1 / sqrt(1 + k12 * k12);   k12 *= k22;
+			}
+			else
+			{
+				k22 /= k12;   k12 = (STG_float)1 / sqrt(1 + k22 * k22);   k22 *= k12;
+			}
+			eig_vec2[0] = k22 * U[0] - k12 * V[0];
+			eig_vec2[1] = k22 * U[1] - k12 * V[1];
+			eig_vec2[2] = k22 * U[2] - k12 * V[2];
+		}
+		else
+		{
+			eig_vec2[0] = U[0];
+			eig_vec2[1] = U[1];
+			eig_vec2[2] = U[2];
+		}
+	}
 }
+
+void compute_eig(
+	STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
+	STG_float * eig_vals, STG_float * eig_vec1, STG_float * eig_vec2, STG_float * eig_vec3
+)
+{
+	if (m12 == 0 && m13 == 0 && m23 == 0)
+	{
+		eig_vals[0] = m11;
+		eig_vals[1] = m22;
+		eig_vals[2] = m33;
+		eig_vec1[0] = 1; eig_vec1[1] = 0; eig_vec1[2] = 0;
+		eig_vec2[0] = 0; eig_vec2[1] = 1; eig_vec2[2] = 0;
+		eig_vec3[0] = 0; eig_vec3[1] = 0; eig_vec3[2] = 1;
+	}
+	else
+	{
+		STG_float U[3], V[3];
+		eig_3x3_sym(m11, m22, m33, m12, m13, m23, eig_vals);
+		compute_eig_vector1(m11, m22, m33, m12, m13, m23, eig_vals[0], eig_vec1);
+		compute_ort_component(eig_vec1, U, V);
+		compute_eig_vector2(m11, m22, m33, m12, m13, m23, eig_vec1, eig_vals[1], U, V, eig_vec2);
+		cross(eig_vec1, eig_vec2, eig_vec3);
+	}
+}
+
 

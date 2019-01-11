@@ -1,6 +1,8 @@
 #ifndef PRECOMPILED_H
 #define PRECOMPILED_H
 
+#define DEBUG
+
 #ifdef __linux__
 	#define OS_LIN
 #else

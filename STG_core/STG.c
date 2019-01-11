@@ -37,30 +37,75 @@ static void bisection_wrap(
     printf("\n");
 }
 
-static void test_eig_values_computing(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23)
+static void test_eig_values_and_vectors_computing(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23)
 {
 	printf("Eigvalues test.\n");
 	printf("Matrix: \n");
 	printf("%.3f  %.3f  %.3f \n", m11, m12, m13);
 	printf("%.3f  %.3f  %.3f \n", m12, m22, m23);
 	printf("%.3f  %.3f  %.3f \n", m13, m23, m33);
-	STG_float * eig = eig_3x3_sym(m11, m22, m33, m12, m13, m23);
+	STG_float eig_vals[3];
+	STG_float eig_vec1[3], eig_vec2[3], eig_vec3[3];
+	compute_eig(m11, m22, m33, m12, m13, m23, eig_vals, eig_vec1, eig_vec2, eig_vec3);
 
 	STG_float M1[3][3] = {
-		{ m11 - eig[0], m12, m13 },
-		{ m12, m22 - eig[1], m23 },
-		{ m13, m23, m33 - eig[2] },
+		{ m11 - eig_vals[0], m12, m13 },
+		{ m12, m22 - eig_vals[1], m23 },
+		{ m13, m23, m33 - eig_vals[2] },
 	};
 	STG_float det = (
 		M1[0][0] * M1[1][1] * M1[2][2] - M1[0][0] * M1[1][2] * M1[2][1] - M1[0][1] * M1[1][0] * M1[2][2] +
 		M1[0][1] * M1[1][2] * M1[2][0] + M1[0][2] * M1[1][0] * M1[2][1] - M1[0][2] * M1[1][1] * M1[2][0]
 	);
+	STG_float M_x_eig_vec1[3] = {
+		m11 * eig_vec1[0] + m12 * eig_vec1[1] + m13 * eig_vec1[2],
+		m12 * eig_vec1[0] + m22 * eig_vec1[1] + m23 * eig_vec1[2],
+		m13 * eig_vec1[0] + m23 * eig_vec1[1] + m33 * eig_vec1[2],
+	};
+	STG_float eig_val1_x_eig_vec1[3] = {
+		eig_vals[0] * eig_vec1[0], eig_vals[0] * eig_vec1[1], eig_vals[0] * eig_vec1[2]
+	};
+	STG_float M_x_eig_vec2[3] = {
+		m11 * eig_vec2[0] + m12 * eig_vec2[1] + m13 * eig_vec2[2],
+		m12 * eig_vec2[0] + m22 * eig_vec2[1] + m23 * eig_vec2[2],
+		m13 * eig_vec2[0] + m23 * eig_vec2[1] + m33 * eig_vec2[2],
+	};
+	STG_float eig_val2_x_eig_vec2[3] = {
+		eig_vals[1] * eig_vec2[0], eig_vals[1] * eig_vec2[1], eig_vals[1] * eig_vec2[2]
+	};
+	STG_float M_x_eig_vec3[3] = {
+		m11 * eig_vec3[0] + m12 * eig_vec3[1] + m13 * eig_vec3[2],
+		m12 * eig_vec3[0] + m22 * eig_vec3[1] + m23 * eig_vec3[2],
+		m13 * eig_vec3[0] + m23 * eig_vec3[1] + m33 * eig_vec3[2],
+	};
+	STG_float eig_val3_x_eig_vec3[3] = {
+		eig_vals[2] * eig_vec3[0], eig_vals[2] * eig_vec3[1], eig_vals[2] * eig_vec3[2]
+	};
+
 	printf("\n");
-	printf("eig1 = %.3f\n", eig[0]);
-	printf("eig2 = %.3f\n", eig[1]);
-	printf("eig3 = %.3f\n", eig[2]);
+	printf("eig1 = %.3f\n", eig_vals[0]);
+	printf("eig2 = %.3f\n", eig_vals[1]);
+	printf("eig3 = %.3f\n", eig_vals[2]);
 	printf("det(M - eig*I) = %.4f\n", det);
 	printf("\n");
+	printf("Eigvectors:\n");
+	printf("%.3f  %.3f  %.3f\n", eig_vec1[0], eig_vec2[0], eig_vec3[0]);
+	printf("%.3f  %.3f  %.3f\n", eig_vec1[1], eig_vec2[1], eig_vec3[1]);
+	printf("%.3f  %.3f  %.3f\n", eig_vec1[2], eig_vec2[2], eig_vec3[2]);
+	printf("(M - eig1*I)*V1 = \n");
+	printf("%.3f \n", M_x_eig_vec1[0] - eig_val1_x_eig_vec1[0]);
+	printf("%.3f \n", M_x_eig_vec1[1] - eig_val1_x_eig_vec1[1]);
+	printf("%.3f \n", M_x_eig_vec1[2] - eig_val1_x_eig_vec1[2]);
+	printf("(M - eig2*I)*V2 = \n");
+	printf("%.3f \n", M_x_eig_vec2[0] - eig_val2_x_eig_vec2[0]);
+	printf("%.3f \n", M_x_eig_vec2[1] - eig_val2_x_eig_vec2[1]);
+	printf("%.3f \n", M_x_eig_vec2[2] - eig_val2_x_eig_vec2[2]);
+	printf("(M - eig3*I)*V3 = \n");
+	printf("%.3f \n", M_x_eig_vec3[0] - eig_val3_x_eig_vec3[0]);
+	printf("%.3f \n", M_x_eig_vec3[1] - eig_val3_x_eig_vec3[1]);
+	printf("%.3f \n", M_x_eig_vec3[2] - eig_val3_x_eig_vec3[2]);
+	printf("\n");
+
 }
 
 static void test_bisection()
@@ -124,10 +169,12 @@ int main(int argc, char * argv[])
 	test_normal(20, 0, 1);
 	test_trigon(20);
 
-	test_eig_values_computing(1, 1, 1, 1, 1, 1);
-	test_eig_values_computing(1, 1, 1, 2, 1, 1);
-	test_eig_values_computing(1, 1, 3, 3, 1, 4);
-	test_eig_values_computing(2, 3, 9, 0, 0, 4);
+	test_eig_values_and_vectors_computing(1, 1, 1, 1, 1, 1);
+	test_eig_values_and_vectors_computing(1, 1, 1, 2, 1, 1);
+	test_eig_values_and_vectors_computing(1, 1, 3, 3, 1, 4);
+	test_eig_values_and_vectors_computing(2, 3, 9, 0, 0, 4);
+	test_eig_values_and_vectors_computing(5, -3, 0, 0, -4, 4);
+	test_eig_values_and_vectors_computing(1, 1, 3, 0, 0, 0);
 
 	return 0;
 }
