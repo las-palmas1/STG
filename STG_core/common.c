@@ -1,7 +1,6 @@
 #include "precompiled.h"
 #include "common.h"
 #include <stdlib.h>
-#include <math.h>
 #include <stdio.h>
 
 

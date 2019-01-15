@@ -13,7 +13,7 @@
     #define STG_SHARED_LIB_API 
 #endif // OS_WIN
 
-#define GET_INDEX(i, j, k, is, js, ks) ks*js*i + ks*j + k  
+#define GET_INDEX(i, j, k, is, js, ks) ks * js * i + ks * j + k  
 
 typedef float STG_float;
 typedef unsigned long int STG_int;
@@ -58,12 +58,14 @@ typedef struct InitData_s
 
 typedef struct OutData_s
 {
+	STG_float * time;
+	STG_int num_ts;
 	STG_int i_cnt;
 	STG_int j_cnt;
 	STG_int k_cnt;
-	STG_float * u_p;
-	STG_float * v_p;
-	STG_float * w_p;
+	STG_float ** u_p;
+	STG_float ** v_p;
+	STG_float ** w_p;
 
 } OutData;
 

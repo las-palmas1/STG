@@ -3,6 +3,8 @@
 
 #define DEBUG
 
+#include <math.h>
+
 #ifdef __linux__
 	#define OS_LIN
 #else
