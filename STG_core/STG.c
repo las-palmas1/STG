@@ -1,6 +1,7 @@
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "Smirnov.h"
 
 
 static STG_float test_func_linear(STG_float x)
@@ -161,9 +162,67 @@ static void test_trigon(STG_int num)
 	printf("\n");
 }
 
+
+static void test_Smirnov_pulsation(
+	STG_float re_uu, STG_float re_vv, STG_float re_ww, STG_float re_uv, STG_float re_uw, STG_float re_vw, STG_int num_modes
+)
+{
+	printf("Test Smirnov pulsations.\n");
+	printf("Reynolds stresses:\n");
+	printf("%.2f  %.2f  %.2f \n", re_uu, re_uv, re_uw);
+	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
+	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
+	printf("Modes number: %d \n", num_modes);
+	InitData init_data;
+	init_data.i_cnt = 1;
+	init_data.j_cnt = 1;
+	init_data.k_cnt = 1;
+	STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+
+	init_data.mesh.x = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.mesh.y = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.mesh.z = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.mesh.x[0] = 1;
+	init_data.mesh.y[0] = 1;
+	init_data.mesh.z[0] = 1;
+
+	init_data.re.re_uu = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.re.re_vv = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.re.re_ww = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.re.re_uv = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.re.re_uw = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.re.re_vw = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.re.re_uu[0] = re_uu;
+	init_data.re.re_vv[0] = re_vv;
+	init_data.re.re_ww[0] = re_ww;
+	init_data.re.re_uv[0] = re_uv;
+	init_data.re.re_uw[0] = re_uw;
+	init_data.re.re_vw[0] = re_vw;
+
+	init_data.scales.length_scale = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.scales.time_scale = (STG_float*)malloc(sizeof(STG_float) * num);
+	init_data.scales.length_scale[0] = 1;
+	init_data.scales.time_scale[0] = 1;
+
+	SmirnovData data;
+	OutData out_data;
+
+	compute_Smirnov_data(init_data, num_modes, 0.1, 0, &data);
+
+	compute_Smirnov_field(init_data, data, &out_data);
+
+	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0][0], out_data.v_p[0][0], out_data.w_p[0][0]);
+	printf("\n");
+
+	free_Smirnov_data(&data);
+	free_InitData(&init_data);
+	free_OutData(&out_data);
+
+}
+
 int main(int argc, char * argv[])
 {
-
+	init_rand();
     test_bisection();
 	test_uniform(20, -5, 5);
 	test_normal(20, 0, 1);
@@ -175,6 +234,10 @@ int main(int argc, char * argv[])
 	test_eig_values_and_vectors_computing(2, 3, 9, 0, 0, 4);
 	test_eig_values_and_vectors_computing(5, -3, 0, 0, -4, 4);
 	test_eig_values_and_vectors_computing(1, 1, 3, 0, 0, 0);
+
+	test_Smirnov_pulsation(1, 3, 2, 0, 0, 0, 150);
+	test_Smirnov_pulsation(1, 1, 1, 0, 0, 0, 150);
+	test_Smirnov_pulsation(1, 1, 1, 2, 1, -3, 150);
 
 	return 0;
 }

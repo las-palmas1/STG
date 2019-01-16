@@ -4,10 +4,11 @@
 #include "precompiled.h"
 #include "common.h"
 
+
 #define MODE(iaxe, imode)  p##iaxe[imode] * cos((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale) + \
 						   q##iaxe[imode] * sin((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale)
 
-typedef struct Smirnov_data_s
+typedef struct SmirnovData_s
 {
 	STG_float ts;
 	STG_int num_ts;
@@ -45,13 +46,13 @@ typedef struct Smirnov_data_s
 	STG_float * q2;
 	STG_float * q3;
 
-} Smirnov_data;
+} SmirnovData;
 
-void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, STG_int num_ts, Smirnov_data * data);
+STG_SHARED_LIB_API void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, STG_int num_ts, SmirnovData * data);
 
-void free_Smirnov_data(Smirnov_data * data);
+STG_SHARED_LIB_API void free_Smirnov_data(SmirnovData * data);
 
-void compute_Smirnov_pulsations(
+STG_SHARED_LIB_API void compute_Smirnov_pulsations(
 	STG_float * k1, STG_float * k2, STG_float * k3, STG_float * p1, STG_float * p2, STG_float * p3,
 	STG_float * q1, STG_float * q2, STG_float * q3, STG_float * omega, STG_float c1, STG_float c2, STG_float c3,
 	STG_float a11, STG_float a12, STG_float a13,
@@ -62,6 +63,6 @@ void compute_Smirnov_pulsations(
 	STG_float * u, STG_float * v, STG_float * w
 );
 
-void compute_Smirnov_field(InitData init_data, Smirnov_data data, OutData * out_data);
+STG_SHARED_LIB_API void compute_Smirnov_field(InitData init_data, SmirnovData data, OutData * out_data);
 
 #endif // !SMIRNOV_H

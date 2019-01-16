@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 
-void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, STG_int num_ts, Smirnov_data * data)
+void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, STG_int num_ts, SmirnovData * data)
 {
 	data->num_modes = num_modes;
 	STG_int is = init_data.i_cnt;
@@ -50,11 +50,11 @@ void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, S
 	{
 		data->p1[i] = data->zeta2[i] * data->k3[i] - data->zeta3[i] * data->k2[i];
 		data->p2[i] = data->zeta3[i] * data->k1[i] - data->zeta1[i] * data->k3[i];
-		data->p2[i] = data->zeta1[i] * data->k2[i] - data->zeta2[i] * data->k1[i];
+		data->p3[i] = data->zeta1[i] * data->k2[i] - data->zeta2[i] * data->k1[i];
 
 		data->q1[i] = data->xi2[i] * data->k3[i] - data->xi3[i] * data->k2[i];
 		data->q2[i] = data->xi3[i] * data->k1[i] - data->xi1[i] * data->k3[i];
-		data->q2[i] = data->xi1[i] * data->k2[i] - data->xi2[i] * data->k1[i];
+		data->q3[i] = data->xi1[i] * data->k2[i] - data->xi2[i] * data->k1[i];
 	}
 
 
@@ -64,7 +64,7 @@ void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, S
 		{
 			for (STG_int k = 0; k < init_data.k_cnt; k++)
 			{
-				STG_float * eig_vals, * eig_vec1, * eig_vec2, * eig_vec3;
+				STG_float eig_vals[3], eig_vec1[3], eig_vec2[3], eig_vec3[3];
 				compute_eig(
 					init_data.re.re_uu[GET_INDEX(i, j, k, is, js, ks)], init_data.re.re_vv[GET_INDEX(i, j, k, is, js, ks)], init_data.re.re_ww[GET_INDEX(i, j, k, is, js, ks)],
 					init_data.re.re_uv[GET_INDEX(i, j, k, is, js, ks)], init_data.re.re_uw[GET_INDEX(i, j, k, is, js, ks)], init_data.re.re_vw[GET_INDEX(i, j, k, is, js, ks)],
@@ -88,10 +88,10 @@ void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, S
 }
 
 
-void free_Smirnov_data(Smirnov_data * data)
+void free_Smirnov_data(SmirnovData * data)
 {
 	free(data->c1);
-	free(data->c3);
+	free(data->c2);
 	free(data->c3);
 	free(data->a11);
 	free(data->a12);
@@ -133,9 +133,9 @@ void compute_Smirnov_pulsations(
 	STG_float * u, STG_float * v, STG_float * w
 )
 {
-	STG_float mode1_sum;
-	STG_float mode2_sum;
-	STG_float mode3_sum;
+	STG_float mode1_sum = 0;
+	STG_float mode2_sum = 0;
+	STG_float mode3_sum = 0;
 	STG_float k1_p, k2_p, k3_p;
 
 
@@ -148,9 +148,9 @@ void compute_Smirnov_pulsations(
 		mode2_sum += MODE(2, i);
 		mode3_sum += MODE(3, i);
 	}
-	STG_float v1 = sqrt(2 / num_modes) * mode1_sum;
-	STG_float v2 = sqrt(2 / num_modes) * mode2_sum;
-	STG_float v3 = sqrt(2 / num_modes) * mode3_sum;
+ 	STG_float v1 = sqrt((STG_float)2 / num_modes) * mode1_sum;
+	STG_float v2 = sqrt((STG_float)2 / num_modes) * mode2_sum;
+	STG_float v3 = sqrt((STG_float)2 / num_modes) * mode3_sum;
 	STG_float w1 = c1 * v1;
 	STG_float w2 = c2 * v2;
 	STG_float w3 = c3 * v3;
@@ -160,15 +160,15 @@ void compute_Smirnov_pulsations(
 }
 
 
-void compute_Smirnov_field(InitData init_data, Smirnov_data data, OutData * out_data)
+void compute_Smirnov_field(InitData init_data, SmirnovData data, OutData * out_data)
 {
 	STG_int is = data.i_cnt;
 	STG_int js = data.j_cnt;
 	STG_int ks = data.k_cnt;
-	out_data->u_p = (STG_float**)malloc(sizeof(STG_float*) * data.num_ts);
-	out_data->v_p = (STG_float**)malloc(sizeof(STG_float*) * data.num_ts);
-	out_data->w_p = (STG_float**)malloc(sizeof(STG_float*) * data.num_ts);
-	out_data->time = (STG_float*)malloc(sizeof(STG_float) * data.num_ts);
+	out_data->u_p = (STG_float**)malloc(sizeof(STG_float*) * (data.num_ts + 1));
+	out_data->v_p = (STG_float**)malloc(sizeof(STG_float*) * (data.num_ts + 1));
+	out_data->w_p = (STG_float**)malloc(sizeof(STG_float*) * (data.num_ts + 1));
+	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
 	out_data->num_ts = data.num_ts;
 
 	STG_int num = is * js * ks;
@@ -188,6 +188,6 @@ void compute_Smirnov_field(InitData init_data, Smirnov_data data, OutData * out_
 				init_data.scales.length_scale[i], init_data.scales.time_scale[i], data.num_modes, time,  
 				&(out_data->u_p[it][i]), &(out_data->v_p[it][i]), &(out_data->w_p[it][i])
 			);
-	}
+		}
 	}
 }

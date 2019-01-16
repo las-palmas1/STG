@@ -4,11 +4,46 @@
 #include <stdio.h>
 
 
+void free_InitData(InitData * init_data)
+{
+	free(init_data->mesh.x);
+	free(init_data->mesh.y);
+	free(init_data->mesh.z);
+	free(init_data->re.re_uu);
+	free(init_data->re.re_vv);
+	free(init_data->re.re_ww);
+	free(init_data->re.re_uv);
+	free(init_data->re.re_uw);
+	free(init_data->re.re_vw);
+	free(init_data->scales.length_scale);
+	free(init_data->scales.time_scale);
+}
+
+void free_OutData(OutData * out_data)
+{
+	free(out_data->time);
+	free(out_data->u_p);
+	free(out_data->v_p);
+	free(out_data->w_p);
+}
+
+void init_rand()
+{
+	srand(time(NULL));
+}
+
+void test_func(STG_float * arr, STG_int num)
+{
+	for (STG_int i = 0; i < num; i++)
+	{
+		printf("%.2f \n", arr[i]);
+	}
+}
+
 // Функция возвращает массив заданного числа точек равномерно распределенных на заданном интервале
 STG_float * get_uniform(STG_float min, STG_float max, STG_int num)
 {
     STG_float * res = (STG_float*)malloc(sizeof (STG_float) * num);
-	srand(time(NULL));
 	for (int i = 0; i < num; i++)
     {
         res[i] = min + (STG_float)rand() / (STG_float)RAND_MAX * (max - min);
@@ -83,7 +118,6 @@ STG_float box_muller()
 STG_float * get_normal(STG_float mu, STG_float sigma, STG_int num)
 {
 	STG_float * res = (STG_float*)malloc(sizeof(STG_float) * num);
-	srand(time(NULL));
 	for (STG_int i = 0; i < num; i++)
 	{
 		res[i] = mu + sigma * box_muller();
@@ -95,7 +129,6 @@ STG_float * get_normal(STG_float mu, STG_float sigma, STG_int num)
 STG_float * get_trigon(STG_int num)
 {
 	STG_float * res = (STG_float*)malloc(sizeof(STG_float) * num);
-	srand(time(NULL));
 	for (STG_int i = 0; i < num; i++)
 	{
 		STG_float u = (STG_float)rand() / (STG_float)RAND_MAX;

@@ -69,6 +69,13 @@ typedef struct OutData_s
 
 } OutData;
 
+void free_InitData(InitData * init_data);
+
+void free_OutData(OutData * out_data);
+
+STG_SHARED_LIB_API void test_func(STG_float * arr, STG_int num);
+
+STG_SHARED_LIB_API void init_rand();
 
 STG_SHARED_LIB_API STG_float * get_uniform(STG_float min, STG_float max, STG_int num);
 
