@@ -56,6 +56,7 @@ typedef struct InitData_s
 
 } InitData;
 
+// Структура, хранящая пульсации для всех узлов сетки и всех шагов по времени.
 typedef struct OutData_s
 {
 	STG_float * time;
@@ -68,6 +69,33 @@ typedef struct OutData_s
 	STG_float ** w_p;
 
 } OutData;
+
+// Структура, хранящая пульсации для всех узлов сетки на одном временном уровне.
+typedef struct OutDataTS_s
+{
+	STG_float time;
+	STG_int i_cnt;
+	STG_int j_cnt;
+	STG_int k_cnt;
+	STG_float * u_p;
+	STG_float * v_p;
+	STG_float * w_p;
+
+} OutDataTS;
+
+// Структура, хранящая пульсации для всех узлов сетки на одном временном уровне.
+typedef struct OutDataNode_s
+{
+	STG_float * time;
+	STG_int num_ts;
+	STG_int i;
+	STG_int j;
+	STG_int k;
+	STG_float * u_p;
+	STG_float * v_p;
+	STG_float * w_p;
+
+} OutDataNode;
 
 void free_InitData(InitData * init_data);
 

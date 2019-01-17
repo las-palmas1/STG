@@ -121,6 +121,31 @@ class OutData(ctypes.Structure):
     ]
 
 
+class OutDataTS(ctypes.Structure):
+    _fields_ = [
+        ('time', ctypes.c_float),
+        ('i_cnt', ctypes.c_uint32),
+        ('j_cnt', ctypes.c_uint32),
+        ('k_cnt', ctypes.c_uint32),
+        ('u_p', ctypes.POINTER(ctypes.c_float)),
+        ('v_p', ctypes.POINTER(ctypes.c_float)),
+        ('w_p', ctypes.POINTER(ctypes.c_float))
+    ]
+
+
+class OutDataNode(ctypes.Structure):
+    _fields_ = [
+        ('time', ctypes.POINTER(ctypes.c_float)),
+        ('num', ctypes.c_uint32),
+        ('i', ctypes.c_uint32),
+        ('j', ctypes.c_uint32),
+        ('k', ctypes.c_uint32),
+        ('u_p', ctypes.POINTER(ctypes.c_float)),
+        ('v_p', ctypes.POINTER(ctypes.c_float)),
+        ('w_p', ctypes.POINTER(ctypes.c_float))
+    ]
+
+
 class SmirnovData(ctypes.Structure):
     _fields_ = [
         ('ts', ctypes.c_float),
@@ -159,6 +184,40 @@ class SmirnovData(ctypes.Structure):
         ('q2', ctypes.POINTER(ctypes.c_float)),
         ('q3', ctypes.POINTER(ctypes.c_float)),
     ]
+
+# TODO: написать функцию get_init_data, которая вернет сишную структуру из питоновских данных.
+# Внутри класса для генерации турбулентности полагаю целесообразнее
+# хранить вспомогательные данные в сишных структурах. В питоновском формате следует хранить только входные и
+# выходные параметры
+
+
+def compute_Smirnov_data(init_data: InitData, num_modes: int, ts: float, num_ts: float, data: SmirnovData):
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
+    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_data
+    func_c.argtypes = InitData, ctypes.c_uint32, ctypes.c_float, ctypes.c_uint32, ctypes.POINTER(SmirnovData)
+    func_c(init_data, num_modes, ts, num_ts, ctypes.byref(data))
+
+
+def free_Smirnov_data(data: SmirnovData):
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
+    func_c = ctypes.CDLL(stg_lib_fname).free_Smirnov_data
+    func_c.argtypes = ctypes.POINTER(SmirnovData)
+    func_c(ctypes.byref(data))
+
+
+def compute_Smirnov_field_ts(init_data: InitData, data: SmirnovData, out_data: OutDataTS, time_level: float):
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
+    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_field_ts
+    func_c.argtypes = InitData, SmirnovData, ctypes.byref(OutDataTS), ctypes.c_float,
+    func_c(init_data, data, ctypes.byref(out_data), time_level)
+
+
+def compute_Smirnov_field_node(init_data: InitData, data: SmirnovData, out_data: OutDataNode, i: int, j: int, k: int):
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
+    func_c = ctypes.CDLL(stg_lib_fname).free_Smirnov_data
+    func_c.argtypes = InitData, SmirnovData, ctypes.byref(OutDataNode), ctypes.c_uint32, ctypes.c_uint32, \
+                      ctypes.c_uint32
+    func_c(init_data, data, ctypes.byref(out_data), i, j, k)
 
 
 if __name__ == '__main__':

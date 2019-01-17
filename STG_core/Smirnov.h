@@ -65,4 +65,8 @@ STG_SHARED_LIB_API void compute_Smirnov_pulsations(
 
 STG_SHARED_LIB_API void compute_Smirnov_field(InitData init_data, SmirnovData data, OutData * out_data);
 
+STG_SHARED_LIB_API void compute_Smirnov_field_ts(InitData init_data, SmirnovData data, OutDataTS * out_data, STG_int time_level);
+
+STG_SHARED_LIB_API void compute_Smirnov_field_node(InitData init_data, SmirnovData data, OutDataNode * out_data, STG_int i, STG_int j, STG_int k);
+
 #endif // !SMIRNOV_H
