@@ -97,9 +97,13 @@ typedef struct OutDataNode_s
 
 } OutDataNode;
 
-void free_InitData(InitData * init_data);
+STG_SHARED_LIB_API void free_InitData(InitData * init_data);
 
-void free_OutData(OutData * out_data);
+STG_SHARED_LIB_API void free_OutData(OutData * out_data);
+
+STG_SHARED_LIB_API void free_OutDataNode(OutDataNode * out_data);
+
+STG_SHARED_LIB_API void free_OutDataTS(OutDataTS * out_data);
 
 STG_SHARED_LIB_API void test_func(STG_float * arr, STG_int num);
 
@@ -139,5 +143,6 @@ void compute_eig(
 	STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
 	STG_float * eig_vals, STG_float * eig_vec1, STG_float * eig_vec2, STG_float * eig_vec3
 );
+
 
 #endif // !COMMON_H

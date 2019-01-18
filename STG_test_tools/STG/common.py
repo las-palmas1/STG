@@ -3,6 +3,7 @@ import ctypes
 import platform
 import os
 import numpy as np
+from typing import Tuple
 
 
 def search_sgt_lib(SGT_lib_name):
@@ -11,7 +12,9 @@ def search_sgt_lib(SGT_lib_name):
     else:
         ext = '.so'
     res = ''
-    for root, dirs, files in os.walk(os.path.join(os.path.dirname(os.path.dirname(os.getcwd())), 'projects')):
+    for root, dirs, files in os.walk(
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'projects')
+    ):
         for file in files:
             if os.path.splitext(file)[0] == SGT_lib_name and os.path.splitext(file)[1] == ext:
                 res = os.path.join(root, file)
@@ -136,7 +139,7 @@ class OutDataTS(ctypes.Structure):
 class OutDataNode(ctypes.Structure):
     _fields_ = [
         ('time', ctypes.POINTER(ctypes.c_float)),
-        ('num', ctypes.c_uint32),
+        ('num_ts', ctypes.c_uint32),
         ('i', ctypes.c_uint32),
         ('j', ctypes.c_uint32),
         ('k', ctypes.c_uint32),
@@ -146,79 +149,114 @@ class OutDataNode(ctypes.Structure):
     ]
 
 
-class SmirnovData(ctypes.Structure):
-    _fields_ = [
-        ('ts', ctypes.c_float),
-        ('num_ts', ctypes.c_uint32),
-        ('i_cnt', ctypes.c_uint32),
-        ('j_cnt', ctypes.c_uint32),
-        ('k_cnt', ctypes.c_uint32),
-        ('c1', ctypes.POINTER(ctypes.c_float)),
-        ('c2', ctypes.POINTER(ctypes.c_float)),
-        ('c3', ctypes.POINTER(ctypes.c_float)),
-        ('a11', ctypes.POINTER(ctypes.c_float)),
-        ('a12', ctypes.POINTER(ctypes.c_float)),
-        ('a13', ctypes.POINTER(ctypes.c_float)),
-        ('a21', ctypes.POINTER(ctypes.c_float)),
-        ('a22', ctypes.POINTER(ctypes.c_float)),
-        ('a23', ctypes.POINTER(ctypes.c_float)),
-        ('a31', ctypes.POINTER(ctypes.c_float)),
-        ('a32', ctypes.POINTER(ctypes.c_float)),
-        ('a33', ctypes.POINTER(ctypes.c_float)),
-
-        ('num_modes', ctypes.c_uint32),
-        ('k1', ctypes.POINTER(ctypes.c_float)),
-        ('k2', ctypes.POINTER(ctypes.c_float)),
-        ('k3', ctypes.POINTER(ctypes.c_float)),
-        ('zeta1', ctypes.POINTER(ctypes.c_float)),
-        ('zeta2', ctypes.POINTER(ctypes.c_float)),
-        ('zeta3', ctypes.POINTER(ctypes.c_float)),
-        ('xi1', ctypes.POINTER(ctypes.c_float)),
-        ('xi2', ctypes.POINTER(ctypes.c_float)),
-        ('xi3', ctypes.POINTER(ctypes.c_float)),
-        ('omega', ctypes.POINTER(ctypes.c_float)),
-        ('p1', ctypes.POINTER(ctypes.c_float)),
-        ('p2', ctypes.POINTER(ctypes.c_float)),
-        ('p3', ctypes.POINTER(ctypes.c_float)),
-        ('q1', ctypes.POINTER(ctypes.c_float)),
-        ('q2', ctypes.POINTER(ctypes.c_float)),
-        ('q3', ctypes.POINTER(ctypes.c_float)),
-    ]
-
-# TODO: написать функцию get_init_data, которая вернет сишную структуру из питоновских данных.
-# Внутри класса для генерации турбулентности полагаю целесообразнее
-# хранить вспомогательные данные в сишных структурах. В питоновском формате следует хранить только входные и
-# выходные параметры
+def extract_pulsations_ts(out_data: OutDataTS):
+    num = out_data.i_cnt * out_data.j_cnt * out_data.k_cnt
+    u = np.zeros(num)
+    v = np.zeros(num)
+    w = np.zeros(num)
+    for i in range(num):
+        u[i] = out_data.u_p[i]
+        v[i] = out_data.v_p[i]
+        w[i] = out_data.w_p[i]
+    u = u.reshape(out_data.i_cnt, out_data.j_cnt, out_data.k_cnt)
+    v = v.reshape(out_data.i_cnt, out_data.j_cnt, out_data.k_cnt)
+    w = w.reshape(out_data.i_cnt, out_data.j_cnt, out_data.k_cnt)
+    return u, v, w
 
 
-def compute_Smirnov_data(init_data: InitData, num_modes: int, ts: float, num_ts: float, data: SmirnovData):
+def extract_pulsations_node(out_data: OutDataNode):
+    u = np.zeros(out_data.num_ts)
+    v = np.zeros(out_data.num_ts)
+    w = np.zeros(out_data.num_ts)
+    for i in range(out_data.num_ts + 1):
+        u[i] = out_data.u_p[i]
+        v[i] = out_data.v_p[i]
+        w[i] = out_data.w_p[i]
+    return u, v, w
+
+
+def extract_pulsations(out_data: OutData):
+    num = out_data.i_cnt * out_data.j_cnt * out_data.k_cnt
+    vel = []
+    u = np.zeros(num)
+    v = np.zeros(num)
+    w = np.zeros(num)
+    for it in range(out_data.num_ts + 1):
+        for i in range(num):
+            u[i] = out_data.u_p[it][i]
+            v[i] = out_data.v_p[it][i]
+            w[i] = out_data.w_p[it][i]
+        vel.append((
+            u.reshape(out_data.i_cnt, out_data.j_cnt, out_data.k_cnt),
+            v.reshape(out_data.i_cnt, out_data.j_cnt, out_data.k_cnt),
+            w.reshape(out_data.i_cnt, out_data.j_cnt, out_data.k_cnt),
+        ))
+    return vel
+
+
+def get_init_data(mesh: Tuple[np.ndarray, np.ndarray, np.ndarray],
+                  re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, l_t, tau_t):
+    i_cnt = mesh[0].shape[0]
+    j_cnt = mesh[0].shape[1]
+    k_cnt = mesh[0].shape[2]
+    num = i_cnt * j_cnt * k_cnt
+    x = (ctypes.c_float * num)(*mesh[0].reshape(num))
+    y = (ctypes.c_float * num)(*mesh[1].reshape(num))
+    z = (ctypes.c_float * num)(*mesh[2].reshape(num))
+    mesh_c = Mesh(x=x, y=y, z=z)
+
+    re_uu_arr = np.full(num, re_uu)
+    re_vv_arr = np.full(num, re_vv)
+    re_ww_arr = np.full(num, re_ww)
+    re_uv_arr = np.full(num, re_uv)
+    re_uw_arr = np.full(num, re_uw)
+    re_vw_arr = np.full(num, re_vw)
+
+    re_uu_c = (ctypes.c_float * num)(*re_uu_arr)
+    re_vv_c = (ctypes.c_float * num)(*re_vv_arr)
+    re_ww_c = (ctypes.c_float * num)(*re_ww_arr)
+    re_uv_c = (ctypes.c_float * num)(*re_uv_arr)
+    re_uw_c = (ctypes.c_float * num)(*re_uw_arr)
+    re_vw_c = (ctypes.c_float * num)(*re_vw_arr)
+    re_stress_c = ReStress(re_uu=re_uu_c, re_vv=re_vv_c, re_ww=re_ww_c, re_uv=re_uv_c, re_uw=re_uw_c, re_vw=re_vw_c)
+
+    l_t_arr = np.full(num, l_t)
+    tau_t_arr = np.full(num, tau_t)
+    l_t_c = (ctypes.c_float * num)(*l_t_arr)
+    tau_t_c = (ctypes.c_float * num)(*tau_t_arr)
+    scales_c = Scales(length_scale=l_t_c, time_scale=tau_t_c)
+
+    init_data = InitData(i_cnt=i_cnt, j_cnt=j_cnt, k_cnt=k_cnt, mesh=mesh_c, re=re_stress_c, scales=scales_c)
+    return init_data
+
+
+def free_out_data(data: OutData):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_data
-    func_c.argtypes = InitData, ctypes.c_uint32, ctypes.c_float, ctypes.c_uint32, ctypes.POINTER(SmirnovData)
-    func_c(init_data, num_modes, ts, num_ts, ctypes.byref(data))
-
-
-def free_Smirnov_data(data: SmirnovData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
-    func_c = ctypes.CDLL(stg_lib_fname).free_Smirnov_data
-    func_c.argtypes = ctypes.POINTER(SmirnovData)
+    func_c = ctypes.CDLL(stg_lib_fname).free_OutData
+    func_c.argtypes = ctypes.POINTER(OutData),
     func_c(ctypes.byref(data))
 
 
-def compute_Smirnov_field_ts(init_data: InitData, data: SmirnovData, out_data: OutDataTS, time_level: float):
+def free_out_data_node(data: OutDataNode):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_field_ts
-    func_c.argtypes = InitData, SmirnovData, ctypes.byref(OutDataTS), ctypes.c_float,
-    func_c(init_data, data, ctypes.byref(out_data), time_level)
+    func_c = ctypes.CDLL(stg_lib_fname).free_OutDataNode
+    func_c.argtypes = ctypes.POINTER(OutDataNode),
+    func_c(ctypes.byref(data))
 
 
-def compute_Smirnov_field_node(init_data: InitData, data: SmirnovData, out_data: OutDataNode, i: int, j: int, k: int):
+def free_out_data_ts(data: OutDataTS):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name)
-    func_c = ctypes.CDLL(stg_lib_fname).free_Smirnov_data
-    func_c.argtypes = InitData, SmirnovData, ctypes.byref(OutDataNode), ctypes.c_uint32, ctypes.c_uint32, \
-                      ctypes.c_uint32
-    func_c(init_data, data, ctypes.byref(out_data), i, j, k)
+    func_c = ctypes.CDLL(stg_lib_fname).free_OutDataTS
+    func_c.argtypes = ctypes.POINTER(OutDataTS),
+    func_c(ctypes.byref(data))
+
+
+def free_init_data(data: InitData):
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
+    func_c = ctypes.CDLL(stg_lib_fname).free_InitData
+    func_c.argtypes = ctypes.POINTER(InitData),
+    func_c(ctypes.byref(data))
 
 
 if __name__ == '__main__':
-    func([1.2, 2.3, 2.5, 0.4, 2.7])
+    out_data = OutDataNode(i=10)

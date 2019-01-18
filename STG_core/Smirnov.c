@@ -1,6 +1,7 @@
 #include "precompiled.h"
 #include "Smirnov.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 
 void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, STG_int num_ts, SmirnovData * data)
@@ -123,8 +124,10 @@ void free_Smirnov_data(SmirnovData * data)
 
 
 void compute_Smirnov_pulsations(
-	STG_float * k1, STG_float * k2, STG_float * k3, STG_float * p1, STG_float * p2, STG_float * p3,
-	STG_float * q1, STG_float * q2, STG_float * q3, STG_float * omega, STG_float c1, STG_float c2, STG_float c3,
+	STG_float * k1, STG_float * k2, STG_float * k3, 
+	STG_float * p1, STG_float * p2, STG_float * p3,
+	STG_float * q1, STG_float * q2, STG_float * q3, STG_float * omega, 
+	STG_float c1, STG_float c2, STG_float c3,
 	STG_float a11, STG_float a12, STG_float a13,
 	STG_float a21, STG_float a22, STG_float a23,
 	STG_float a31, STG_float a32, STG_float a33,
@@ -132,12 +135,11 @@ void compute_Smirnov_pulsations(
 	STG_float length_scale, STG_float time_scale, STG_int num_modes, STG_float time,
 	STG_float * u, STG_float * v, STG_float * w
 )
-{
+{	
 	STG_float mode1_sum = 0;
 	STG_float mode2_sum = 0;
 	STG_float mode3_sum = 0;
 	STG_float k1_p, k2_p, k3_p;
-
 
 	for (STG_int i = 0; i < num_modes; i++)
 	{
@@ -185,10 +187,16 @@ void compute_Smirnov_field(InitData init_data, SmirnovData data, OutData * out_d
 		for (STG_int i = 0; i < num; i++)
 		{
 			compute_Smirnov_pulsations(
-				data.k1, data.k2, data.k3, data.p1, data.p2, data.p3, data.q1, data.q2, data.q3, data.omega,
-				data.c1[i], data.c2[i], data.c3[i], data.a11[i], data.a12[i], data.a13[i], data.a21[i], data.a22[i], data.a23[i],
-				data.a31[i], data.a32[i], data.a33[i], init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
-				init_data.scales.length_scale[i], init_data.scales.time_scale[i], data.num_modes, time,  
+				data.k1, data.k2, data.k3, 
+				data.p1, data.p2, data.p3, 
+				data.q1, data.q2, data.q3, data.omega,
+				data.c1[i], data.c2[i], data.c3[i], 
+				data.a11[i], data.a12[i], data.a13[i],
+				data.a21[i], data.a22[i], data.a23[i],
+				data.a31[i], data.a32[i], data.a33[i], 
+				init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
+				init_data.scales.length_scale[i], init_data.scales.time_scale[i], 
+				data.num_modes, time,  
 				&(out_data->u_p[it][i]), &(out_data->v_p[it][i]), &(out_data->w_p[it][i])
 			);
 		}
@@ -208,10 +216,16 @@ void compute_Smirnov_field_ts(InitData init_data, SmirnovData data, OutDataTS * 
 	for (STG_int i = 0; i < num; i++)
 	{
 		compute_Smirnov_pulsations(
-			data.k1, data.k2, data.k3, data.p1, data.p2, data.p3, data.q1, data.q2, data.q3, data.omega,
-			data.c1[i], data.c2[i], data.c3[i], data.a11[i], data.a12[i], data.a13[i], data.a21[i], data.a22[i], data.a23[i],
-			data.a31[i], data.a32[i], data.a33[i], init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
-			init_data.scales.length_scale[i], init_data.scales.time_scale[i], data.num_modes, out_data->time,
+			data.k1, data.k2, data.k3, 
+			data.p1, data.p2, data.p3,
+			data.q1, data.q2, data.q3, data.omega,
+			data.c1[i], data.c2[i], data.c3[i], 
+			data.a11[i], data.a12[i], data.a13[i], 
+			data.a21[i], data.a22[i], data.a23[i],
+			data.a31[i], data.a32[i], data.a33[i], 
+			init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
+			init_data.scales.length_scale[i], init_data.scales.time_scale[i], 
+			data.num_modes, out_data->time,
 			&(out_data->u_p[i]), &(out_data->v_p[i]), &(out_data->w_p[i])
 		);
 	}
@@ -230,11 +244,19 @@ void compute_Smirnov_field_node(InitData init_data, SmirnovData data, OutDataNod
 	out_data->w_p = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
 	for (STG_int it = 0; it < data.num_ts + 1; it++)
 	{
+		STG_float time = data.ts * it;
+		out_data->time[it] = time;
 		compute_Smirnov_pulsations(
-			data.k1, data.k2, data.k3, data.p1, data.p2, data.p3, data.q1, data.q2, data.q3, data.omega,
-			data.c1[num], data.c2[num], data.c3[num], data.a11[num], data.a12[num], data.a13[num], data.a21[num], data.a22[num], data.a23[num],
-			data.a31[num], data.a32[num], data.a33[num], init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num],
-			init_data.scales.length_scale[num], init_data.scales.time_scale[num], data.num_modes, out_data->time[it],
+			data.k1, data.k2, data.k3, 
+			data.p1, data.p2, data.p3, 
+			data.q1, data.q2, data.q3, data.omega,
+			data.c1[num], data.c2[num], data.c3[num], 
+			data.a11[num], data.a12[num], data.a13[num],
+			data.a21[num], data.a22[num], data.a23[num],
+			data.a31[num], data.a32[num], data.a33[num], 
+			init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num],
+			init_data.scales.length_scale[num], init_data.scales.time_scale[num], 
+			data.num_modes, out_data->time[it],
 			&(out_data->u_p[it]), &(out_data->v_p[it]), &(out_data->w_p[it])
 		);
 	}

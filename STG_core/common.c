@@ -27,6 +27,21 @@ void free_OutData(OutData * out_data)
 	free(out_data->w_p);
 }
 
+void free_OutDataNode(OutDataNode * out_data)
+{
+	free(out_data->time);
+	free(out_data->u_p);
+	free(out_data->v_p);
+	free(out_data->w_p);
+}
+
+void free_OutDataTS(OutDataTS * out_data)
+{
+	free(out_data->u_p);
+	free(out_data->v_p);
+	free(out_data->w_p);
+}
+
 void init_rand()
 {
 	srand(time(NULL));

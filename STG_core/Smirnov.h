@@ -1,9 +1,8 @@
 #ifndef SMIRNOV_H
 #define SMIRNOV_H
 
-#include "precompiled.h"
-#include "common.h"
 
+#include "common.h"
 
 #define MODE(iaxe, imode)  p##iaxe[imode] * cos((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale) + \
 						   q##iaxe[imode] * sin((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale)
