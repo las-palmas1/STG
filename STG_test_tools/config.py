@@ -1,4 +1,5 @@
 
+conf = 'Release'
 STG_lib_name = 'STG_shared_lib'
 
 # путь к папке с картинками

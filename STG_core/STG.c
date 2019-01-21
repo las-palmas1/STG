@@ -204,17 +204,19 @@ static void test_Smirnov_pulsation(
 	init_data.scales.length_scale[0] = 1;
 	init_data.scales.time_scale[0] = 1;
 
-	SmirnovData data;
+	SmirnovDataTimeIndep data_tind;
+	SmirnovDataTimeDep data_tdep;
 	OutData out_data;
 
-	compute_Smirnov_data(init_data, num_modes, 0.1, 0, &data);
+	compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
+	compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
-	compute_Smirnov_field(init_data, data, &out_data);
+	compute_Smirnov_field(init_data, data_tind, data_tdep, &out_data);
 
 	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0][0], out_data.v_p[0][0], out_data.w_p[0][0]);
 	printf("\n");
 
-	free_Smirnov_data(&data);
+	free_Smirnov_data_time_indep(&data_tind);
 	free_InitData(&init_data);
 	free_OutData(&out_data);
 }
@@ -261,17 +263,19 @@ static void test_Smirnov_pulsation_node(
 	init_data.scales.length_scale[0] = 1;
 	init_data.scales.time_scale[0] = 1;
 
-	SmirnovData data;
+	SmirnovDataTimeIndep data_tind;
+	SmirnovDataTimeDep data_tdep;
 	OutDataNode out_data;
 
-	compute_Smirnov_data(init_data, num_modes, 0.1, 0, &data);
+	compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
+	compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
-	compute_Smirnov_field_node(init_data, data, &out_data, 0, 0, 0);
+	compute_Smirnov_field_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
 
 	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0], out_data.v_p[0], out_data.w_p[0]);
 	printf("\n");
 
-	free_Smirnov_data(&data);
+	free_Smirnov_data_time_indep(&data_tind);
 	free_InitData(&init_data);
 	free_OutData(&out_data);
 }

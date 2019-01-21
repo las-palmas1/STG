@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, STG_int num_ts, SmirnovData * data)
+void compute_Smirnov_data_time_indep(InitData init_data, STG_int num_modes, SmirnovDataTimeIndep * data)
 {
 	data->num_modes = num_modes;
 	STG_int is = init_data.i_cnt;
@@ -14,8 +14,6 @@ void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, S
 	data->i_cnt = is;
 	data->j_cnt = js;
 	data->k_cnt = ks;
-	data->ts = ts;
-	data->num_ts = num_ts;
 
 	data->c1 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->c2 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
@@ -88,8 +86,14 @@ void compute_Smirnov_data(InitData init_data, STG_int num_modes, STG_float ts, S
 	}
 }
 
+void compute_Smirnov_data_time_dep(STG_float ts, STG_int num_ts, SmirnovDataTimeDep * data)
+{
+	data->num_ts = num_ts;
+	data->ts = ts;
+}
 
-void free_Smirnov_data(SmirnovData * data)
+
+void free_Smirnov_data_time_indep(SmirnovDataTimeIndep * data)
 {
 	free(data->c1);
 	free(data->c2);
@@ -162,24 +166,24 @@ void compute_Smirnov_pulsations(
 }
 
 
-void compute_Smirnov_field(InitData init_data, SmirnovData data, OutData * out_data)
+void compute_Smirnov_field(InitData init_data, SmirnovDataTimeIndep data_tind, SmirnovDataTimeDep data_tdep, OutData * out_data)
 {
-	STG_int is = data.i_cnt;
-	STG_int js = data.j_cnt;
-	STG_int ks = data.k_cnt;
+	STG_int is = data_tind.i_cnt;
+	STG_int js = data_tind.j_cnt;
+	STG_int ks = data_tind.k_cnt;
 	out_data->i_cnt = is;
 	out_data->j_cnt = js;
 	out_data->k_cnt = ks;
-	out_data->u_p = (STG_float**)malloc(sizeof(STG_float*) * (data.num_ts + 1));
-	out_data->v_p = (STG_float**)malloc(sizeof(STG_float*) * (data.num_ts + 1));
-	out_data->w_p = (STG_float**)malloc(sizeof(STG_float*) * (data.num_ts + 1));
-	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
-	out_data->num_ts = data.num_ts;
+	out_data->u_p = (STG_float**)malloc(sizeof(STG_float*) * (data_tdep.num_ts + 1));
+	out_data->v_p = (STG_float**)malloc(sizeof(STG_float*) * (data_tdep.num_ts + 1));
+	out_data->w_p = (STG_float**)malloc(sizeof(STG_float*) * (data_tdep.num_ts + 1));
+	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
+	out_data->num_ts = data_tdep.num_ts;
 
 	STG_int num = is * js * ks;
-	for (STG_int it = 0; it < data.num_ts + 1; it++)
+	for (STG_int it = 0; it < data_tdep.num_ts + 1; it++)
 	{
-		STG_float time = data.ts * it;
+		STG_float time = data_tdep.ts * it;
 		out_data->time[it] = time;
 		out_data->u_p[it] = (STG_float*)malloc(sizeof(STG_float) * num);
 		out_data->v_p[it] = (STG_float*)malloc(sizeof(STG_float) * num);
@@ -187,76 +191,76 @@ void compute_Smirnov_field(InitData init_data, SmirnovData data, OutData * out_d
 		for (STG_int i = 0; i < num; i++)
 		{
 			compute_Smirnov_pulsations(
-				data.k1, data.k2, data.k3, 
-				data.p1, data.p2, data.p3, 
-				data.q1, data.q2, data.q3, data.omega,
-				data.c1[i], data.c2[i], data.c3[i], 
-				data.a11[i], data.a12[i], data.a13[i],
-				data.a21[i], data.a22[i], data.a23[i],
-				data.a31[i], data.a32[i], data.a33[i], 
+				data_tind.k1, data_tind.k2, data_tind.k3, 
+				data_tind.p1, data_tind.p2, data_tind.p3, 
+				data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
+				data_tind.c1[i], data_tind.c2[i], data_tind.c3[i], 
+				data_tind.a11[i], data_tind.a12[i], data_tind.a13[i],
+				data_tind.a21[i], data_tind.a22[i], data_tind.a23[i],
+				data_tind.a31[i], data_tind.a32[i], data_tind.a33[i], 
 				init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
 				init_data.scales.length_scale[i], init_data.scales.time_scale[i], 
-				data.num_modes, time,  
+				data_tind.num_modes, time,  
 				&(out_data->u_p[it][i]), &(out_data->v_p[it][i]), &(out_data->w_p[it][i])
 			);
 		}
 	}
 }
 
-void compute_Smirnov_field_ts(InitData init_data, SmirnovData data, OutDataTS * out_data, STG_int time_level)
+void compute_Smirnov_field_ts(InitData init_data, SmirnovDataTimeIndep data_tind, SmirnovDataTimeDep data_tdep, OutDataTS * out_data, STG_int time_level)
 {
-	out_data->time = data.ts * time_level;
-	out_data->i_cnt = data.i_cnt;
-	out_data->j_cnt = data.j_cnt;
-	out_data->k_cnt = data.k_cnt;
-	STG_int num = data.i_cnt * data.j_cnt * data.k_cnt;
+	out_data->time = data_tdep.ts * time_level;
+	out_data->i_cnt = data_tind.i_cnt;
+	out_data->j_cnt = data_tind.j_cnt;
+	out_data->k_cnt = data_tind.k_cnt;
+	STG_int num = data_tind.i_cnt * data_tind.j_cnt * data_tind.k_cnt;
 	out_data->u_p = (STG_float*)malloc(sizeof(STG_float) * num);
 	out_data->v_p = (STG_float*)malloc(sizeof(STG_float) * num);
 	out_data->w_p = (STG_float*)malloc(sizeof(STG_float) * num);
 	for (STG_int i = 0; i < num; i++)
 	{
 		compute_Smirnov_pulsations(
-			data.k1, data.k2, data.k3, 
-			data.p1, data.p2, data.p3,
-			data.q1, data.q2, data.q3, data.omega,
-			data.c1[i], data.c2[i], data.c3[i], 
-			data.a11[i], data.a12[i], data.a13[i], 
-			data.a21[i], data.a22[i], data.a23[i],
-			data.a31[i], data.a32[i], data.a33[i], 
+			data_tind.k1, data_tind.k2, data_tind.k3, 
+			data_tind.p1, data_tind.p2, data_tind.p3,
+			data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
+			data_tind.c1[i], data_tind.c2[i], data_tind.c3[i], 
+			data_tind.a11[i], data_tind.a12[i], data_tind.a13[i], 
+			data_tind.a21[i], data_tind.a22[i], data_tind.a23[i],
+			data_tind.a31[i], data_tind.a32[i], data_tind.a33[i], 
 			init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
 			init_data.scales.length_scale[i], init_data.scales.time_scale[i], 
-			data.num_modes, out_data->time,
+			data_tind.num_modes, out_data->time,
 			&(out_data->u_p[i]), &(out_data->v_p[i]), &(out_data->w_p[i])
 		);
 	}
 }
 
-void compute_Smirnov_field_node(InitData init_data, SmirnovData data, OutDataNode * out_data, STG_int i, STG_int j, STG_int k)
+void compute_Smirnov_field_node(InitData init_data, SmirnovDataTimeIndep data_tind, SmirnovDataTimeDep data_tdep, OutDataNode * out_data, STG_int i, STG_int j, STG_int k)
 {
 	out_data->i = i;
 	out_data->j = j;
 	out_data->k = k;
 	STG_int num = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
-	out_data->num_ts = data.num_ts;
-	out_data->u_p = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
-	out_data->v_p = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
-	out_data->w_p = (STG_float*)malloc(sizeof(STG_float) * (data.num_ts + 1));
-	for (STG_int it = 0; it < data.num_ts + 1; it++)
+	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
+	out_data->num_ts = data_tdep.num_ts;
+	out_data->u_p = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
+	out_data->v_p = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
+	out_data->w_p = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
+	for (STG_int it = 0; it < data_tdep.num_ts + 1; it++)
 	{
-		STG_float time = data.ts * it;
+		STG_float time = data_tdep.ts * it;
 		out_data->time[it] = time;
 		compute_Smirnov_pulsations(
-			data.k1, data.k2, data.k3, 
-			data.p1, data.p2, data.p3, 
-			data.q1, data.q2, data.q3, data.omega,
-			data.c1[num], data.c2[num], data.c3[num], 
-			data.a11[num], data.a12[num], data.a13[num],
-			data.a21[num], data.a22[num], data.a23[num],
-			data.a31[num], data.a32[num], data.a33[num], 
+			data_tind.k1, data_tind.k2, data_tind.k3, 
+			data_tind.p1, data_tind.p2, data_tind.p3, 
+			data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
+			data_tind.c1[num], data_tind.c2[num], data_tind.c3[num], 
+			data_tind.a11[num], data_tind.a12[num], data_tind.a13[num],
+			data_tind.a21[num], data_tind.a22[num], data_tind.a23[num],
+			data_tind.a31[num], data_tind.a32[num], data_tind.a33[num], 
 			init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num],
 			init_data.scales.length_scale[num], init_data.scales.time_scale[num], 
-			data.num_modes, out_data->time[it],
+			data_tind.num_modes, out_data->time[it],
 			&(out_data->u_p[it]), &(out_data->v_p[it]), &(out_data->w_p[it])
 		);
 	}

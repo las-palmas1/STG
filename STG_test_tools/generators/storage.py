@@ -7,9 +7,10 @@ from scipy.interpolate import interp1d
 from scipy.optimize import fsolve
 from STG.common import OutDataNode, OutData
 
-from STG.smirnov import compute_Smirnov_data, compute_Smirnov_field_node, compute_Smirnov_field_ts, \
-    free_Smirnov_data, SmirnovData, extract_pulsations_node, extract_pulsations_ts, \
-    free_init_data, free_out_data, free_out_data_node, free_out_data_ts, extract_pulsations, compute_Smirnov_field
+from STG.smirnov import compute_Smirnov_data_time_indep, compute_Smirnov_field_node, compute_Smirnov_field_ts, \
+    free_Smirnov_data_time_indep, SmirnovDataTimeIndep, extract_pulsations_node, extract_pulsations_ts, \
+    free_init_data, free_out_data, free_out_data_node, free_out_data_ts, extract_pulsations, compute_Smirnov_field, \
+    SmirnovDataTimeDep, compute_Smirnov_data_time_dep
 
 from generators.tools import smirnov_compute_velocity_field, smirnov_compute_pulsation, \
     davidson_compute_velocity_field, davidson_compute_velocity_pulsation, \
@@ -81,28 +82,31 @@ class Smirnov(Generator):
         self.tau_t = tau_t
         self.l_t = l_t
         self.mode_num = mode_num
-        self._c_data = SmirnovData()
+        self._c_data_tind = SmirnovDataTimeIndep()
+        self._c_data_tdep_field = SmirnovDataTimeDep()
+        self._c_data_tdep_puls = SmirnovDataTimeDep()
         Generator.__init__(self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, l_t, tau_t, time_arr)
 
     def _compute_aux_data_time_indep(self):
-        compute_Smirnov_data(self._c_init_data, self.mode_num, self.time_arr_field, self._c_data)
+        compute_Smirnov_data_time_indep(self._c_init_data, self.mode_num, self._c_data_tind)
 
     def compute_aux_data_time_dep_field(self):
-        pass
+        compute_Smirnov_data_time_dep(self.time_arr_field, self._c_data_tdep_field)
 
     def compute_aux_data_time_dep_puls(self):
-        pass
+        compute_Smirnov_data_time_dep(self.time_arr_puls, self._c_data_tdep_puls)
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
         self._c_out_data_node = OutDataNode()
-        compute_Smirnov_field_node(self._c_init_data, self._c_data, self._c_out_data_node, i, j, k)
+        compute_Smirnov_field_node(self._c_init_data, self._c_data_tind, self._c_data_tdep_puls,
+                                   self._c_out_data_node, i, j, k)
         self._vel_puls = extract_pulsations_node(self._c_out_data_node)
         free_out_data_node(self._c_out_data_node)
 
     def compute_velocity_field(self):
         self._c_out_data = OutData()
-        compute_Smirnov_field(self._c_init_data, self._c_data, self._c_out_data)
+        compute_Smirnov_field(self._c_init_data, self._c_data_tind, self._c_data_tdep_field, self._c_out_data)
         self._vel_field = extract_pulsations(self._c_out_data)
         free_out_data(self._c_out_data)
 
