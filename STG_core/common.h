@@ -16,18 +16,18 @@
 #define GET_INDEX(i, j, k, is, js, ks) ks * js * i + ks * j + k  
 
 typedef float STG_float;
-typedef unsigned long int STG_int;
+typedef signed long int STG_int;
 
 
-typedef struct Mesh_s
+typedef struct STG_Mesh_s
 {
 	STG_float * x;
 	STG_float * y;
 	STG_float * z;
 
-} Mesh;
+} STG_Mesh;
 
-typedef struct ReStress_s
+typedef struct STG_ReStress_s
 {
 	STG_float * re_uu;
 	STG_float * re_vv;
@@ -36,28 +36,28 @@ typedef struct ReStress_s
     STG_float * re_uw;
 	STG_float * re_vw;
 
-} ReStress;
+} STG_ReStress;
 
-typedef struct Scales_s
+typedef struct STG_Scales_s
 {
 	STG_float * length_scale;
 	STG_float * time_scale;
 
-} Scales;
+} STG_Scales;
 
-typedef struct InitData_s
+typedef struct STG_InitData_s
 {
 	STG_int i_cnt;
 	STG_int j_cnt;
 	STG_int k_cnt;
-	Mesh mesh;
-    ReStress re;
-    Scales scales;
+	STG_Mesh mesh;
+    STG_ReStress re;
+    STG_Scales scales;
 
-} InitData;
+} STG_InitData;
 
 // Структура, хранящая пульсации для всех узлов сетки и всех шагов по времени.
-typedef struct OutData_s
+typedef struct STG_OutData_s
 {
 	STG_float * time;
 	STG_int num_ts;
@@ -68,10 +68,10 @@ typedef struct OutData_s
 	STG_float ** v_p;
 	STG_float ** w_p;
 
-} OutData;
+} STG_OutData;
 
 // Структура, хранящая пульсации для всех узлов сетки на одном временном уровне.
-typedef struct OutDataTS_s
+typedef struct STG_OutDataTS_s
 {
 	STG_float time;
 	STG_int i_cnt;
@@ -81,10 +81,10 @@ typedef struct OutDataTS_s
 	STG_float * v_p;
 	STG_float * w_p;
 
-} OutDataTS;
+} STG_OutDataTS;
 
 // Структура, хранящая пульсации для всех узлов сетки на одном временном уровне.
-typedef struct OutDataNode_s
+typedef struct STG_OutDataNode_s
 {
 	STG_float * time;
 	STG_int num_ts;
@@ -95,15 +95,15 @@ typedef struct OutDataNode_s
 	STG_float * v_p;
 	STG_float * w_p;
 
-} OutDataNode;
+} STG_OutDataNode;
 
-STG_SHARED_LIB_API void free_InitData(InitData * init_data);
+STG_SHARED_LIB_API void STG_free_InitData(STG_InitData * init_data);
 
-STG_SHARED_LIB_API void free_OutData(OutData * out_data);
+STG_SHARED_LIB_API void STG_free_OutData(STG_OutData * out_data);
 
-STG_SHARED_LIB_API void free_OutDataNode(OutDataNode * out_data);
+STG_SHARED_LIB_API void STG_free_OutDataNode(STG_OutDataNode * out_data);
 
-STG_SHARED_LIB_API void free_OutDataTS(OutDataTS * out_data);
+STG_SHARED_LIB_API void STG_free_OutDataTS(STG_OutDataTS * out_data);
 
 STG_SHARED_LIB_API void test_func(STG_float * arr, STG_int num);
 

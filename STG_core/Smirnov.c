@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-void compute_Smirnov_data_time_indep(InitData init_data, STG_int num_modes, SmirnovDataTimeIndep * data)
+void STG_compute_Smirnov_data_time_indep(STG_InitData init_data, STG_int num_modes, STG_SmirnovDataTimeIndep * data)
 {
 	data->num_modes = num_modes;
 	STG_int is = init_data.i_cnt;
@@ -18,7 +18,7 @@ void compute_Smirnov_data_time_indep(InitData init_data, STG_int num_modes, Smir
 	data->c1 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->c2 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->c3 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
-	data->a11 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
+	data->a11 = (STG_float*)malloc(sizeof(STG_float) * is *	 js * ks);
 	data->a12 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->a13 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->a21 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
@@ -86,14 +86,14 @@ void compute_Smirnov_data_time_indep(InitData init_data, STG_int num_modes, Smir
 	}
 }
 
-void compute_Smirnov_data_time_dep(STG_float ts, STG_int num_ts, SmirnovDataTimeDep * data)
+void STG_compute_Smirnov_data_time_dep(STG_float ts, STG_int num_ts, STG_SmirnovDataTimeDep * data)
 {
 	data->num_ts = num_ts;
 	data->ts = ts;
 }
 
 
-void free_Smirnov_data_time_indep(SmirnovDataTimeIndep * data)
+void STG_free_Smirnov_data_time_indep(STG_SmirnovDataTimeIndep * data)
 {
 	free(data->c1);
 	free(data->c2);
@@ -127,7 +127,7 @@ void free_Smirnov_data_time_indep(SmirnovDataTimeIndep * data)
 }
 
 
-void compute_Smirnov_pulsations(
+void STG_compute_Smirnov_pulsations(
 	STG_float * k1, STG_float * k2, STG_float * k3, 
 	STG_float * p1, STG_float * p2, STG_float * p3,
 	STG_float * q1, STG_float * q2, STG_float * q3, STG_float * omega, 
@@ -166,7 +166,7 @@ void compute_Smirnov_pulsations(
 }
 
 
-void compute_Smirnov_field(InitData init_data, SmirnovDataTimeIndep data_tind, SmirnovDataTimeDep data_tdep, OutData * out_data)
+void STG_compute_Smirnov_field(STG_InitData init_data, STG_SmirnovDataTimeIndep data_tind, STG_SmirnovDataTimeDep data_tdep, STG_OutData * out_data)
 {
 	STG_int is = data_tind.i_cnt;
 	STG_int js = data_tind.j_cnt;
@@ -190,7 +190,7 @@ void compute_Smirnov_field(InitData init_data, SmirnovDataTimeIndep data_tind, S
 		out_data->w_p[it] = (STG_float*)malloc(sizeof(STG_float) * num);
 		for (STG_int i = 0; i < num; i++)
 		{
-			compute_Smirnov_pulsations(
+			STG_compute_Smirnov_pulsations(
 				data_tind.k1, data_tind.k2, data_tind.k3, 
 				data_tind.p1, data_tind.p2, data_tind.p3, 
 				data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
@@ -207,7 +207,7 @@ void compute_Smirnov_field(InitData init_data, SmirnovDataTimeIndep data_tind, S
 	}
 }
 
-void compute_Smirnov_field_ts(InitData init_data, SmirnovDataTimeIndep data_tind, SmirnovDataTimeDep data_tdep, OutDataTS * out_data, STG_int time_level)
+void STG_compute_Smirnov_field_ts(STG_InitData init_data, STG_SmirnovDataTimeIndep data_tind, STG_SmirnovDataTimeDep data_tdep, STG_OutDataTS * out_data, STG_int time_level)
 {
 	out_data->time = data_tdep.ts * time_level;
 	out_data->i_cnt = data_tind.i_cnt;
@@ -219,7 +219,7 @@ void compute_Smirnov_field_ts(InitData init_data, SmirnovDataTimeIndep data_tind
 	out_data->w_p = (STG_float*)malloc(sizeof(STG_float) * num);
 	for (STG_int i = 0; i < num; i++)
 	{
-		compute_Smirnov_pulsations(
+		STG_compute_Smirnov_pulsations(
 			data_tind.k1, data_tind.k2, data_tind.k3, 
 			data_tind.p1, data_tind.p2, data_tind.p3,
 			data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
@@ -235,7 +235,7 @@ void compute_Smirnov_field_ts(InitData init_data, SmirnovDataTimeIndep data_tind
 	}
 }
 
-void compute_Smirnov_field_node(InitData init_data, SmirnovDataTimeIndep data_tind, SmirnovDataTimeDep data_tdep, OutDataNode * out_data, STG_int i, STG_int j, STG_int k)
+void STG_compute_Smirnov_field_node(STG_InitData init_data, STG_SmirnovDataTimeIndep data_tind, STG_SmirnovDataTimeDep data_tdep, STG_OutDataNode * out_data, STG_int i, STG_int j, STG_int k)
 {
 	out_data->i = i;
 	out_data->j = j;
@@ -250,7 +250,7 @@ void compute_Smirnov_field_node(InitData init_data, SmirnovDataTimeIndep data_ti
 	{
 		STG_float time = data_tdep.ts * it;
 		out_data->time[it] = time;
-		compute_Smirnov_pulsations(
+		STG_compute_Smirnov_pulsations(
 			data_tind.k1, data_tind.k2, data_tind.k3, 
 			data_tind.p1, data_tind.p2, data_tind.p3, 
 			data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,

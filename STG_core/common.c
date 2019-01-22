@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 
-void free_InitData(InitData * init_data)
+void STG_free_InitData(STG_InitData * init_data)
 {
 	free(init_data->mesh.x);
 	free(init_data->mesh.y);
@@ -19,7 +19,7 @@ void free_InitData(InitData * init_data)
 	free(init_data->scales.time_scale);
 }
 
-void free_OutData(OutData * out_data)
+void STG_free_OutData(STG_OutData * out_data)
 {
 	free(out_data->time);
 	free(out_data->u_p);
@@ -27,7 +27,7 @@ void free_OutData(OutData * out_data)
 	free(out_data->w_p);
 }
 
-void free_OutDataNode(OutDataNode * out_data)
+void STG_free_OutDataNode(STG_OutDataNode * out_data)
 {
 	free(out_data->time);
 	free(out_data->u_p);
@@ -35,7 +35,7 @@ void free_OutDataNode(OutDataNode * out_data)
 	free(out_data->w_p);
 }
 
-void free_OutDataTS(OutDataTS * out_data)
+void STG_free_OutDataTS(STG_OutDataTS * out_data)
 {
 	free(out_data->u_p);
 	free(out_data->v_p);

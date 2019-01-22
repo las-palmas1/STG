@@ -173,7 +173,7 @@ static void test_Smirnov_pulsation(
 	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
 	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
 	printf("Modes number: %d \n", num_modes);
-	InitData init_data;
+	STG_InitData init_data;
 	init_data.i_cnt = 1;
 	init_data.j_cnt = 1;
 	init_data.k_cnt = 1;
@@ -204,21 +204,21 @@ static void test_Smirnov_pulsation(
 	init_data.scales.length_scale[0] = 1;
 	init_data.scales.time_scale[0] = 1;
 
-	SmirnovDataTimeIndep data_tind;
-	SmirnovDataTimeDep data_tdep;
-	OutData out_data;
+	STG_SmirnovDataTimeIndep data_tind;
+	STG_SmirnovDataTimeDep data_tdep;
+	STG_OutData out_data;
 
-	compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
-	compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
+	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
+	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
-	compute_Smirnov_field(init_data, data_tind, data_tdep, &out_data);
+	STG_compute_Smirnov_field(init_data, data_tind, data_tdep, &out_data);
 
 	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0][0], out_data.v_p[0][0], out_data.w_p[0][0]);
 	printf("\n");
 
-	free_Smirnov_data_time_indep(&data_tind);
-	free_InitData(&init_data);
-	free_OutData(&out_data);
+	STG_free_Smirnov_data_time_indep(&data_tind);
+	STG_free_InitData(&init_data);
+	STG_free_OutData(&out_data);
 }
 
 
@@ -232,7 +232,7 @@ static void test_Smirnov_pulsation_node(
 	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
 	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
 	printf("Modes number: %d \n", num_modes);
-	InitData init_data;
+	STG_InitData init_data;
 	init_data.i_cnt = 1;
 	init_data.j_cnt = 1;
 	init_data.k_cnt = 1;
@@ -263,21 +263,21 @@ static void test_Smirnov_pulsation_node(
 	init_data.scales.length_scale[0] = 1;
 	init_data.scales.time_scale[0] = 1;
 
-	SmirnovDataTimeIndep data_tind;
-	SmirnovDataTimeDep data_tdep;
-	OutDataNode out_data;
+	STG_SmirnovDataTimeIndep data_tind;
+	STG_SmirnovDataTimeDep data_tdep;
+	STG_OutDataNode out_data;
 
-	compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
-	compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
+	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
+	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
-	compute_Smirnov_field_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
+	STG_compute_Smirnov_field_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
 
 	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0], out_data.v_p[0], out_data.w_p[0]);
 	printf("\n");
 
-	free_Smirnov_data_time_indep(&data_tind);
-	free_InitData(&init_data);
-	free_OutData(&out_data);
+	STG_free_Smirnov_data_time_indep(&data_tind);
+	STG_free_InitData(&init_data);
+	STG_free_OutData(&out_data);
 }
 
 int main(int argc, char * argv[])
