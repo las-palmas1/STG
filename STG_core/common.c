@@ -42,7 +42,7 @@ void STG_free_OutDataTS(STG_OutDataTS * out_data)
 	free(out_data->w_p);
 }
 
-void init_rand()
+void STG_init_rand()
 {
 	srand(time(NULL));
 }

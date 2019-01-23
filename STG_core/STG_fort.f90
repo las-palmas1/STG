@@ -14,8 +14,15 @@
 
     program STG_fort
     
-    use STG_COMMON
-    use STG_SMIRNOV
+    ! TODO: Думаю, что для случая задания ГУ нужно создать свои структуры для хранения вспомогательных данных SmirnovData и начальных данных.
+    ! Не нужно хранить в них координаты, а также рейнольдсовы напряжения и масштабы в виде массивов для каждого узла, 
+    ! так как координаты проще извлечь непосредственно в процедуре расчета ГУ, а масштабы и рейнодсовы напряжения при расчете ГУ не зависят от координаты.
+    ! Текущая функция для расчета пульсаций на шаге по времени уже понадобится
+    
+    use STG_COMMON_STRUCT
+    use STG_COMMON_FUNC
+    use STG_SMIRNOV_STRUCT
+    use STG_SMIRNOV_FUNC
     
     implicit none
 
@@ -25,8 +32,8 @@
     integer :: num_modes = 20
     integer, parameter :: sum_size = size * size * size
     
-    type(STG_InitData) :: init_data
-    type(STG_SmirnovDataTimeIndep) :: data_tind
+    type(STG_InitData_C) :: init_data
+    type(STG_SmirnovDataTimeIndep_C) :: data_tind
     
     real :: X(sum_size) = (/ (1, I=1, sum_size) /)
     real :: Y(sum_size) = (/ (2, I=1, sum_size) /)
@@ -64,7 +71,8 @@
     init_data%scales%length_scale = C_LOC(l_t(1))
     init_data%scales%time_scale = C_LOC(tau_t(1))
     
-     call STG_compute_Smirnov_data_time_indep(init_data, num_modes, C_LOC(data_tind))
+    call STG_init_rand()
+    call STG_compute_Smirnov_data_time_indep_C(init_data, num_modes, C_LOC(data_tind))
     
     call c_f_pointer(init_data%mesh%y, py, shape=[sum_size])
     call c_f_pointer(init_data%re%re_uu, p_re_uu, shape=[sum_size])

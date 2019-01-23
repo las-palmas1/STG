@@ -107,7 +107,7 @@ STG_SHARED_LIB_API void STG_free_OutDataTS(STG_OutDataTS * out_data);
 
 STG_SHARED_LIB_API void test_func(STG_float * arr, STG_int num);
 
-STG_SHARED_LIB_API void init_rand();
+STG_SHARED_LIB_API void STG_init_rand();
 
 STG_SHARED_LIB_API STG_float * get_uniform(STG_float min, STG_float max, STG_int num);
 
