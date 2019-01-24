@@ -204,14 +204,14 @@ static void test_Smirnov_pulsation(
 	init_data.scales.length_scale[0] = 1;
 	init_data.scales.time_scale[0] = 1;
 
-	STG_SmirnovDataTimeIndep data_tind;
-	STG_SmirnovDataTimeDep data_tdep;
+	STG_SmirnovData_TimeIndep data_tind;
+	STG_SmirnovData_TimeDep data_tdep;
 	STG_OutData out_data;
 
-	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
+	STG_compute_Smirnov_data_time_indep_hetero(init_data, num_modes, &data_tind);
 	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
-	STG_compute_Smirnov_field(init_data, data_tind, data_tdep, &out_data);
+	STG_compute_Smirnov(init_data, data_tind, data_tdep, &out_data);
 
 	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0][0], out_data.v_p[0][0], out_data.w_p[0][0]);
 	printf("\n");
@@ -263,14 +263,14 @@ static void test_Smirnov_pulsation_node(
 	init_data.scales.length_scale[0] = 1;
 	init_data.scales.time_scale[0] = 1;
 
-	STG_SmirnovDataTimeIndep data_tind;
-	STG_SmirnovDataTimeDep data_tdep;
+	STG_SmirnovData_TimeIndep data_tind;
+	STG_SmirnovData_TimeDep data_tdep;
 	STG_OutDataNode out_data;
 
-	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
+	STG_compute_Smirnov_data_time_indep_hetero(init_data, num_modes, &data_tind);
 	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
-	STG_compute_Smirnov_field_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
+	STG_compute_Smirnov_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
 
 	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0], out_data.v_p[0], out_data.w_p[0]);
 	printf("\n");
@@ -282,7 +282,7 @@ static void test_Smirnov_pulsation_node(
 
 int main(int argc, char * argv[])
 {
-	init_rand();
+	STG_init_rand();
     test_bisection();
 	test_uniform(20, -5, 5);
 	test_normal(20, 0, 1);
@@ -299,6 +299,29 @@ int main(int argc, char * argv[])
 	test_Smirnov_pulsation(1, 1, 1, 0, 0, 0, 150);
 	test_Smirnov_pulsation(1, 1, 1, 2, 1, -3, 150);
 	test_Smirnov_pulsation_node(1, 1, 1, 2, 1, -3, 150);
+
+	STG_int n = 10;
+	STG_float * k1 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * k2 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * k3 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * zeta1 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * zeta2 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * zeta3 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * xi1 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * xi2 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * xi3 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * p1 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * p2 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * p3 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * q1 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * q2 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * q3 = (STG_float*)malloc(n * sizeof(STG_float));
+	STG_float * omega = (STG_float*)malloc(n * sizeof(STG_float));
+
+	STG_compute_Smirnov_random_data(n, omega, k1, k2, k3, zeta1, zeta2, zeta3, xi1, xi2, xi3, p1, p2, p3, q1, q2, q3);
+
+	printf("%.3f  %.3f  %.3f", p1[0], p1[1], p2[0]);
+
 
 	return 0;
 }

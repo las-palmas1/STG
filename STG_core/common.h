@@ -45,6 +45,7 @@ typedef struct STG_Scales_s
 
 } STG_Scales;
 
+// Структура, которая хранит начальные данные для случая неоднородной турбулентности
 typedef struct STG_InitData_s
 {
 	STG_int i_cnt;
@@ -55,6 +56,7 @@ typedef struct STG_InitData_s
     STG_Scales scales;
 
 } STG_InitData;
+
 
 // Структура, хранящая пульсации для всех узлов сетки и всех шагов по времени.
 typedef struct STG_OutData_s
@@ -111,15 +113,21 @@ STG_SHARED_LIB_API void STG_init_rand();
 
 STG_SHARED_LIB_API STG_float * get_uniform(STG_float min, STG_float max, STG_int num);
 
+void get_uniform_ref(STG_float min, STG_float max, STG_int num, STG_float * res);
+
 STG_SHARED_LIB_API STG_float bisection(STG_float x1, STG_float x2, STG_float(*func)(STG_float), STG_float a, STG_float eps, STG_int max_iter);
 
 STG_float box_muller();
 
 STG_SHARED_LIB_API STG_float * get_normal(STG_float mu, STG_float sigma, STG_int num);
 
+void get_normal_ref(STG_float mu, STG_float sigma, STG_int num, STG_float * res);
+
 //STG_float inverse_transform(STG_float u, STG_float(*cdf)(STG_float));
 
 STG_SHARED_LIB_API STG_float * get_trigon(STG_int num);
+
+void get_trigon_ref(STG_int num, STG_float * res);
 
 void eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23, STG_float * eig_vals);
 

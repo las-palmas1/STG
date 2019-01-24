@@ -66,6 +66,14 @@ STG_float * get_uniform(STG_float min, STG_float max, STG_int num)
     return res;
 }
 
+void get_uniform_ref(STG_float min, STG_float max, STG_int num, STG_float * res)
+{
+	for (int i = 0; i < num; i++)
+	{
+		res[i] = min + (STG_float)rand() / (STG_float)RAND_MAX * (max - min);
+	}
+}
+
 static STG_int sign(STG_float val)
 {
     if (val > 0.){
@@ -140,6 +148,14 @@ STG_float * get_normal(STG_float mu, STG_float sigma, STG_int num)
 	return res;
 }
 
+void get_normal_ref(STG_float mu, STG_float sigma, STG_int num, STG_float * res)
+{
+	for (STG_int i = 0; i < num; i++)
+	{
+		res[i] = mu + sigma * box_muller();
+	}
+}
+
 // Рассчитывает массив случайных чисел с распределением вероятностей p(x) = 1/2 * sin(x) по методу обратного преобразования 
 STG_float * get_trigon(STG_int num)
 {
@@ -150,6 +166,15 @@ STG_float * get_trigon(STG_int num)
 		res[i] = acos(1 - 2 * u);
 	}
 	return res;
+}
+
+void get_trigon_ref(STG_int num, STG_float * res)
+{
+	for (STG_int i = 0; i < num; i++)
+	{
+		STG_float u = (STG_float)rand() / (STG_float)RAND_MAX;
+		res[i] = acos(1 - 2 * u);
+	}
 }
 
 // Расчет собственных значений симметричной матрицы размером 3 x 3.
