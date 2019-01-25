@@ -208,7 +208,7 @@ static void test_Smirnov_pulsation(
 	STG_SmirnovData_TimeDep data_tdep;
 	STG_OutData out_data;
 
-	STG_compute_Smirnov_data_time_indep_hetero(init_data, num_modes, &data_tind);
+	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
 	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
 	STG_compute_Smirnov(init_data, data_tind, data_tdep, &out_data);
@@ -267,7 +267,7 @@ static void test_Smirnov_pulsation_node(
 	STG_SmirnovData_TimeDep data_tdep;
 	STG_OutDataNode out_data;
 
-	STG_compute_Smirnov_data_time_indep_hetero(init_data, num_modes, &data_tind);
+	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
 	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
 
 	STG_compute_Smirnov_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
@@ -295,32 +295,10 @@ int main(int argc, char * argv[])
 	test_eig_values_and_vectors_computing(5, -3, 0, 0, -4, 4);
 	test_eig_values_and_vectors_computing(1, 1, 3, 0, 0, 0);
 
-	test_Smirnov_pulsation(1, 3, 2, 0, 0, 0, 150);
-	test_Smirnov_pulsation(1, 1, 1, 0, 0, 0, 150);
-	test_Smirnov_pulsation(1, 1, 1, 2, 1, -3, 150);
-	test_Smirnov_pulsation_node(1, 1, 1, 2, 1, -3, 150);
-
-	STG_int n = 10;
-	STG_float * k1 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * k2 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * k3 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * zeta1 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * zeta2 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * zeta3 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * xi1 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * xi2 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * xi3 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * p1 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * p2 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * p3 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * q1 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * q2 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * q3 = (STG_float*)malloc(n * sizeof(STG_float));
-	STG_float * omega = (STG_float*)malloc(n * sizeof(STG_float));
-
-	STG_compute_Smirnov_random_data(n, omega, k1, k2, k3, zeta1, zeta2, zeta3, xi1, xi2, xi3, p1, p2, p3, q1, q2, q3);
-
-	printf("%.3f  %.3f  %.3f", p1[0], p1[1], p2[0]);
+	test_Smirnov_pulsation(1, 3, 2, 0, 0, 0, 100);
+	test_Smirnov_pulsation(1, 1, 1, 0, 0, 0, 100);
+	test_Smirnov_pulsation(1, 1, 1, 2, 1, -3, 100);
+	test_Smirnov_pulsation_node(1, 1, 1, 2, 1, -3, 100);
 
 
 	return 0;

@@ -63,7 +63,7 @@ void STG_compute_Smirnov_random_data(
 	}
 }
 
-void STG_compute_Smirnov_data_time_indep_hetero(STG_InitData init_data, STG_int num_modes, STG_SmirnovData_TimeIndep * data)
+void STG_compute_Smirnov_data_time_indep(STG_InitData init_data, STG_int num_modes, STG_SmirnovData_TimeIndep * data)
 {
 	data->num_modes = num_modes;
 	STG_int is = init_data.i_cnt;
