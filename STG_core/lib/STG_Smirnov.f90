@@ -84,10 +84,10 @@ module STG_SMIRNOV
         use, intrinsic :: ISO_C_BINDING
         real, intent(in), value :: re_uu, re_vv, re_ww
         real, intent(in), value :: re_uv, re_uw, re_vw
-        real, pointer :: c1, c2, c3
-        real, pointer :: a11, a12, a13
-        real, pointer :: a21, a22, a23
-        real, pointer :: a31, a32, a33
+        real :: c1, c2, c3
+        real :: a11, a12, a13
+        real :: a21, a22, a23
+        real :: a31, a32, a33
         
         call STG_compute_Smirnov_matrix_data_homo_C( &
             re_uu, re_vv, re_ww, &
@@ -109,9 +109,9 @@ module STG_SMIRNOV
     )
         use, intrinsic :: ISO_C_BINDING
         integer(8), intent(in) :: num_modes
-        real, pointer :: k1(:), k2(:), k3(:), omega(:)
-        real, pointer :: zeta1(:), zeta2(:), zeta3(:), xi1(:), xi2(:), xi3(:)
-        real, pointer :: p1(:), p2(:), p3(:), q1(:), q2(:), q3(:)
+        real :: k1(:), k2(:), k3(:), omega(:)
+        real :: zeta1(:), zeta2(:), zeta3(:), xi1(:), xi2(:), xi3(:)
+        real :: p1(:), p2(:), p3(:), q1(:), q2(:), q3(:)
         
         call STG_compute_Smirnov_random_data_C( &
             num_modes, c_loc(omega(1)), &
@@ -138,12 +138,12 @@ module STG_SMIRNOV
         u, v, w &
     )
         use, intrinsic :: ISO_C_BINDING
-        real, pointer, intent(in) :: k1(:), k2(:), k3(:), omega(:)
-        real, pointer, intent(in) :: p1(:), p2(:), p3(:), q1(:), q2(:), q3(:)
-        real, pointer, intent(in) :: c1, c2, c3
-        real, pointer, intent(in) :: a11, a12, a13
-        real, pointer, intent(in) :: a21, a22, a23
-        real, pointer, intent(in) :: a31, a32, a33
+        real, intent(in) :: k1(:), k2(:), k3(:), omega(:)
+        real, intent(in) :: p1(:), p2(:), p3(:), q1(:), q2(:), q3(:)
+        real, intent(in) :: c1, c2, c3
+        real, intent(in) :: a11, a12, a13
+        real, intent(in) :: a21, a22, a23
+        real, intent(in) :: a31, a32, a33
         integer(8), intent(in) :: num_modes
         real, intent(in) :: x, y, z, length_scale, time_scale, time
         real, intent(out) :: u, v, w

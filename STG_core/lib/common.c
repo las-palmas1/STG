@@ -213,7 +213,7 @@ void eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG
 		if (r > -1 && r < 1) {
 			phi = (STG_float)acos(r) / (STG_float)3;
 		}
-
+		
 		eig_vals[0] = q + 2 * p * cos(phi);
 		eig_vals[2] = q + 2 * p * cos(phi + (STG_float)2 * pi / (STG_float)3);
 		eig_vals[1] = 3 * q - eig_vals[0] - eig_vals[2];

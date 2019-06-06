@@ -1,7 +1,7 @@
-#include "common.h"
+#include "lib\common.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "Smirnov.h"
+#include "lib\Smirnov.h"
 
 
 static STG_float test_func_linear(STG_float x)
