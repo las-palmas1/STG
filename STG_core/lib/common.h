@@ -13,6 +13,11 @@
     #define STG_SHARED_LIB_API 
 #endif // OS_WIN
 
+#ifdef OS_LIN
+	#define max(a,b) (((a) > (b)) ? (a) : (b))
+	#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
 #define GET_INDEX(i, j, k, is, js, ks) ks * js * i + ks * j + k  
 
 typedef float STG_float;
