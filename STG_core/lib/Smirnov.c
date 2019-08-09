@@ -18,9 +18,9 @@ void STG_compute_Smirnov_matrix_data_homo(
 		re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
 		eig_vals, eig_vec1, eig_vec2, eig_vec3
 	);
-	*c1 = eig_vals[0];
-	*c2 = eig_vals[1];
-	*c3 = eig_vals[2];
+	*c1 = sqrt(eig_vals[0]);
+	*c2 = sqrt(eig_vals[1]);
+	*c3 = sqrt(eig_vals[2]);
 	*a11 = eig_vec1[0];
 	*a21 = eig_vec1[1];
 	*a31 = eig_vec1[2];
@@ -129,9 +129,12 @@ void STG_compute_Smirnov_data_time_indep(STG_InitData init_data, STG_int num_mod
 					init_data.re.re_uv[index], init_data.re.re_uw[index], init_data.re.re_vw[index],
 					eig_vals, eig_vec1, eig_vec2, eig_vec3
 				);
-				data->c1[index] = eig_vals[0];
-				data->c2[index] = eig_vals[1];
-				data->c3[index] = eig_vals[2];
+				printf("%f \n", eig_vals[0]);
+				printf("%f \n", eig_vals[1]);
+				printf("%f \n", eig_vals[2]);
+				data->c1[index] = sqrt(eig_vals[0]);
+				data->c2[index] = sqrt(eig_vals[1]);
+				data->c3[index] = sqrt(eig_vals[2]);
 				data->a11[index] = eig_vec1[0];
 				data->a21[index] = eig_vec1[1];
 				data->a31[index] = eig_vec1[2];
@@ -208,9 +211,9 @@ void STG_compute_Smirnov_pulsations(
 
 	for (STG_int i = 0; i < num_modes; i++)
 	{
-		k1_p = k1[i] * (length_scale / time_scale) / c1;
-		k2_p = k2[i] * (length_scale / time_scale) / c2;
-		k3_p = k3[i] * (length_scale / time_scale) / c3;
+		k1_p = k1[i] / c1;
+		k2_p = k2[i] / c2;
+		k3_p = k3[i] / c3;
 		mode1_sum += MODE(1, i);
 		mode2_sum += MODE(2, i);
 		mode3_sum += MODE(3, i);

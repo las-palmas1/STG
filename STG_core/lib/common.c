@@ -180,6 +180,18 @@ void get_trigon_ref(STG_int num, STG_float * res)
 // Расчет собственных значений симметричной матрицы размером 3 x 3.
 void eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23, STG_float * eig_vals)
 {
+	if (m11 == 0.)
+	{
+		m11 = 1e-7;
+	}
+	if (m22 == 0.)
+	{
+		m22 = 1e-7;
+	}
+	if (m33 == 0.)
+	{
+		m33 = 1e-7;
+	}
 	STG_float p1 = m12 * m12 + m13 * m13 + m23 * m23;
 	if (p1 == 0)
 	{

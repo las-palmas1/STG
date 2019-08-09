@@ -201,7 +201,7 @@ static void test_Smirnov_pulsation(
 
 	init_data.scales.length_scale = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.scales.time_scale = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.scales.length_scale[0] = 1;
+	init_data.scales.length_scale[0] = 8.69e-2;
 	init_data.scales.time_scale[0] = 1;
 
 	STG_SmirnovData_TimeIndep data_tind;
@@ -260,7 +260,7 @@ static void test_Smirnov_pulsation_node(
 
 	init_data.scales.length_scale = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.scales.time_scale = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.scales.length_scale[0] = 1;
+	init_data.scales.length_scale[0] = 0.0019;
 	init_data.scales.time_scale[0] = 1;
 
 	STG_SmirnovData_TimeIndep data_tind;
@@ -297,8 +297,9 @@ int main(int argc, char * argv[])
 
 	test_Smirnov_pulsation(1, 3, 2, 0, 0, 0, 100);
 	test_Smirnov_pulsation(1, 1, 1, 0, 0, 0, 100);
-	test_Smirnov_pulsation(1, 1, 1, 2, 1, -3, 100);
-	test_Smirnov_pulsation_node(1, 1, 1, 2, 1, -3, 100);
+	test_Smirnov_pulsation(32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 100);
+	test_Smirnov_pulsation_node(32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 100);
+	test_Smirnov_pulsation(0.000001, 0.000001, 0.0000, 1.19e-8, -3.08e-7, 0.000000, 100);
 
 
 	return 0;

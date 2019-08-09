@@ -11,7 +11,9 @@
 !  PURPOSE:  Entry point for the console application.
 !
 !****************************************************************************
-    
+module Test
+
+contains
     subroutine test_Smirnov( &
         re_uu, re_vv, re_ww, &
         re_uv, re_uw, re_vw, &
@@ -137,9 +139,63 @@
         print *, ''
     end subroutine test_Smirnov
     
+    subroutine test2(y1)
+        implicit none
+        real :: y1(:)
+        
+        y1(12) = 2
+        print *, y1(12)
+    end subroutine test2
     
+    subroutine Read_array(turb_data_dir, dir, fname, arr)
+        character(len=100) :: turb_data_dir, full_fname
+        character(*) :: fname, dir
+        real :: arr(:)
+     
+        full_fname = TRIM(turb_data_dir) // "\" // TRIM(dir) // "\" // TRIM(fname)
+        open(21, file = full_fname) 
+        read(21, *) arr
+        close(21)
+    end subroutine 
+
+    subroutine Read_re_stresses(turb_data_dir, y, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw)
+        character(len=100) :: turb_data_dir
+        real :: y(:), re_uu(:), re_vv(:), re_ww(:), re_uv(:), re_uw(:), re_vw(:)
+    
+        call Read_array(turb_data_dir, "re", "uu_av", re_uu)
+        call Read_array(turb_data_dir, 're', 'vv_av', re_vv)
+        call Read_array(turb_data_dir, 're', 'ww_av', re_ww)
+        call Read_array(turb_data_dir, 're', 'uv_av', re_uv)
+        call Read_array(turb_data_dir, 're', 'uw_av', re_uw)
+        call Read_array(turb_data_dir, 're', 'vw_av', re_vw)
+        call Read_array(turb_data_dir, 're', "y", y)
+    end subroutine
+
+    function Interp(y, y_arr, val_arr)
+    real :: y
+    real :: y_arr(:), val_arr(:)
+    real :: Interp
+    integer :: i
+    integer :: num
+    
+    num = size(y_arr)
+    do i = 1, num-1
+        if ((y >= y_arr(i)).AND.(y < y_arr(i + 1))) then
+            Interp = val_arr(i) + (y - y_arr(i)) * (val_arr(i + 1) - val_arr(i)) / (y_arr(i + 1) - y_arr(i))
+        end if
+    end do
+    if (y < y_arr(1)) then
+        Interp = val_arr(1) - (val_arr(2) - val_arr(1)) / (y_arr(2) - y_arr(1)) * (y_arr(1) - y)
+    end if
+    if (y >= y_arr(num)) then
+        Interp = val_arr(num) + (val_arr(num) - val_arr(num-1)) / (y_arr(num) - y_arr(num-1)) * (y - y_arr(num))
+    end if
+end function
+    
+end module Test
+
     program STG_fort
-    
+    use Test    
     implicit none
 
     ! Variables
@@ -151,9 +207,28 @@
     real :: re_uw = 1
     real :: re_vw = -3
 
-    ! Body of STG_fort
+    character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
+    integer(8) :: N = 69
+    real, allocatable :: y_arr(:), re_uu_arr(:), re_vv_arr(:), re_ww_arr(:), re_uv_arr(:), re_uw_arr(:), re_vw_arr(:) 
+    real :: y = 0.001
     
-    call test_Smirnov(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes)
+    ! Body of STG_fort
+    allocate(y_arr(N))
+    allocate(re_uu_arr(N))
+    allocate(re_vv_arr(N))
+    allocate(re_ww_arr(N))
+    allocate(re_uv_arr(N))
+    allocate(re_uw_arr(N))
+    allocate(re_vw_arr(N))
+    
+    call Read_re_stresses(turb_data_dir, y_arr, re_uu_arr, re_vv_arr, re_ww_arr, re_uv_arr, re_uw_arr, re_vw_arr)
+    print *, Interp(y, y_arr, re_uu_arr)
+    print *, ''
+    print *, y_arr
+    print *, ''
+    print *, re_uu_arr
+
+    call test_Smirnov(re_uu*2, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes)
     
     end program STG_fort
 
