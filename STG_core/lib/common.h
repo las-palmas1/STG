@@ -21,7 +21,7 @@
 #define GET_INDEX(i, j, k, is, js, ks) ks * js * i + ks * j + k  
 
 typedef float STG_float;
-typedef signed long int STG_int;
+typedef unsigned long int STG_int;
 
 
 typedef struct STG_Mesh_s
@@ -45,8 +45,24 @@ typedef struct STG_ReStress_s
 
 typedef struct STG_Scales_s
 {
-	STG_float * length_scale;
-	STG_float * time_scale;
+    // ???????????? ???????? ???????
+    STG_float *ls_i;
+    // ?????? ???????? ????????
+    STG_float *ls_ux;
+    STG_float *ls_uy;
+    STG_float *ls_uz;
+    STG_float *ls_vx;
+    STG_float *ls_vy;
+    STG_float *ls_vz;
+    STG_float *ls_wx;
+    STG_float *ls_wy;
+    STG_float *ls_wz;
+    // ???????????? ????????? ???????
+    STG_float *ts_i;
+    // ?????? ????????? ????????
+    STG_float *ts_u;
+    STG_float *ts_v;
+    STG_float *ts_w;
 
 } STG_Scales;
 
@@ -54,8 +70,8 @@ typedef struct STG_Scales_s
 typedef struct STG_InitData_s
 {
 	STG_int i_cnt;
-	STG_int j_cnt;
-	STG_int k_cnt;
+    STG_int j_cnt;
+    STG_int k_cnt;
 	STG_Mesh mesh;
     STG_ReStress re;
     STG_Scales scales;
@@ -63,22 +79,8 @@ typedef struct STG_InitData_s
 } STG_InitData;
 
 
-// Структура, хранящая пульсации для всех узлов сетки и всех шагов по времени.
-typedef struct STG_OutData_s
-{
-	STG_float * time;
-	STG_int num_ts;
-	STG_int i_cnt;
-	STG_int j_cnt;
-	STG_int k_cnt;
-	STG_float ** u_p;
-	STG_float ** v_p;
-	STG_float ** w_p;
-
-} STG_OutData;
-
-// Структура, хранящая пульсации для всех узлов сетки на одном временном уровне.
-typedef struct STG_OutDataTS_s
+// ????????? ??? ???????? ??????????? ???????????? ???? ?????????
+typedef struct STG_VelMomField_s
 {
 	STG_float time;
 	STG_int i_cnt;
@@ -88,10 +90,10 @@ typedef struct STG_OutDataTS_s
 	STG_float * v_p;
 	STG_float * w_p;
 
-} STG_OutDataTS;
+} STG_VelMomField;
 
-// Структура, хранящая пульсации для всех узлов сетки на одном временном уровне.
-typedef struct STG_OutDataNode_s
+// ????????? ??? ???????? ??????? ????????? ????????? ? ????? ???? ?????
+typedef struct STG_VelNodeHist_s
 {
 	STG_float * time;
 	STG_int num_ts;
@@ -102,15 +104,13 @@ typedef struct STG_OutDataNode_s
 	STG_float * v_p;
 	STG_float * w_p;
 
-} STG_OutDataNode;
+} STG_VelNodeHist;
 
 STG_SHARED_LIB_API void STG_free_InitData(STG_InitData * init_data);
 
-STG_SHARED_LIB_API void STG_free_OutData(STG_OutData * out_data);
+STG_SHARED_LIB_API void STG_free_VelNodeHist(STG_VelNodeHist * node_hist);
 
-STG_SHARED_LIB_API void STG_free_OutDataNode(STG_OutDataNode * out_data);
-
-STG_SHARED_LIB_API void STG_free_OutDataTS(STG_OutDataTS * out_data);
+STG_SHARED_LIB_API void STG_free_VelMomField(STG_VelMomField * mom_field);
 
 STG_SHARED_LIB_API void test_func(STG_float * arr, STG_int num);
 

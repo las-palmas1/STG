@@ -5,98 +5,75 @@ import ctypes
 #  данные должны хранится только для одного шага по времени.
 
 
-class SmirnovDataTimeIndep(ctypes.Structure):
+class STG_SmirnovData(ctypes.Structure):
     _fields_ = [
-        ('i_cnt', ctypes.c_uint32),
-        ('j_cnt', ctypes.c_uint32),
-        ('k_cnt', ctypes.c_uint32),
-        ('c1', ctypes.POINTER(ctypes.c_float)),
-        ('c2', ctypes.POINTER(ctypes.c_float)),
-        ('c3', ctypes.POINTER(ctypes.c_float)),
-        ('a11', ctypes.POINTER(ctypes.c_float)),
-        ('a12', ctypes.POINTER(ctypes.c_float)),
-        ('a13', ctypes.POINTER(ctypes.c_float)),
-        ('a21', ctypes.POINTER(ctypes.c_float)),
-        ('a22', ctypes.POINTER(ctypes.c_float)),
-        ('a23', ctypes.POINTER(ctypes.c_float)),
-        ('a31', ctypes.POINTER(ctypes.c_float)),
-        ('a32', ctypes.POINTER(ctypes.c_float)),
-        ('a33', ctypes.POINTER(ctypes.c_float)),
+        ('i_cnt', STG_int),
+        ('j_cnt', STG_int),
+        ('k_cnt', STG_int),
+        ('c1', ctypes.POINTER(STG_float)),
+        ('c2', ctypes.POINTER(STG_float)),
+        ('c3', ctypes.POINTER(STG_float)),
+        ('a11', ctypes.POINTER(STG_float)),
+        ('a12', ctypes.POINTER(STG_float)),
+        ('a13', ctypes.POINTER(STG_float)),
+        ('a21', ctypes.POINTER(STG_float)),
+        ('a22', ctypes.POINTER(STG_float)),
+        ('a23', ctypes.POINTER(STG_float)),
+        ('a31', ctypes.POINTER(STG_float)),
+        ('a32', ctypes.POINTER(STG_float)),
+        ('a33', ctypes.POINTER(STG_float)),
 
-        ('num_modes', ctypes.c_uint32),
-        ('k1', ctypes.POINTER(ctypes.c_float)),
-        ('k2', ctypes.POINTER(ctypes.c_float)),
-        ('k3', ctypes.POINTER(ctypes.c_float)),
-        ('zeta1', ctypes.POINTER(ctypes.c_float)),
-        ('zeta2', ctypes.POINTER(ctypes.c_float)),
-        ('zeta3', ctypes.POINTER(ctypes.c_float)),
-        ('xi1', ctypes.POINTER(ctypes.c_float)),
-        ('xi2', ctypes.POINTER(ctypes.c_float)),
-        ('xi3', ctypes.POINTER(ctypes.c_float)),
-        ('omega', ctypes.POINTER(ctypes.c_float)),
-        ('p1', ctypes.POINTER(ctypes.c_float)),
-        ('p2', ctypes.POINTER(ctypes.c_float)),
-        ('p3', ctypes.POINTER(ctypes.c_float)),
-        ('q1', ctypes.POINTER(ctypes.c_float)),
-        ('q2', ctypes.POINTER(ctypes.c_float)),
-        ('q3', ctypes.POINTER(ctypes.c_float)),
+        ('num_modes', STG_int),
+        ('k1', ctypes.POINTER(STG_float)),
+        ('k2', ctypes.POINTER(STG_float)),
+        ('k3', ctypes.POINTER(STG_float)),
+        ('zeta1', ctypes.POINTER(STG_float)),
+        ('zeta2', ctypes.POINTER(STG_float)),
+        ('zeta3', ctypes.POINTER(STG_float)),
+        ('xi1', ctypes.POINTER(STG_float)),
+        ('xi2', ctypes.POINTER(STG_float)),
+        ('xi3', ctypes.POINTER(STG_float)),
+        ('omega', ctypes.POINTER(STG_float)),
+        ('p1', ctypes.POINTER(STG_float)),
+        ('p2', ctypes.POINTER(STG_float)),
+        ('p3', ctypes.POINTER(STG_float)),
+        ('q1', ctypes.POINTER(STG_float)),
+        ('q2', ctypes.POINTER(STG_float)),
+        ('q3', ctypes.POINTER(STG_float)),
     ]
 
 
-class SmirnovDataTimeDep(ctypes.Structure):
-    _fields_ = [
-        ('ts', ctypes.c_float),
-        ('num_ts', ctypes.c_uint32),
-    ]
-
-
-def compute_Smirnov_data_time_indep(init_data: InitData, num_modes: int, data: SmirnovDataTimeIndep):
+def compute_smirnov_data(init_data: STG_InitData, num_modes: int, data: STG_SmirnovData):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_data_time_indep
-    func_c.argtypes = InitData, ctypes.c_uint32, ctypes.POINTER(SmirnovDataTimeIndep)
+    func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Smirnov_data
+    func_c.argtypes = STG_InitData, STG_int, ctypes.POINTER(STG_SmirnovData)
     func_c(init_data, num_modes, ctypes.byref(data))
 
 
-def compute_Smirnov_data_time_dep(time_arr: np.ndarray, data: SmirnovDataTimeDep):
+def free_smirnov_data(data: STG_SmirnovData):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_data_time_dep
-    func_c.argtypes = ctypes.c_float, ctypes.c_uint32, ctypes.POINTER(SmirnovDataTimeDep)
-    num_ts = len(time_arr) - 1
-    if num_ts != 0:
-        ts = time_arr[1] - time_arr[0]
-    else:
-        ts = 0.
-    func_c(ts, num_ts, ctypes.byref(data))
-
-
-def free_Smirnov_data_time_indep(data: SmirnovDataTimeIndep):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
-    func_c = ctypes.CDLL(stg_lib_fname).free_Smirnov_data_time_indep
-    func_c.argtypes = ctypes.POINTER(SmirnovDataTimeIndep),
+    func_c = ctypes.CDLL(stg_lib_fname).STG_free_Smirnov_data
+    func_c.argtypes = ctypes.POINTER(STG_SmirnovData),
     func_c(ctypes.byref(data))
 
 
-def compute_Smirnov_field_ts(init_data: InitData, data_tind: SmirnovDataTimeIndep, data_tdep: SmirnovDataTimeDep,
-                             out_data: OutDataTS, time_level: float):
+def compute_smirnov_moment_field(
+        init_data: STG_InitData, data: STG_SmirnovData, time: float,
+        mom_field: STG_VelMomField
+):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_field_ts
-    func_c.argtypes = InitData, SmirnovDataTimeIndep, SmirnovDataTimeDep, ctypes.POINTER(OutDataTS), ctypes.c_float,
-    func_c(init_data, data_tind, data_tdep, ctypes.byref(out_data), time_level)
+    func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Smirnov_moment_field
+    func_c.argtypes = STG_InitData, STG_SmirnovData, STG_float, ctypes.POINTER(STG_VelMomField)
+    func_c(init_data, data, time, ctypes.byref(mom_field))
 
 
-def compute_Smirnov_field_node(init_data: InitData, data_tind: SmirnovDataTimeIndep, data_tdep: SmirnovDataTimeDep,
-                               out_data: OutDataNode, i: int, j: int, k: int):
+def compute_smirnov_node_hist(
+        init_data: STG_InitData, data: STG_SmirnovData, ts: float, num_ts: int,
+        node_hist: STG_VelNodeHist, i: int, j: int, k: int
+):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_field_node
-    func_c.argtypes = InitData, SmirnovDataTimeIndep, SmirnovDataTimeDep, ctypes.POINTER(OutDataNode), \
-                      ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32
-    func_c(init_data, data_tind, data_tdep, ctypes.byref(out_data), i, j, k)
-
-
-def compute_Smirnov_field(init_data: InitData, data_tind: SmirnovDataTimeIndep, data_tdep: SmirnovDataTimeDep,
-                          out_data: OutData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
-    func_c = ctypes.CDLL(stg_lib_fname).compute_Smirnov_field
-    func_c.argtypes = InitData, SmirnovDataTimeIndep, SmirnovDataTimeDep, ctypes.POINTER(OutData)
-    func_c(init_data, data_tind, data_tdep, ctypes.byref(out_data))
+    func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Smirnov_node_hist
+    func_c.argtypes = STG_InitData, STG_SmirnovData, STG_float, STG_int, ctypes.POINTER(STG_VelNodeHist), \
+                      STG_int, STG_int, STG_int
+    func_c(init_data, data, ts, num_ts, ctypes.byref(node_hist), i, j, k)
 

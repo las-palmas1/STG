@@ -63,13 +63,12 @@ void STG_compute_Smirnov_random_data(
 	}
 }
 
-void STG_compute_Smirnov_data_time_indep(STG_InitData init_data, STG_int num_modes, STG_SmirnovData_TimeIndep * data)
+void STG_compute_Smirnov_data(STG_InitData init_data, STG_int num_modes, STG_SmirnovData * data)
 {
 	data->num_modes = num_modes;
 	STG_int is = init_data.i_cnt;
 	STG_int js = init_data.j_cnt;
-	STG_int ks = init_data.k_cnt;
-
+    STG_int ks = init_data.k_cnt;
 	data->i_cnt = is;
 	data->j_cnt = js;
 	data->k_cnt = ks;
@@ -77,7 +76,7 @@ void STG_compute_Smirnov_data_time_indep(STG_InitData init_data, STG_int num_mod
 	data->c1 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->c2 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->c3 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
-	data->a11 = (STG_float*)malloc(sizeof(STG_float) * is *	 js * ks);
+    data->a11 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->a12 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->a13 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
 	data->a21 = (STG_float*)malloc(sizeof(STG_float) * is * js * ks);
@@ -104,60 +103,49 @@ void STG_compute_Smirnov_data_time_indep(STG_InitData init_data, STG_int num_mod
 	data->q2 = (STG_float*)malloc(sizeof(STG_float) * num_modes);
 	data->q3 = (STG_float*)malloc(sizeof(STG_float) * num_modes);
 
-	for (STG_int i = 0; i < num_modes; i++)
-	{
-		data->p1[i] = data->zeta2[i] * data->k3[i] - data->zeta3[i] * data->k2[i];
-		data->p2[i] = data->zeta3[i] * data->k1[i] - data->zeta1[i] * data->k3[i];
-		data->p3[i] = data->zeta1[i] * data->k2[i] - data->zeta2[i] * data->k1[i];
+    for (STG_int i = 0; i < num_modes; i++)
+    {
+        data->p1[i] = data->zeta2[i] * data->k3[i] - data->zeta3[i] * data->k2[i];
+        data->p2[i] = data->zeta3[i] * data->k1[i] - data->zeta1[i] * data->k3[i];
+        data->p3[i] = data->zeta1[i] * data->k2[i] - data->zeta2[i] * data->k1[i];
 
-		data->q1[i] = data->xi2[i] * data->k3[i] - data->xi3[i] * data->k2[i];
-		data->q2[i] = data->xi3[i] * data->k1[i] - data->xi1[i] * data->k3[i];
-		data->q3[i] = data->xi1[i] * data->k2[i] - data->xi2[i] * data->k1[i];
-	}
+        data->q1[i] = data->xi2[i] * data->k3[i] - data->xi3[i] * data->k2[i];
+        data->q2[i] = data->xi3[i] * data->k1[i] - data->xi1[i] * data->k3[i];
+        data->q3[i] = data->xi1[i] * data->k2[i] - data->xi2[i] * data->k1[i];
+    }
 
-
-	for (STG_int i = 0; i < init_data.i_cnt; i++)
-	{
-		for (STG_int j = 0; j < init_data.j_cnt; j++)
-		{
-			for (STG_int k = 0; k < init_data.k_cnt; k++)
-			{
-				STG_float eig_vals[3], eig_vec1[3], eig_vec2[3], eig_vec3[3];
-				STG_int index = GET_INDEX(i, j, k, is, js, ks);
-				compute_eig(
-					init_data.re.re_uu[index], init_data.re.re_vv[index], init_data.re.re_ww[index],
-					init_data.re.re_uv[index], init_data.re.re_uw[index], init_data.re.re_vw[index],
-					eig_vals, eig_vec1, eig_vec2, eig_vec3
-				);
-				printf("%f \n", eig_vals[0]);
-				printf("%f \n", eig_vals[1]);
-				printf("%f \n", eig_vals[2]);
-				data->c1[index] = sqrt(eig_vals[0]);
-				data->c2[index] = sqrt(eig_vals[1]);
-				data->c3[index] = sqrt(eig_vals[2]);
-				data->a11[index] = eig_vec1[0];
-				data->a21[index] = eig_vec1[1];
-				data->a31[index] = eig_vec1[2];
-				data->a12[index] = eig_vec2[0];
-				data->a22[index] = eig_vec2[1];
-				data->a32[index] = eig_vec2[2];
-				data->a13[index] = eig_vec3[0];
-				data->a23[index] = eig_vec3[1];
-				data->a33[index] = eig_vec3[2];
-			}
-		}
-	}
+    for (STG_int i = 0; i < init_data.i_cnt; i++)
+    {
+        for (STG_int j = 0; j < init_data.j_cnt; j++)
+        {
+            for (STG_int k = 0; k < init_data.k_cnt; k++)
+            {
+                STG_float eig_vals[3], eig_vec1[3], eig_vec2[3], eig_vec3[3];
+                STG_int index = GET_INDEX(i, j, k, is, js, ks);
+                compute_eig(
+                    init_data.re.re_uu[index], init_data.re.re_vv[index], init_data.re.re_ww[index],
+                    init_data.re.re_uv[index], init_data.re.re_uw[index], init_data.re.re_vw[index],
+                    eig_vals, eig_vec1, eig_vec2, eig_vec3
+                );
+                data->c1[index] = sqrt(eig_vals[0]);
+                data->c2[index] = sqrt(eig_vals[1]);
+                data->c3[index] = sqrt(eig_vals[2]);
+                data->a11[index] = eig_vec1[0];
+                data->a21[index] = eig_vec1[1];
+                data->a31[index] = eig_vec1[2];
+                data->a12[index] = eig_vec2[0];
+                data->a22[index] = eig_vec2[1];
+                data->a32[index] = eig_vec2[2];
+                data->a13[index] = eig_vec3[0];
+                data->a23[index] = eig_vec3[1];
+                data->a33[index] = eig_vec3[2];
+            }
+        }
+    }
 }
 
 
-void STG_compute_Smirnov_data_time_dep(STG_float ts, STG_int num_ts, STG_SmirnovData_TimeDep * data)
-{
-	data->num_ts = num_ts;
-	data->ts = ts;
-}
-
-
-void STG_free_Smirnov_data_time_indep(STG_SmirnovData_TimeIndep * data)
+void STG_free_Smirnov_data(STG_SmirnovData * data)
 {
 	free(data->c1);
 	free(data->c2);
@@ -230,81 +218,73 @@ void STG_compute_Smirnov_pulsations(
 }
 
 
-void STG_compute_Smirnov(
-	STG_InitData init_data, STG_SmirnovData_TimeIndep data_tind, 
-	STG_SmirnovData_TimeDep data_tdep, STG_OutData * out_data
+void STG_compute_Smirnov_moment_field(
+    STG_InitData init_data, STG_SmirnovData data,
+    STG_float time, STG_VelMomField * mom_field
 )
 {
-	STG_int is = data_tind.i_cnt;
-	STG_int js = data_tind.j_cnt;
-	STG_int ks = data_tind.k_cnt;
-	out_data->i_cnt = is;
-	out_data->j_cnt = js;
-	out_data->k_cnt = ks;
-	out_data->u_p = (STG_float**)malloc(sizeof(STG_float*) * (data_tdep.num_ts + 1));
-	out_data->v_p = (STG_float**)malloc(sizeof(STG_float*) * (data_tdep.num_ts + 1));
-	out_data->w_p = (STG_float**)malloc(sizeof(STG_float*) * (data_tdep.num_ts + 1));
-	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
-	out_data->num_ts = data_tdep.num_ts;
+    STG_int is = data.i_cnt;
+    STG_int js = data.j_cnt;
+    STG_int ks = data.k_cnt;
+    mom_field->i_cnt = is;
+    mom_field->j_cnt = js;
+    mom_field->k_cnt = ks;
+    mom_field->time = time;
 
 	STG_int num = is * js * ks;
-	for (STG_int it = 0; it < data_tdep.num_ts + 1; it++)
-	{
-		STG_float time = data_tdep.ts * it;
-		out_data->time[it] = time;
-		out_data->u_p[it] = (STG_float*)malloc(sizeof(STG_float) * num);
-		out_data->v_p[it] = (STG_float*)malloc(sizeof(STG_float) * num);
-		out_data->w_p[it] = (STG_float*)malloc(sizeof(STG_float) * num);
-		for (STG_int i = 0; i < num; i++)
-		{
-			STG_compute_Smirnov_pulsations(
-				data_tind.k1, data_tind.k2, data_tind.k3, 
-				data_tind.p1, data_tind.p2, data_tind.p3, 
-				data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
-				data_tind.c1[i], data_tind.c2[i], data_tind.c3[i], 
-				data_tind.a11[i], data_tind.a12[i], data_tind.a13[i],
-				data_tind.a21[i], data_tind.a22[i], data_tind.a23[i],
-				data_tind.a31[i], data_tind.a32[i], data_tind.a33[i], 
-				init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
-				init_data.scales.length_scale[i], init_data.scales.time_scale[i], 
-				data_tind.num_modes, time,  
-				&(out_data->u_p[it][i]), &(out_data->v_p[it][i]), &(out_data->w_p[it][i])
-			);
-		}
-	}
+
+    mom_field->u_p = (STG_float*)malloc(sizeof(STG_float) * num);
+    mom_field->v_p = (STG_float*)malloc(sizeof(STG_float) * num);
+    mom_field->w_p = (STG_float*)malloc(sizeof(STG_float) * num);
+    for (STG_int i = 0; i < num; i++)
+    {
+        STG_compute_Smirnov_pulsations(
+            data.k1, data.k2, data.k3,
+            data.p1, data.p2, data.p3,
+            data.q1, data.q2, data.q3, data.omega,
+            data.c1[i], data.c2[i], data.c3[i],
+            data.a11[i], data.a12[i], data.a13[i],
+            data.a21[i], data.a22[i], data.a23[i],
+            data.a31[i], data.a32[i], data.a33[i],
+            init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
+            init_data.scales.ls_i[i], init_data.scales.ts_i[i],
+            data.num_modes, time,
+            &(mom_field->u_p[i]), &(mom_field->v_p[i]), &(mom_field->w_p[i])
+        );
+    }
 }
 
 
-void STG_compute_Smirnov_node(
-	STG_InitData init_data, STG_SmirnovData_TimeIndep data_tind, 
-	STG_SmirnovData_TimeDep data_tdep, STG_OutDataNode * out_data, STG_int i, STG_int j, STG_int k
+void STG_compute_Smirnov_node_hist(
+    STG_InitData init_data, STG_SmirnovData data,
+    STG_float ts, STG_int num_ts, STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k
 )
 {
-	out_data->i = i;
-	out_data->j = j;
-	out_data->k = k;
-	STG_int num = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	out_data->time = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
-	out_data->num_ts = data_tdep.num_ts;
-	out_data->u_p = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
-	out_data->v_p = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
-	out_data->w_p = (STG_float*)malloc(sizeof(STG_float) * (data_tdep.num_ts + 1));
-	for (STG_int it = 0; it < data_tdep.num_ts + 1; it++)
+    node_hist->i = i;
+    node_hist->j = j;
+    node_hist->k = k;
+    STG_int num = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+    node_hist->time = (STG_float*)malloc(sizeof(STG_float) * (num_ts + 1));
+    node_hist->num_ts = num_ts;
+    node_hist->u_p = (STG_float*)malloc(sizeof(STG_float) * (num_ts + 1));
+    node_hist->v_p = (STG_float*)malloc(sizeof(STG_float) * (num_ts + 1));
+    node_hist->w_p = (STG_float*)malloc(sizeof(STG_float) * (num_ts + 1));
+    for (STG_int it = 0; it < num_ts + 1; it++)
 	{
-		STG_float time = data_tdep.ts * it;
-		out_data->time[it] = time;
+        STG_float time = ts * it;
+        node_hist->time[it] = time;
 		STG_compute_Smirnov_pulsations(
-			data_tind.k1, data_tind.k2, data_tind.k3, 
-			data_tind.p1, data_tind.p2, data_tind.p3, 
-			data_tind.q1, data_tind.q2, data_tind.q3, data_tind.omega,
-			data_tind.c1[num], data_tind.c2[num], data_tind.c3[num], 
-			data_tind.a11[num], data_tind.a12[num], data_tind.a13[num],
-			data_tind.a21[num], data_tind.a22[num], data_tind.a23[num],
-			data_tind.a31[num], data_tind.a32[num], data_tind.a33[num], 
+            data.k1, data.k2, data.k3,
+            data.p1, data.p2, data.p3,
+            data.q1, data.q2, data.q3, data.omega,
+            data.c1[num], data.c2[num], data.c3[num],
+            data.a11[num], data.a12[num], data.a13[num],
+            data.a21[num], data.a22[num], data.a23[num],
+            data.a31[num], data.a32[num], data.a33[num],
 			init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num],
-			init_data.scales.length_scale[num], init_data.scales.time_scale[num], 
-			data_tind.num_modes, out_data->time[it],
-			&(out_data->u_p[it]), &(out_data->v_p[it]), &(out_data->w_p[it])
+            init_data.scales.ls_i[num], init_data.scales.ts_i[num],
+            data.num_modes, node_hist->time[it],
+            &(node_hist->u_p[it]), &(node_hist->v_p[it]), &(node_hist->w_p[it])
 		);
 	}
 }

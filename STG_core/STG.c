@@ -1,7 +1,12 @@
-#include "lib\common.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include "lib\Smirnov.h"
+#ifdef __linux__
+    #include "lib/Smirnov.h"
+    #include "lib/common.h"
+#else
+    #include "lib\common.h"
+    #include "lib\Smirnov.h"
+#endif
 
 
 static STG_float test_func_linear(STG_float x)
@@ -174,10 +179,10 @@ static void test_Smirnov_pulsation(
 	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
 	printf("Modes number: %d \n", num_modes);
 	STG_InitData init_data;
-	init_data.i_cnt = 1;
-	init_data.j_cnt = 1;
-	init_data.k_cnt = 1;
-	STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+    init_data.i_cnt = 15;
+    init_data.j_cnt = 15;
+    init_data.k_cnt = 15;
+    STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
 
 	init_data.mesh.x = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.mesh.y = (STG_float*)malloc(sizeof(STG_float) * num);
@@ -199,26 +204,39 @@ static void test_Smirnov_pulsation(
 	init_data.re.re_uw[0] = re_uw;
 	init_data.re.re_vw[0] = re_vw;
 
-	init_data.scales.length_scale = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.scales.time_scale = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.scales.length_scale[0] = 8.69e-2;
-	init_data.scales.time_scale[0] = 1;
+    init_data.scales.ls_i = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_ux = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_uy = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_uz = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_vx = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_vy = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_vz = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_wx = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_wy = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_wz = (STG_float*)malloc(sizeof(STG_float) * num);
 
-	STG_SmirnovData_TimeIndep data_tind;
-	STG_SmirnovData_TimeDep data_tdep;
-	STG_OutData out_data;
+    init_data.scales.ts_i = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ts_u = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ts_v = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ts_w = (STG_float*)malloc(sizeof(STG_float) * num);
 
-	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
-	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
+    init_data.scales.ls_i[0] = 8.69e-2;
+    init_data.scales.ts_i[0] = 1;
 
-	STG_compute_Smirnov(init_data, data_tind, data_tdep, &out_data);
+    STG_SmirnovData data_tind;
+    STG_VelMomField mom_field;
+    STG_float time = 0.0;
 
-	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0][0], out_data.v_p[0][0], out_data.w_p[0][0]);
+    STG_compute_Smirnov_data(init_data, num_modes, &data_tind);
+
+    STG_compute_Smirnov_moment_field(init_data, data_tind, time, &mom_field);
+
+    printf("u = %.3f   v = %.3f  w = %.3f \n", mom_field.u_p[0], mom_field.v_p[0], mom_field.w_p[0]);
 	printf("\n");
 
-	STG_free_Smirnov_data_time_indep(&data_tind);
+    STG_free_Smirnov_data(&data_tind);
 	STG_free_InitData(&init_data);
-	STG_free_OutData(&out_data);
+    STG_free_VelMomField(&mom_field);
 }
 
 
@@ -235,8 +253,8 @@ static void test_Smirnov_pulsation_node(
 	STG_InitData init_data;
 	init_data.i_cnt = 1;
 	init_data.j_cnt = 1;
-	init_data.k_cnt = 1;
-	STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+    init_data.k_cnt = 1;
+    STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
 
 	init_data.mesh.x = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.mesh.y = (STG_float*)malloc(sizeof(STG_float) * num);
@@ -258,33 +276,47 @@ static void test_Smirnov_pulsation_node(
 	init_data.re.re_uw[0] = re_uw;
 	init_data.re.re_vw[0] = re_vw;
 
-	init_data.scales.length_scale = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.scales.time_scale = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.scales.length_scale[0] = 0.0019;
-	init_data.scales.time_scale[0] = 1;
+    init_data.scales.ls_i = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_ux = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_uy = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_uz = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_vx = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_vy = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_vz = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_wx = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_wy = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ls_wz = (STG_float*)malloc(sizeof(STG_float) * num);
 
-	STG_SmirnovData_TimeIndep data_tind;
-	STG_SmirnovData_TimeDep data_tdep;
-	STG_OutDataNode out_data;
+    init_data.scales.ts_i = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ts_u = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ts_v = (STG_float*)malloc(sizeof(STG_float) * num);
+    init_data.scales.ts_w = (STG_float*)malloc(sizeof(STG_float) * num);
 
-	STG_compute_Smirnov_data_time_indep(init_data, num_modes, &data_tind);
-	STG_compute_Smirnov_data_time_dep(0.1, 0, &data_tdep);
+    init_data.scales.ls_i[0] = 0.0019;
+    init_data.scales.ts_i[0] = 1;
 
-	STG_compute_Smirnov_node(init_data, data_tind, data_tdep, &out_data, 0, 0, 0);
+    STG_SmirnovData data;
+    STG_float ts = 0.1;
+    STG_int num_ts = 0;
+    STG_VelNodeHist node_hist;
 
-	printf("u = %.3f   v = %.3f  w = %.3f \n", out_data.u_p[0], out_data.v_p[0], out_data.w_p[0]);
+    STG_compute_Smirnov_data(init_data, num_modes, &data);
+
+    STG_compute_Smirnov_node_hist(init_data, data, ts, num_ts, &node_hist, 0, 0, 0);
+
+    printf("u = %.3f   v = %.3f  w = %.3f \n", node_hist.u_p[0], node_hist.v_p[0], node_hist.w_p[0]);
 	printf("\n");
 
-	STG_free_Smirnov_data_time_indep(&data_tind);
+    STG_free_Smirnov_data(&data);
 	STG_free_InitData(&init_data);
-	STG_free_OutData(&out_data);
+    STG_free_VelNodeHist(&node_hist);
 }
 
 int main(int argc, char * argv[])
 {
 	STG_init_rand();
     test_bisection();
-	test_uniform(20, -5, 5);
+    test_uniform(20, -5, 5);
 	test_normal(20, 0, 1);
 	test_trigon(20);
 

@@ -15,31 +15,38 @@ void STG_free_InitData(STG_InitData * init_data)
 	free(init_data->re.re_uv);
 	free(init_data->re.re_uw);
 	free(init_data->re.re_vw);
-	free(init_data->scales.length_scale);
-	free(init_data->scales.time_scale);
+
+    free(init_data->scales.ls_i);
+    free(init_data->scales.ls_ux);
+    free(init_data->scales.ls_uy);
+    free(init_data->scales.ls_uz);
+    free(init_data->scales.ls_vx);
+    free(init_data->scales.ls_vy);
+    free(init_data->scales.ls_vz);
+    free(init_data->scales.ls_wx);
+    free(init_data->scales.ls_wy);
+    free(init_data->scales.ls_wz);
+
+    free(init_data->scales.ts_i);
+    free(init_data->scales.ts_u);
+    free(init_data->scales.ts_v);
+    free(init_data->scales.ts_w);
 }
 
-void STG_free_OutData(STG_OutData * out_data)
+
+void STG_free_VelNodeHist(STG_VelNodeHist * node_hist)
 {
-	free(out_data->time);
-	free(out_data->u_p);
-	free(out_data->v_p);
-	free(out_data->w_p);
+    free(node_hist->time);
+    free(node_hist->u_p);
+    free(node_hist->v_p);
+    free(node_hist->w_p);
 }
 
-void STG_free_OutDataNode(STG_OutDataNode * out_data)
+void STG_free_VelMomField(STG_VelMomField * mom_field)
 {
-	free(out_data->time);
-	free(out_data->u_p);
-	free(out_data->v_p);
-	free(out_data->w_p);
-}
-
-void STG_free_OutDataTS(STG_OutDataTS * out_data)
-{
-	free(out_data->u_p);
-	free(out_data->v_p);
-	free(out_data->w_p);
+    free(mom_field->u_p);
+    free(mom_field->v_p);
+    free(mom_field->w_p);
 }
 
 void STG_init_rand()
