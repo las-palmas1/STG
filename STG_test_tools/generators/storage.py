@@ -5,15 +5,14 @@ import numpy.linalg as la
 from random import choices
 from scipy.interpolate import interp1d
 from scipy.optimize import fsolve
-from STG.common import STG_VelNodeHist, OutData
+
+from STG.common import STG_VelNodeHist, STG_VelMomField, free_mom_field, free_node_hist, free_init_data, \
+    extract_pulsations_from_mom_field, extract_pulsations_from_node_hist
 
 from STG.smirnov import compute_smirnov_data, compute_smirnov_node_hist, compute_smirnov_moment_field, \
-    free_smirnov_data, STG_SmirnovData, extract_pulsations_from_node_hist, extract_pulsations_from_mom_field, \
-    free_init_data, free_out_data, free_node_hist, free_mom_field, extract_pulsations, compute_Smirnov_field, \
-    SmirnovDataTimeDep, compute_Smirnov_data_time_dep
+    free_smirnov_data, STG_SmirnovData
 
-from generators.tools import smirnov_compute_velocity_field, smirnov_compute_pulsation, \
-    davidson_compute_velocity_field, davidson_compute_velocity_pulsation, \
+from generators.tools import davidson_compute_velocity_field, davidson_compute_velocity_pulsation, \
     original_sem_compute_velocity_field, original_sem_compute_pulsation
 
 
@@ -38,80 +37,90 @@ class Lund(Generator):
         self.a32 = (self.re_vw - self.a21 * self.a31) / self.a22
         self.a33 = np.sqrt(self.re_ww - self.a31 ** 2 - self.a32 ** 2)
 
-    def compute_velocity_field(self):
-        for time in self.time_arr_field:
-            u_prime = np.random.normal(0, 1, self.block.shape)
-            v_prime = np.random.normal(0, 1, self.block.shape)
-            w_prime = np.random.normal(0, 1, self.block.shape)
-            u = self.a11 * u_prime + self.a12 * v_prime + self.a13 * w_prime
-            v = self.a21 * u_prime + self.a22 * v_prime + self.a23 * w_prime
-            w = self.a31 * u_prime + self.a32 * v_prime + self.a33 * w_prime
-            self._vel_field.append((u, v, w))
+    def compute_velocity_field(self, time):
+        u_prime = np.random.normal(0, 1, self.block.shape)
+        v_prime = np.random.normal(0, 1, self.block.shape)
+        w_prime = np.random.normal(0, 1, self.block.shape)
+        u = self.a11 * u_prime + self.a12 * v_prime + self.a13 * w_prime
+        v = self.a21 * u_prime + self.a22 * v_prime + self.a23 * w_prime
+        w = self.a31 * u_prime + self.a32 * v_prime + self.a33 * w_prime
+        self._vel_field = (u, v, w)
 
     def compute_pulsation_at_node(self):
         i = self._i_puls
         j = self._j_puls
         k = self._k_puls
-        u_prime = np.random.normal(0, 1, self.time_arr_puls.shape)
-        v_prime = np.random.normal(0, 1, self.time_arr_puls.shape)
-        w_prime = np.random.normal(0, 1, self.time_arr_puls.shape)
+        u_prime = np.random.normal(0, 1, self.time_arr.shape)
+        v_prime = np.random.normal(0, 1, self.time_arr.shape)
+        w_prime = np.random.normal(0, 1, self.time_arr.shape)
         u = self.a11 * u_prime + self.a12 * v_prime + self.a13 * w_prime
         v = self.a21 * u_prime + self.a22 * v_prime + self.a23 * w_prime
         w = self.a31 * u_prime + self.a32 * v_prime + self.a33 * w_prime
         self._vel_puls = (u, v, w)
 
-    def _compute_aux_data_space(self):
+    def _compute_aux_data_stationary(self):
         self._compute_cholesky()
 
-    def _compute_aux_data_time_indep(self):
+    def compute_aux_data_transient_puls(self):
         pass
 
-    def compute_aux_data_time_dep_puls(self):
+    def compute_aux_data_transient_field(self, time):
         pass
 
-    def compute_aux_data_time_dep_field(self):
+    def free_data(self):
         pass
 
 
 class Smirnov(Generator):
-    def __init__(self, block: Block, u_av: Tuple[float, float, float], l_t: float, tau_t: float,
+    def __init__(self, block: Block, u_av: Tuple[float, float, float], ls_i: float, ts_i: float,
                  re_uu: float, re_vv: float, re_ww: float,
                  re_uv: float, re_uw: float, re_vw: float,
                  time_arr: np.ndarray,
-                 mode_num: int=100, ):
-        self.tau_t = tau_t
-        self.l_t = l_t
+                 mode_num: int = 100, ):
+        self.ts_i = ts_i
+        self.ls_i = ls_i
         self.mode_num = mode_num
-        self._c_data_tind = STG_SmirnovData()
-        self._c_data_tdep_field = SmirnovDataTimeDep()
-        self._c_data_tdep_puls = SmirnovDataTimeDep()
-        Generator.__init__(self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, l_t, tau_t, time_arr)
+        self._c_data = STG_SmirnovData()
+        Generator.__init__(
+            self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
+            ls_i=ls_i, ls_ux=0, ls_uy=0, ls_uz=0, ls_vx=0, ls_vy=0, ls_vz=0,
+            ls_wx=0, ls_wy=0, ls_wz=0,
+            ts_i=ts_i, ts_u=0, ts_v=0, ts_w=0,
+            time_arr=time_arr
+        )
 
-    def _compute_aux_data_time_indep(self):
-        compute_smirnov_data(self._c_init_data, self.mode_num, self._c_data_tind)
+    def _compute_aux_data_stationary(self):
+        compute_smirnov_data(self._c_init_data, self.mode_num, self._c_data)
 
-    def compute_aux_data_time_dep_field(self):
-        compute_Smirnov_data_time_dep(self.time_arr_field, self._c_data_tdep_field)
+    def compute_aux_data_transient_field(self, time):
+        pass
 
-    def compute_aux_data_time_dep_puls(self):
-        compute_Smirnov_data_time_dep(self.time_arr_puls, self._c_data_tdep_puls)
+    def compute_aux_data_transient_puls(self):
+        pass
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
-        self._c_out_data_node = STG_VelNodeHist()
-        compute_smirnov_node_hist(self._c_init_data, self._c_data_tind, self._c_data_tdep_puls,
-                                  self._c_out_data_node, i, j, k)
-        self._vel_puls = extract_pulsations_from_node_hist(self._c_out_data_node)
-        free_node_hist(self._c_out_data_node)
+        self._c_node_hist = STG_VelNodeHist()
+        compute_smirnov_node_hist(
+            init_data=self._c_init_data, data=self._c_data, ts=self._ts, num_ts=self._num_ts,
+            node_hist=self._c_node_hist, i=i, j=j, k=k)
+        self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
+        free_node_hist(self._c_node_hist)
 
-    def compute_velocity_field(self):
-        self._c_out_data = OutData()
-        compute_Smirnov_field(self._c_init_data, self._c_data_tind, self._c_data_tdep_field, self._c_out_data)
-        self._vel_field = extract_pulsations(self._c_out_data)
-        free_out_data(self._c_out_data)
+    def compute_velocity_field(self, time):
+        self._c_mom_filed = STG_VelMomField()
+        compute_smirnov_moment_field(
+            init_data=self._c_init_data, data=self._c_data, time=time, mom_field=self._c_mom_filed
+        )
+        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_filed)
+        free_mom_field(self._c_mom_filed)
 
     def _get_energy_desired(self, k):
         return 16 * (2 / np.pi) ** 0.5 * k**4 * np.exp(-2 * k**2)
+
+    def free_data(self):
+        free_init_data(self._c_init_data)
+        free_smirnov_data(self._c_data)
 
 
 class Davidson(Generator):
@@ -230,7 +239,7 @@ class Davidson(Generator):
         )
         self.u_abs = np.sqrt(self.energy * self.delta_k)
 
-    def compute_aux_data_time_dep_field(self):
+    def compute_aux_data_transient_field(self):
         if len(self.time_arr_field) > 1:
             self._time_step_field = self.time_arr_field.max() / (self.time_arr_field.shape[0] - 1)
             self.a_field = np.exp(-self._time_step_field / self.tau_t)
@@ -260,15 +269,15 @@ class Davidson(Generator):
             )
             self.sigma3_field.append(-np.sin(self.theta_field[n]) * np.cos(self.alpha_field[n]))
 
-    def compute_aux_data_time_dep_puls(self):
-        if len(self.time_arr_puls) > 1:
-            self._time_step_puls = self.time_arr_puls.max() / (self.time_arr_puls.shape[0] - 1)
+    def compute_aux_data_transient_puls(self):
+        if len(self.time_arr) > 1:
+            self._time_step_puls = self.time_arr.max() / (self.time_arr.shape[0] - 1)
             self.a_puls = np.exp(-self._time_step_puls / self.tau_t)
         else:
             self.a_puls = 1
         self.b_puls = (1 - self.a_puls ** 2) ** 0.5
 
-        for n, time in enumerate(self.time_arr_puls):
+        for n, time in enumerate(self.time_arr):
             uniform_pop = np.linspace(0, 2 * np.pi, 100)
             uniform_weights = [1 / (2 * np.pi) for _ in uniform_pop]
             self.phi_puls.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
@@ -290,7 +299,7 @@ class Davidson(Generator):
             )
             self.sigma3_puls.append(-np.sin(self.theta_puls[n]) * np.cos(self.alpha_puls[n]))
 
-    def _compute_aux_data_time_indep(self):
+    def _compute_aux_data_stationary(self):
         self._compute_wave_numbers_and_amplitude()
 
     def _compute_aux_data_space(self):
@@ -334,7 +343,7 @@ class Davidson(Generator):
             self.a31, self.a32, self.a33,
             self.block.mesh[0][i, j, k], self.block.mesh[1][i, j, k], self.block.mesh[2][i, j, k],
             self.u_abs, self.a_puls, self.b_puls,
-            self.time_arr_puls
+            self.time_arr
         )
         self._vel_puls = (vel[0], vel[1], vel[2])
 
@@ -487,22 +496,22 @@ class OriginalSEM(Generator):
             res[n, 5, :] = epsilon[:, 2]
         return res
 
-    def _compute_aux_data_time_indep(self):
+    def _compute_aux_data_stationary(self):
         self._compute_init_eddies_pos()
 
     def _compute_aux_data_space(self):
         self._compute_cholesky()
 
-    def compute_aux_data_time_dep_field(self):
+    def compute_aux_data_transient_field(self):
         self.eddy_positions_field = self.get_eddies_params(
             self.time_arr_field.max() - self.time_arr_field.min(),
             self.time_arr_field.shape[0] - 1
         )
 
-    def compute_aux_data_time_dep_puls(self):
+    def compute_aux_data_transient_puls(self):
         self.eddy_positions_puls = self.get_eddies_params(
-            self.time_arr_puls.max() - self.time_arr_puls.min(),
-            self.time_arr_puls.shape[0] - 1
+            self.time_arr.max() - self.time_arr.min(),
+            self.time_arr.shape[0] - 1
         )
 
     @classmethod

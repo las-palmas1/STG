@@ -44,7 +44,10 @@ class Generator(metaclass=ABCMeta):
             self, block: Block, u_av: Tuple[float, float, float],
             re_uu: float, re_vv: float, re_ww: float,
             re_uv: float, re_uw: float, re_vw: float,
-            l_t: float, tau_t: float,
+            ls_i: float, ls_ux: float, ls_uy: float, ls_uz: float,
+            ls_vx: float, ls_vy: float, ls_vz: float,
+            ls_wx: float, ls_wy: float, ls_wz: float,
+            ts_i: float, ts_u: float, ts_v: float, ts_w: float,
             time_arr: np.ndarray,
             ):
         """
@@ -56,8 +59,8 @@ class Generator(metaclass=ABCMeta):
         :param re_uv: Осредненное произведение vx*vy.
         :param re_uw: Осредненное произведение vx*vz.
         :param re_vw: Осредненное произведение vy*vz.
-        :param l_t: Линейный масштаб турбулентности.
-        :param tau_t: Временной масштаб турбулентности.
+        :param ls_i: Интегральный линейный масштаб турбулентности.
+        :param ts_i: Интегральный временной масштаб турбулентности.
         :param time_arr: Моменты времени, для которых производится вычисление поля скоростей.
         """
         self.block = block
@@ -68,21 +71,39 @@ class Generator(metaclass=ABCMeta):
         self.re_uv = re_uv
         self.re_uw = re_uw
         self.re_vw = re_vw
-        self.l_t = l_t
-        self.tau_t = tau_t
-        self._time_arr_field = time_arr
-        self._time_arr_puls = time_arr
+        self.ls_i = ls_i
+        self.ls_ux = ls_ux
+        self.ls_uy = ls_uy
+        self.ls_uz = ls_uz
+        self.ls_vx = ls_vx
+        self.ls_vy = ls_vy
+        self.ls_vz = ls_vz
+        self.ls_wx = ls_wx
+        self.ls_wy = ls_wy
+        self.ls_wz = ls_wz
+        self.ts_i = ts_i
+        self._time_arr = time_arr
         self._i_puls = 0
         self._j_puls = 0
         self._k_puls = 0
-        self._c_out_data = None
-        self._c_out_data_node = None
-        self._vel_field: List[Tuple[np.ndarray, np.ndarray, np.ndarray]] = []
+        self._c_mom_filed = None
+        self._c_node_hist = None
+        self._vel_field: Tuple[np.ndarray, np.ndarray, np.ndarray] = ()
         self._vel_puls: Tuple[np.ndarray, np.ndarray, np.ndarray] = (
             np.zeros(time_arr.shape), np.zeros(time_arr.shape), np.zeros(time_arr.shape)
         )
-        self._c_init_data = get_init_data(self.block.mesh, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, l_t, tau_t)
-        self._compute_aux_data_time_indep()
+        self._c_init_data = get_init_data(
+            self.block.mesh, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
+            ls_i=ls_i, ls_ux=ls_ux, ls_uy=ls_uy, ls_uz=ls_uz, ls_vx=ls_vx, ls_vy=ls_vy, ls_vz=ls_vz,
+            ls_wx=ls_wx, ls_wy=ls_wy, ls_wz=ls_wz, ts_i=ts_i, ts_u=ts_u, ts_v=ts_v, ts_w=ts_w
+        )
+        self._ts = time_arr[1] - time_arr[0]
+        self._num_ts = time_arr.shape[0] - 1
+        self._compute_aux_data_stationary()
+
+    @abstractmethod
+    def free_data(self):
+        pass
 
     def _get_energy_desired(self, k) -> float:
         """Для спектральных методов следует переопределить. По умолчанию возвращает ноль."""
@@ -117,14 +138,14 @@ class Generator(metaclass=ABCMeta):
         return res
 
     @abstractmethod
-    def _compute_aux_data_time_indep(self):
+    def _compute_aux_data_stationary(self):
         """
         Вычисление вспомогательных данных, независимых от времени.
         """
         pass
 
     @abstractmethod
-    def compute_aux_data_time_dep_puls(self):
+    def compute_aux_data_transient_puls(self):
         """
         Вычисление вспомогательных данных зависимых от времени
         для моментов времени, в которые вычисляются скорости в одном заданном узле.
@@ -132,23 +153,23 @@ class Generator(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def compute_aux_data_time_dep_field(self):
+    def compute_aux_data_transient_field(self, time):
         """
         Вычисление вспомогательных данных зависимых от времени для моментов
         времени, в которое вычисляется все поле скорости.
         """
         pass
 
-    def get_velocity_field(self, time_step: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Возвращает поле скорости на всей сетке на заданном временном шаге."""
-        return self._vel_field[time_step]
+    def get_velocity_field(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Возвращает поле скорости на всей сетке."""
+        return self._vel_field
 
     def get_pulsation_at_node(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Возвращает значение пульсаций в узле в заданные моменты времени."""
         return self._vel_puls
 
     @abstractmethod
-    def compute_velocity_field(self):
+    def compute_velocity_field(self, time):
         """Расчет поля скорости."""
         pass
 
@@ -166,17 +187,11 @@ class Generator(metaclass=ABCMeta):
         self._k_puls = k
 
     @property
-    def time_arr_field(self):
-        return self._time_arr_field
+    def time_arr(self):
+        return self._time_arr
 
-    @time_arr_field.setter
-    def time_arr_field(self, value: np.ndarray):
-        self._time_arr_field = value
-
-    @property
-    def time_arr_puls(self):
-        return self._time_arr_puls
-
-    @time_arr_puls.setter
-    def time_arr_puls(self, value: np.ndarray):
-        self._time_arr_puls = value
+    @time_arr.setter
+    def time_arr(self, value: np.ndarray):
+        self._ts = value[1] - value[0]
+        self._num_ts = value.shape[0] - 1
+        self._time_arr = value

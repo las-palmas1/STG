@@ -5,10 +5,11 @@ import numpy as np
 
 
 class Analyzer:
-    def __init__(self, generator: Generator):
+    def __init__(self, generator: Generator, time=0):
         self.generator = generator
-        self.generator.compute_aux_data_time_dep_field()
-        self.generator.compute_velocity_field()
+        self.time = 0
+        self.generator.compute_aux_data_transient_field(time=time)
+        self.generator.compute_velocity_field(time=time)
 
     def plot_2d_velocity_field(
             self, figsize=(7, 7), num_levels=20, vmin=-3.5, vmax=3.5, grid=True, title_fsize=18, title=True,
@@ -16,7 +17,7 @@ class Analyzer:
     ):
         x = self.generator.block.mesh[0][:, :, 0]
         y = self.generator.block.mesh[1][:, :, 0]
-        u3d, v3d, w3d = self.generator.get_velocity_field(0)
+        u3d, v3d, w3d = self.generator.get_velocity_field()
         u = u3d[:, :, 0]
         v = v3d[:, :, 0]
         w = w3d[:, :, 0]
@@ -72,8 +73,8 @@ class Analyzer:
     ):
         t_arr = np.arange(0, ts*num_ts, ts)
         self.generator.set_puls_node(i, j, k)
-        self.generator.time_arr_puls = t_arr
-        self.generator.compute_aux_data_time_dep_puls()
+        self.generator.time_arr = t_arr
+        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u, v, w = self.generator.get_pulsation_at_node()
 
@@ -150,8 +151,8 @@ class Analyzer:
     ):
         t_arr = np.arange(0, ts * num_ts, ts)
         self.generator.set_puls_node(i, j, k)
-        self.generator.time_arr_puls = t_arr
-        self.generator.compute_aux_data_time_dep_puls()
+        self.generator.time_arr = t_arr
+        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u, v, w = self.generator.get_pulsation_at_node()
         uu_av = self._get_average_arr(u * u)
@@ -189,7 +190,7 @@ class Analyzer:
     ):
         x = self.generator.block.mesh[0][:, :, 0]
         y = self.generator.block.mesh[1][:, :, 0]
-        vel = self.generator.get_velocity_field(0)
+        vel = self.generator.get_velocity_field()
         div = self.generator.get_divergence(vel, self.generator.block.mesh, self.generator.block.shape)
         div_2d = div[:, :, 0]
 
@@ -220,8 +221,8 @@ class Analyzer:
         cor_vv = np.zeros(num)
         cor_ww = np.zeros(num)
         self.generator.set_puls_node(i0, j0, k0)
-        self.generator.time_arr_puls = t_arr
-        self.generator.compute_aux_data_time_dep_puls()
+        self.generator.time_arr = t_arr
+        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u0, v0, w0 = self.generator.get_pulsation_at_node()
         u0u0_av = self._get_average(u0 * u0)
@@ -294,8 +295,8 @@ class Analyzer:
         cor_vv = np.zeros(num_dt + 1)
         cor_ww = np.zeros(num_dt + 1)
         self.generator.set_puls_node(i, j, k)
-        self.generator.time_arr_puls = t_arr
-        self.generator.compute_aux_data_time_dep_puls()
+        self.generator.time_arr = t_arr
+        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u, v, w = self.generator.get_pulsation_at_node()
         u0u0_av = self._get_average(u[0: 2 * num_dt_av + 1] * u[0: 2 * num_dt_av + 1])
@@ -389,7 +390,7 @@ class Analyzer:
     ):
         if self.generator.block.shape[0] != self.generator.block.shape[1]:
             raise Exception('Для построения спектра блок должен быть квадратным')
-        u3d, v3d, w3d = self.generator.get_velocity_field(0)
+        u3d, v3d, w3d = self.generator.get_velocity_field()
         u = u3d[:, :, 0]
         v = v3d[:, :, 0]
         w = w3d[:, :, 0]
@@ -436,7 +437,7 @@ class Analyzer:
         if self.generator.block.shape[0] != self.generator.block.shape[1] or \
                 self.generator.block.shape[0] != self.generator.block.shape[2]:
             raise Exception('Для построения трехмерного спектра блок должен быть кубическим')
-        u, v, w = self.generator.get_velocity_field(0)
+        u, v, w = self.generator.get_velocity_field()
         x = self.generator.block.mesh[0][:, 0, 0]
         k, e = self.get_spectrum_3d(x, u, v, w, num_pnt)
         plt.figure(figsize=figsize)

@@ -69,25 +69,25 @@ class SmirnovTest(unittest.TestCase):
     def setUp(self):
         n = 55
         size = 20
-        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
-        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
+        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
+        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
         self.block = Block(
-            shape=(n, n, n),
+            shape=(n, n, 2),
             mesh=(mesh[1], mesh[0], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
         self.generator = Smirnov(
             block=self.block,
             u_av=(0., 0., 0.),
-            l_t=1,
-            tau_t=1,
+            ls_i=1,
+            ts_i=1,
             re_uu=1.,
             re_vv=1.,
             re_ww=1.,
             re_uv=0.,
             re_uw=0.,
             re_vw=0.,
-            time_arr=np.array([0]),
+            time_arr=np.array([0, 1]),
             mode_num=1000
         )
         self.analyzer = Analyzer(self.generator)
@@ -99,7 +99,7 @@ class SmirnovTest(unittest.TestCase):
         self.analyzer.plot_velocity_history(0, 0, 0, 0.1, 1000)
 
     def test_plot_moments(self):
-        self.analyzer.plot_moments(0, 0, 0, 0.01, 30000)
+        self.analyzer.plot_moments(0, 0, 0, 0.01, 80000, ylim=(-0.5, 1.5))
 
     def test_plot_divergence_field_2d(self):
         self.analyzer.plot_divergence_field_2d(vmin=-1.5, vmax=1.5, grid=False)
