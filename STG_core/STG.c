@@ -272,7 +272,7 @@ static void test_Davidson_mom_filed(
 	STG_float ls_i, STG_int num_modes
 )
 {
-	printf("Test Davidson pulsations.\n");
+	printf("Test Davidson moment field.\n");
 	printf("Reynolds stresses:\n");
 	printf("%.2f  %.2f  %.2f \n", re_uu, re_uv, re_uw);
 	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
@@ -314,6 +314,54 @@ static void test_Davidson_mom_filed(
 	STG_free_Davidson_trans_data(&trans_data);
 	STG_free_InitData(&init_data);
 	STG_free_VelMomField(&mom_field);
+}
+
+
+static void test_Davidson_node_hist(
+	STG_float ts, STG_int num_ts, STG_float ts_i, STG_float re_uu, STG_float re_vv, STG_float re_ww,
+	STG_float re_uv, STG_float re_uw, STG_float re_vw, STG_int num_modes
+)
+{
+	STG_int node_cnt = 10;
+	STG_float length = 0.1;
+	STG_float ls_i = 0.01;
+	printf("Test Davidson node history.\n");
+	printf("Reynolds stresses:\n");
+	printf("%.2f  %.2f  %.2f \n", re_uu, re_uv, re_uw);
+	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
+	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
+	printf("Modes number: %d \n", num_modes);
+	STG_InitData init_data;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+	STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
+	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
+
+
+	STG_float visc = 1.8e-5;
+	STG_float dissip = pow(0.09, 0.75) * pow((re_uu + re_vv + re_ww) / 2, 1.5) / ls_i;
+	STG_DavidsonData_Stationary stat_data;
+	STG_DavidsonData_Transient trans_data;
+	STG_VelNodeHist node_hist;
+
+	STG_alloc_Davidson_trans_data(init_data, num_modes, &trans_data);
+	STG_compute_Davidson_stat_data(init_data, num_modes, dissip, visc, ts, &stat_data);
+	STG_compute_Davidson_node_hist(init_data, stat_data, ts, num_ts, &trans_data, &node_hist, 1, 1, 1);
+
+	printf("Velosity history\n");
+	for (STG_int i = 0; i < num_ts + 1; i++)
+	{
+		printf("time = %.3f  u = %.3f  v = %.3f  w = %.3f \n", node_hist.time[i], node_hist.u_p[i], node_hist.v_p[i], node_hist.w_p[i]);
+	}
+	printf("\n");
+
+	STG_free_Davidson_stat_data(&stat_data);
+	STG_free_Davidson_trans_data(&trans_data);
+	STG_free_InitData(&init_data);
+	STG_free_VelNodeHist(&node_hist);
 }
 
 static void test_Smirnov_mom_field(
@@ -450,6 +498,8 @@ int main(int argc, char * argv[])
 	test_Smirnov_mom_field(5, 0.1, 0.000001, 0.000001, 0.0000, 1.19e-8, -3.08e-7, 0.000000, 0.01, 100);
 
 	test_Davidson_mom_filed(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
+	test_Davidson_mom_filed(10, 10, 1, 2, 3, 0, 0, 0, 1, 100);
+	test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
 
 	return 0;
 }

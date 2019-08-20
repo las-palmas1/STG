@@ -5,11 +5,10 @@ import numpy as np
 
 
 class Analyzer:
-    def __init__(self, generator: Generator, time=0):
+    def __init__(self, generator: Generator):
         self.generator = generator
-        self.time = 0
-        self.generator.compute_aux_data_transient_field(time=time)
-        self.generator.compute_velocity_field(time=time)
+        self.generator.compute_aux_data_transient(num_ts=0)
+        self.generator.compute_velocity_field(num_ts=0)
 
     def plot_2d_velocity_field(
             self, figsize=(7, 7), num_levels=20, vmin=-3.5, vmax=3.5, grid=True, title_fsize=18, title=True,
@@ -74,7 +73,6 @@ class Analyzer:
         t_arr = np.arange(0, ts*num_ts, ts)
         self.generator.set_puls_node(i, j, k)
         self.generator.time_arr = t_arr
-        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u, v, w = self.generator.get_pulsation_at_node()
 
@@ -152,7 +150,6 @@ class Analyzer:
         t_arr = np.arange(0, ts * num_ts, ts)
         self.generator.set_puls_node(i, j, k)
         self.generator.time_arr = t_arr
-        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u, v, w = self.generator.get_pulsation_at_node()
         uu_av = self._get_average_arr(u * u)
@@ -211,7 +208,7 @@ class Analyzer:
 
     def plot_two_point_space_correlation(
             self, i0: int, j0: int, k0: int, ts: float, num_ts: int,
-            di: int=1, dj: int=1, dk: int=1, num: int=20,
+            di: int = 1, dj: int = 1, dk: int = 1, num: int = 20,
             figsize=(7, 7), label_fsize=14, ticks_fsize=12, legend_fsize=14, ylim=(-1.1, 1.1),
             axes=(0.07, 0.07, 0.9, 0.87), fname=None
     ):
@@ -222,7 +219,6 @@ class Analyzer:
         cor_ww = np.zeros(num)
         self.generator.set_puls_node(i0, j0, k0)
         self.generator.time_arr = t_arr
-        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u0, v0, w0 = self.generator.get_pulsation_at_node()
         u0u0_av = self._get_average(u0 * u0)
@@ -296,7 +292,6 @@ class Analyzer:
         cor_ww = np.zeros(num_dt + 1)
         self.generator.set_puls_node(i, j, k)
         self.generator.time_arr = t_arr
-        self.generator.compute_aux_data_transient_puls()
         self.generator.compute_pulsation_at_node()
         u, v, w = self.generator.get_pulsation_at_node()
         u0u0_av = self._get_average(u[0: 2 * num_dt_av + 1] * u[0: 2 * num_dt_av + 1])

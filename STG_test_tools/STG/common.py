@@ -62,7 +62,7 @@ def get_trigon(num):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
     get_trigon_ctypes = ctypes.CDLL(stg_lib_fname).get_trigon
     get_trigon_ctypes.restype = ctypes.POINTER(STG_float)
-    get_trigon_ctypes.argtypes = STG_int
+    get_trigon_ctypes.argtypes = STG_int,
 
     res_p = get_trigon_ctypes(num)
     res = np.zeros(num)
@@ -119,9 +119,9 @@ class STG_ReStress(ctypes.Structure):
 
 class STG_InitData(ctypes.Structure):
     _fields_ = [
-        ('i_cnt', ctypes.c_ulong),
-        ('j_cnt', ctypes.c_ulong),
-        ('k_cnt', ctypes.c_ulong),
+        ('i_cnt', STG_int),
+        ('j_cnt', STG_int),
+        ('k_cnt', STG_int),
         ('mesh', STG_Mesh),
         ('re', STG_ReStress),
         ('scales', STG_Scales)
@@ -131,9 +131,9 @@ class STG_InitData(ctypes.Structure):
 class STG_VelMomField(ctypes.Structure):
     _fields_ = [
         ('time', STG_float),
-        ('i_cnt', ctypes.c_ulong),
-        ('j_cnt', ctypes.c_long),
-        ('k_cnt', ctypes.c_long),
+        ('i_cnt', STG_int),
+        ('j_cnt', STG_int),
+        ('k_cnt', STG_int),
         ('u_p', ctypes.POINTER(STG_float)),
         ('v_p', ctypes.POINTER(STG_float)),
         ('w_p', ctypes.POINTER(STG_float))
@@ -143,10 +143,10 @@ class STG_VelMomField(ctypes.Structure):
 class STG_VelNodeHist(ctypes.Structure):
     _fields_ = [
         ('time', ctypes.POINTER(STG_float)),
-        ('num_ts', ctypes.c_long),
-        ('i', ctypes.c_long),
-        ('j', ctypes.c_long),
-        ('k', ctypes.c_long),
+        ('num_ts', STG_int),
+        ('i', STG_int),
+        ('j', STG_int),
+        ('k', STG_int),
         ('u_p', ctypes.POINTER(STG_float)),
         ('v_p', ctypes.POINTER(STG_float)),
         ('w_p', ctypes.POINTER(STG_float))
@@ -248,6 +248,7 @@ def get_init_data(
     )
 
     init_data = STG_InitData(i_cnt=i_cnt, j_cnt=j_cnt, k_cnt=k_cnt, mesh=mesh_c, re=re_stress_c, scales=scales_c)
+    # free_init_data в данном случае не работает
     return init_data
 
 

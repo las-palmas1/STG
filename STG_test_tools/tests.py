@@ -125,29 +125,38 @@ class DavidsonTest(unittest.TestCase):
     def setUp(self):
         n = 50
         size = 0.1 * n
-        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
-        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
+        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
+        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
         self.block = Block(
-            shape=(n, n, n),
+            shape=(n, n, 2),
             mesh=(mesh[1], mesh[0], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
+        self.visc = 1.5e-5
+        self.re_uu = 1.
+        self.re_vv = 1.
+        self.re_ww = 1.
+        self.re_uv = 0
+        self.re_uw = 0.
+        self.re_vw = 0.
+        self.ls_i = 1
+        self.ts_i = 0.01
+        self.dissip_rate = 0.09 ** 0.75 * (0.5 * (self.re_uu + self.re_vv + self.re_ww)) ** 1.5 / self.ls_i
         self.generator = Davidson(
             block=self.block,
             u_av=(0., 0., 0.),
-            l_t=2,
-            tau_t=0.01,
-            num_modes=1000,
-            viscosity=1.42e-5,
-            dissip_rate=1e3,
-            k_t=3/2,
-            re_uu=1.,
-            re_vv=1.,
-            re_ww=1.,
-            re_uv=0,
-            re_uw=0.,
-            re_vw=0.,
-            time_arr=np.array([0]),
+            ls_i=self.ls_i,
+            ts_i=self.ts_i,
+            num_modes=300,
+            visc=self.visc,
+            dissip_rate=self.dissip_rate,
+            re_uu=self.re_uu,
+            re_vv=self.re_vv,
+            re_ww=self.re_ww,
+            re_uv=self.re_uv,
+            re_uw=self.re_uw,
+            re_vw=self.re_vw,
+            time_arr=np.array([0, 0.1]),
         )
         self.analyzer = Analyzer(self.generator)
 
@@ -158,7 +167,7 @@ class DavidsonTest(unittest.TestCase):
         self.analyzer.plot_velocity_history(0, 0, 0, 0.001, 1000)
 
     def test_plot_moments(self):
-        self.analyzer.plot_moments(0, 0, 0, 0.001, 5000)
+        self.analyzer.plot_moments(0, 0, 0, 0.001, 5000, ylim=(-0.5, 1.5))
 
     def test_plot_divergence_field_2d(self):
         self.analyzer.plot_divergence_field_2d(vmin=-1.5, vmax=1.5, grid=False)

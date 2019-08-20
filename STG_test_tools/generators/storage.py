@@ -15,6 +15,10 @@ from STG.smirnov import compute_smirnov_data, compute_smirnov_node_hist, compute
 from generators.tools import davidson_compute_velocity_field, davidson_compute_velocity_pulsation, \
     original_sem_compute_velocity_field, original_sem_compute_pulsation
 
+from STG.davidson import STG_DavidsonData_Transient, STG_DavidsonData_Stationary, free_davidson_trans_data, \
+    free_davidson_stat_data, alloc_davidson_trans_data, compute_davidson_node_hist, compute_davidson_stat_data, \
+    compute_davidson_moment_field, compute_davidson_trans_data
+
 
 class Lund(Generator):
     def __init__(
@@ -37,7 +41,7 @@ class Lund(Generator):
         self.a32 = (self.re_vw - self.a21 * self.a31) / self.a22
         self.a33 = np.sqrt(self.re_ww - self.a31 ** 2 - self.a32 ** 2)
 
-    def compute_velocity_field(self, time):
+    def compute_velocity_field(self, num_ts):
         u_prime = np.random.normal(0, 1, self.block.shape)
         v_prime = np.random.normal(0, 1, self.block.shape)
         w_prime = np.random.normal(0, 1, self.block.shape)
@@ -61,10 +65,10 @@ class Lund(Generator):
     def _compute_aux_data_stationary(self):
         self._compute_cholesky()
 
-    def compute_aux_data_transient_puls(self):
+    def compute_aux_data_transient(self, num_ts):
         pass
 
-    def compute_aux_data_transient_field(self, time):
+    def _alloc_aux_data_transient(self):
         pass
 
     def free_data(self):
@@ -92,263 +96,97 @@ class Smirnov(Generator):
     def _compute_aux_data_stationary(self):
         compute_smirnov_data(self._c_init_data, self.mode_num, self._c_data)
 
-    def compute_aux_data_transient_field(self, time):
-        pass
-
-    def compute_aux_data_transient_puls(self):
+    def compute_aux_data_transient(self, num_ts):
         pass
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
-        self._c_node_hist = STG_VelNodeHist()
         compute_smirnov_node_hist(
             init_data=self._c_init_data, data=self._c_data, ts=self._ts, num_ts=self._num_ts,
             node_hist=self._c_node_hist, i=i, j=j, k=k)
         self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
         free_node_hist(self._c_node_hist)
 
-    def compute_velocity_field(self, time):
-        self._c_mom_filed = STG_VelMomField()
+    def compute_velocity_field(self, num_ts):
         compute_smirnov_moment_field(
-            init_data=self._c_init_data, data=self._c_data, time=time, mom_field=self._c_mom_filed
+            init_data=self._c_init_data, data=self._c_data, time=self.time_arr[num_ts], mom_field=self._c_mom_field
         )
-        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_filed)
-        free_mom_field(self._c_mom_filed)
+        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
+        free_mom_field(self._c_mom_field)
 
     def _get_energy_desired(self, k):
         return 16 * (2 / np.pi) ** 0.5 * k**4 * np.exp(-2 * k**2)
 
+    def _alloc_aux_data_transient(self):
+        pass
+
     def free_data(self):
-        free_init_data(self._c_init_data)
         free_smirnov_data(self._c_data)
 
 
 class Davidson(Generator):
     def __init__(
             self, block: Block, u_av: Tuple[float, float, float],
-            tau_t: float, l_t: float, dissip_rate: float, viscosity: float, k_t: float, num_modes: int,
+            ts_i: float, ls_i: float, dissip_rate: float, visc: float, num_modes: int,
             re_uu: float, re_vv: float, re_ww: float,
             re_uv: float, re_uw: float, re_vw: float,
             time_arr: np.ndarray,
     ):
-        self.tau_t = tau_t
-        self.l_t = l_t
-        self.k_t = k_t
-        assert k_t == (re_uu + re_vv + re_ww) / 2, 'The value of the kinetic energy of turbulence is not ' \
-                                                   'consistent with the values of Reynolds stresses.'
+        self.ts_i = ts_i
+        self.ls_i = ls_i
         self.dissip_rate = dissip_rate
-        self.viscosity = viscosity
+        self.visc = visc
         self.num_modes = num_modes
-        self._time_step_field: float = None
-        self._time_step_puls: float = None
-        self.a_field: float = None
-        self.a_puls: float = None
-        self.b_field: float = None
-        self.b_puls: float = None
-        self.phi_field: List[np.ndarray] = []
-        self.psi_field: List[np.ndarray] = []
-        self.alpha_field: List[np.ndarray] = []
-        self.theta_field: List[np.ndarray] = []
-        self.k1_field: List[np.ndarray] = []
-        self.k2_field: List[np.ndarray] = []
-        self.k3_field: List[np.ndarray] = []
-        self.sigma1_field: List[np.ndarray] = []
-        self.sigma2_field: List[np.ndarray] = []
-        self.sigma3_field: List[np.ndarray] = []
-        self.phi_puls: List[np.ndarray] = []
-        self.psi_puls: List[np.ndarray] = []
-        self.alpha_puls: List[np.ndarray] = []
-        self.theta_puls: List[np.ndarray] = []
-        self.k1_puls: List[np.ndarray] = []
-        self.k2_puls: List[np.ndarray] = []
-        self.k3_puls: List[np.ndarray] = []
-        self.sigma1_puls: List[np.ndarray] = []
-        self.sigma2_puls: List[np.ndarray] = []
-        self.sigma3_puls: List[np.ndarray] = []
-        Generator.__init__(self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, time_arr)
-
-    def _compute_eigen_values(self):
-        mat = np.array([
-            [self.re_uu, self.re_uv, self.re_uw],
-            [self.re_uv, self.re_vv, self.re_vw],
-            [self.re_uw, self.re_vw, self.re_ww],
-        ])
-        w, v = la.eig(mat)
-        # нормируем диагонализируемую матрицу напряжений Рейнольдса
-        self.c1 = np.sqrt(w[0] * 3 / mat.trace())
-        self.c2 = np.sqrt(w[1] * 3 / mat.trace())
-        self.c3 = np.sqrt(w[2] * 3 / mat.trace())
-        self.a11 = v[0, 0]
-        self.a12 = v[0, 1]
-        self.a13 = v[0, 2]
-        self.a21 = v[1, 0]
-        self.a22 = v[1, 1]
-        self.a23 = v[1, 2]
-        self.a31 = v[2, 0]
-        self.a32 = v[2, 1]
-        self.a33 = v[2, 2]
-
-    def _get_k_from_spectrum(self, alpha, delta_min):
-        k_e = alpha * 9 * np.pi / (55 * self.l_t)
-        k_min = k_e / 2
-        k_max = 2 * np.pi / (2 * delta_min)
-        delta_k = (k_max - k_min) / (self.num_modes - 1)
-        k_eta = self.dissip_rate ** 0.25 / self.viscosity ** 0.75
-        k_arr = np.linspace(k_min, k_max, self.num_modes)
-        u_rms = (2 / 3 * self.k_t) ** 0.5
-        energy = (
-                alpha * u_rms ** 2 / k_e * (k_arr / k_e) ** 4 *
-                np.exp(-2 * (k_arr / k_eta) ** 2) / (1 + (k_arr / k_e) ** 2) ** (17 / 6)
-        )
-        return (energy * delta_k).sum()
-
-    def _compute_wave_numbers_and_amplitude(self):
-        # определение минимального шага из предположения об ортогональности и неравномерности блока
-        x = self.block.mesh[0][:, 0, 0]
-        y = self.block.mesh[1][0, :, 0]
-        z = self.block.mesh[2][0, 0, :]
-
-        n_i = self.block.shape[0]
-        n_j = self.block.shape[1]
-        n_k = self.block.shape[2]
-
-        delta_x = x[1: n_i] - x[0: n_i - 1]
-        delta_y = y[1: n_j] - y[0: n_j - 1]
-        delta_z = z[1: n_k] - z[0: n_k - 1]
-
-        self.delta_min = min(
-            delta_x.min(), delta_y.min(), delta_z.min()
+        self._c_stat_data = STG_DavidsonData_Stationary()
+        self._c_trans_data_node = STG_DavidsonData_Transient()
+        self._c_trans_data_field = STG_DavidsonData_Transient()
+        Generator.__init__(
+            self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, ls_i=ls_i,
+            ls_ux=0, ls_uy=0, ls_uz=0,
+            ls_vx=0, ls_vy=0, ls_vz=0,
+            ls_wx=0, ls_wy=0, ls_wz=0,
+            ts_i=ts_i, ts_u=0, ts_v=0, ts_w=0, time_arr=time_arr
         )
 
-        self.alpha = fsolve(
-            lambda x: [self._get_k_from_spectrum(x[0], self.delta_min) - self.k_t], x0=np.array([1.4])
-        )[0]
-        self.alpha = 1.483
-        self.k_e = self.alpha * 9 * np.pi / (55 * self.l_t)
-        self.k_min = self.k_e / 2
+    def _alloc_aux_data_transient(self):
+        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._c_trans_data_field)
+        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._c_trans_data_node)
 
-        self.k_max = 2 * np.pi / (2 * self.delta_min)
-        self.delta_k = (self.k_max - self.k_min) / (self.num_modes - 1)
-        self.k_arr = np.linspace(self.k_min, self.k_max, self.num_modes)
-
-        self.k_eta = self.dissip_rate**0.25 / self.viscosity**0.75
-        self.u_rms = (2 / 3 * self.k_t) ** 0.5
-        self.energy = (
-                self.alpha * self.u_rms ** 2 / self.k_e * (self.k_arr / self.k_e) ** 4 *
-                np.exp(-2 * (self.k_arr / self.k_eta) ** 2) / (1 + (self.k_arr / self.k_e) ** 2) ** (17 / 6)
-        )
-        self.u_abs = np.sqrt(self.energy * self.delta_k)
-
-    def compute_aux_data_transient_field(self):
-        if len(self.time_arr_field) > 1:
-            self._time_step_field = self.time_arr_field.max() / (self.time_arr_field.shape[0] - 1)
-            self.a_field = np.exp(-self._time_step_field / self.tau_t)
-        else:
-            self.a_field = 1
-        self.b_field = (1 - self.a_field**2)**0.5
-
-        for n, time in enumerate(self.time_arr_field):
-            uniform_pop = np.linspace(0, 2 * np.pi, 100)
-            uniform_weights = [1 / (2 * np.pi) for _ in uniform_pop]
-            self.phi_field.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
-            self.psi_field.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
-            self.alpha_field.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
-            theta_pop = np.linspace(0, np.pi, 1000)
-            theta_wheights = 1 / 2 * np.sin(theta_pop)
-            self.theta_field.append(np.array(choices(theta_pop, theta_wheights, k=self.num_modes)))
-            self.k1_field.append(np.sin(self.theta_field[n]) * np.cos(self.phi_field[n]) * self.k_arr)
-            self.k2_field.append(np.sin(self.theta_field[n]) * np.sin(self.phi_field[n]) * self.k_arr)
-            self.k3_field.append(np.cos(self.theta_field[n]) * self.k_arr)
-            self.sigma1_field.append(
-                    np.cos(self.phi_field[n]) * np.cos(self.theta_field[n]) * np.cos(self.alpha_field[n]) -
-                    np.sin(self.phi_field[n]) * np.sin(self.alpha_field[n])
-            )
-            self.sigma2_field.append(
-                    np.sin(self.phi_field[n]) * np.cos(self.theta_field[n]) * np.cos(self.alpha_field[n]) +
-                    np.cos(self.phi_field[n]) * np.sin(self.alpha_field[n])
-            )
-            self.sigma3_field.append(-np.sin(self.theta_field[n]) * np.cos(self.alpha_field[n]))
-
-    def compute_aux_data_transient_puls(self):
-        if len(self.time_arr) > 1:
-            self._time_step_puls = self.time_arr.max() / (self.time_arr.shape[0] - 1)
-            self.a_puls = np.exp(-self._time_step_puls / self.tau_t)
-        else:
-            self.a_puls = 1
-        self.b_puls = (1 - self.a_puls ** 2) ** 0.5
-
-        for n, time in enumerate(self.time_arr):
-            uniform_pop = np.linspace(0, 2 * np.pi, 100)
-            uniform_weights = [1 / (2 * np.pi) for _ in uniform_pop]
-            self.phi_puls.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
-            self.psi_puls.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
-            self.alpha_puls.append(np.array(choices(uniform_pop, uniform_weights, k=self.num_modes)))
-            theta_pop = np.linspace(0, np.pi, 1000)
-            theta_wheights = 1 / 2 * np.sin(theta_pop)
-            self.theta_puls.append(np.array(choices(theta_pop, theta_wheights, k=self.num_modes)))
-            self.k1_puls.append(np.sin(self.theta_puls[n]) * np.cos(self.phi_puls[n]))
-            self.k2_puls.append(np.sin(self.theta_puls[n]) * np.sin(self.phi_puls[n]))
-            self.k3_puls.append(np.cos(self.theta_puls[n]))
-            self.sigma1_puls.append(
-                    np.cos(self.phi_puls[n]) * np.cos(self.theta_puls[n]) * np.cos(self.alpha_puls[n]) -
-                    np.sin(self.phi_puls[n]) * np.sin(self.alpha_puls[n])
-            )
-            self.sigma2_puls.append(
-                    np.sin(self.phi_puls[n]) * np.cos(self.theta_puls[n]) * np.cos(self.alpha_puls[n]) +
-                    np.cos(self.phi_puls[n]) * np.sin(self.alpha_puls[n])
-            )
-            self.sigma3_puls.append(-np.sin(self.theta_puls[n]) * np.cos(self.alpha_puls[n]))
+    def compute_aux_data_transient(self, num_ts):
+        compute_davidson_trans_data(self._c_stat_data, self.num_modes, self._ts, num_ts, self._c_trans_data_field)
 
     def _compute_aux_data_stationary(self):
-        self._compute_wave_numbers_and_amplitude()
+        compute_davidson_stat_data(self._c_init_data, self.num_modes, self.dissip_rate, self.visc, self._ts,
+                                   self._c_stat_data)
 
-    def _compute_aux_data_space(self):
-        self._compute_eigen_values()
-
-    def compute_velocity_field(self):
-        shape = self.block.shape
-        for n, time in enumerate(self.time_arr_field):
-            if n == 0:
-                vel = davidson_compute_velocity_field(
-                    self.k1_field[n], self.k2_field[n], self.k3_field[n],
-                    self.sigma1_field[n], self.sigma2_field[n], self.sigma3_field[n], self.psi_field[n],
-                    self.c1, self.c2, self.c3,
-                    self.a11, self.a12, self.a13, self.a21, self.a22, self.a23, self.a31, self.a32, self.a33,
-                    self.block.mesh[0], self.block.mesh[1], self.block.mesh[2],
-                    u_abs=self.u_abs, a=self.a_field, b=1,
-                    v1_previous=np.zeros(shape), v2_previous=np.zeros(shape), v3_previous=np.zeros(shape)
-                )
-                self._vel_field.append((vel[0], vel[1], vel[2]))
-            else:
-                vel = davidson_compute_velocity_field(
-                    self.k1_field[n], self.k2_field[n], self.k3_field[n],
-                    self.sigma1_field[n], self.sigma2_field[n], self.sigma3_field[n], self.psi_field[n],
-                    self.c1, self.c2, self.c3,
-                    self.a11, self.a12, self.a13, self.a21, self.a22, self.a23, self.a31, self.a32, self.a33,
-                    self.block.mesh[0], self.block.mesh[1], self.block.mesh[2],
-                    u_abs=self.u_abs, a=self.a_field, b=self.b_field,
-                    v1_previous=self._vel_field[n - 1][0],
-                    v2_previous=self._vel_field[n - 1][1],
-                    v3_previous=self._vel_field[n - 1][2]
-                )
-                self._vel_field.append((vel[0], vel[1], vel[2]))
+    def compute_velocity_field(self, num_ts):
+        compute_davidson_moment_field(
+            self._c_init_data, self._c_stat_data, self._c_trans_data_field, self.time_arr[num_ts], self._c_mom_field
+        )
+        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
+        free_mom_field(self._c_mom_field)
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
-        vel = davidson_compute_velocity_pulsation(
-            self.k1_puls, self.k2_puls, self.k3_puls, self.sigma1_puls, self.sigma2_puls, self.sigma3_puls,
-            self.psi_puls, self.c1, self.c2, self.c3,
-            self.a11, self.a12, self.a13,
-            self.a21, self.a22, self.a23,
-            self.a31, self.a32, self.a33,
-            self.block.mesh[0][i, j, k], self.block.mesh[1][i, j, k], self.block.mesh[2][i, j, k],
-            self.u_abs, self.a_puls, self.b_puls,
-            self.time_arr
+        compute_davidson_node_hist(
+            self._c_init_data, self._c_stat_data, self._ts, self._num_ts, self._c_trans_data_node, self._c_node_hist,
+            i, j, k
         )
-        self._vel_puls = (vel[0], vel[1], vel[2])
+        self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
+        free_node_hist(self._c_node_hist)
+
+    def free_data(self):
+        free_davidson_stat_data(self._c_stat_data)
+        free_davidson_trans_data(self._c_trans_data_field)
+        free_davidson_trans_data(self._c_trans_data_node)
 
     def _get_energy_desired(self, k):
-        return float(interp1d(self.k_arr, self.energy, fill_value=0, bounds_error=False)(k))
+        k_arr = np.zeros(self.num_modes)
+        energy = np.zeros(self.num_modes)
+        for i in range(self.num_modes):
+            k_arr[i] = self._c_stat_data.k_arr[i]
+            energy[i] = self._c_stat_data.energy[i]
+        return float(interp1d(k_arr, energy, fill_value=0, bounds_error=False)(k))
 
 
 class OriginalSEM(Generator):
@@ -502,13 +340,13 @@ class OriginalSEM(Generator):
     def _compute_aux_data_space(self):
         self._compute_cholesky()
 
-    def compute_aux_data_transient_field(self):
+    def compute_aux_data_transient(self):
         self.eddy_positions_field = self.get_eddies_params(
             self.time_arr_field.max() - self.time_arr_field.min(),
             self.time_arr_field.shape[0] - 1
         )
 
-    def compute_aux_data_transient_puls(self):
+    def compute_aux_data_transient_node(self):
         self.eddy_positions_puls = self.get_eddies_params(
             self.time_arr.max() - self.time_arr.min(),
             self.time_arr.shape[0] - 1

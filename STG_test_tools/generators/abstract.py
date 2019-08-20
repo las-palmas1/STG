@@ -2,7 +2,7 @@ import numpy as np
 from abc import ABCMeta, abstractmethod
 from typing import List, Tuple
 import enum
-from STG.common import get_init_data
+from STG.common import get_init_data, STG_VelNodeHist, STG_VelMomField
 
 
 class BCType(enum.Enum):
@@ -86,8 +86,8 @@ class Generator(metaclass=ABCMeta):
         self._i_puls = 0
         self._j_puls = 0
         self._k_puls = 0
-        self._c_mom_filed = None
-        self._c_node_hist = None
+        self._c_mom_field = STG_VelMomField()
+        self._c_node_hist = STG_VelNodeHist()
         self._vel_field: Tuple[np.ndarray, np.ndarray, np.ndarray] = ()
         self._vel_puls: Tuple[np.ndarray, np.ndarray, np.ndarray] = (
             np.zeros(time_arr.shape), np.zeros(time_arr.shape), np.zeros(time_arr.shape)
@@ -100,6 +100,7 @@ class Generator(metaclass=ABCMeta):
         self._ts = time_arr[1] - time_arr[0]
         self._num_ts = time_arr.shape[0] - 1
         self._compute_aux_data_stationary()
+        self._alloc_aux_data_transient()
 
     @abstractmethod
     def free_data(self):
@@ -145,19 +146,14 @@ class Generator(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def compute_aux_data_transient_puls(self):
+    def compute_aux_data_transient(self, num_ts):
         """
-        Вычисление вспомогательных данных зависимых от времени
-        для моментов времени, в которые вычисляются скорости в одном заданном узле.
+        Вычисление вспомогательных данных зависимых от времени.
         """
         pass
 
     @abstractmethod
-    def compute_aux_data_transient_field(self, time):
-        """
-        Вычисление вспомогательных данных зависимых от времени для моментов
-        времени, в которое вычисляется все поле скорости.
-        """
+    def _alloc_aux_data_transient(self):
         pass
 
     def get_velocity_field(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -169,7 +165,7 @@ class Generator(metaclass=ABCMeta):
         return self._vel_puls
 
     @abstractmethod
-    def compute_velocity_field(self, time):
+    def compute_velocity_field(self, num_ts):
         """Расчет поля скорости."""
         pass
 
