@@ -98,9 +98,11 @@ class Generator(metaclass=ABCMeta):
             ls_wx=ls_wx, ls_wy=ls_wy, ls_wz=ls_wz, ts_i=ts_i, ts_u=ts_u, ts_v=ts_v, ts_w=ts_w
         )
         self._ts = time_arr[1] - time_arr[0]
-        self._num_ts = time_arr.shape[0] - 1
+        self._num_ts_tot = time_arr.shape[0] - 1
+        "Суммарное число шагов по времени"
         self._compute_aux_data_stationary()
         self._alloc_aux_data_transient()
+        self._compute_aux_data_transient()
 
     @abstractmethod
     def free_data(self):
@@ -146,7 +148,7 @@ class Generator(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def compute_aux_data_transient(self, num_ts):
+    def _compute_aux_data_transient(self):
         """
         Вычисление вспомогательных данных зависимых от времени.
         """
@@ -189,5 +191,8 @@ class Generator(metaclass=ABCMeta):
     @time_arr.setter
     def time_arr(self, value: np.ndarray):
         self._ts = value[1] - value[0]
-        self._num_ts = value.shape[0] - 1
+        self._num_ts_tot = value.shape[0] - 1
         self._time_arr = value
+        self._compute_aux_data_stationary()
+        self._alloc_aux_data_transient()
+        self._compute_aux_data_transient()

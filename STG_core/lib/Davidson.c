@@ -99,19 +99,19 @@ void STG_compute_Davidson_spectrum(
 	}
 }
 
-void STG_alloc_Davidson_trans_data(STG_InitData init_data, STG_int num_modes,
+void STG_alloc_Davidson_trans_data(STG_InitData init_data, STG_int num_modes, STG_int num_ts_tot,
 	STG_DavidsonData_Transient * data)
 {
-	data->phi = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->psi = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->alpha = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->theta = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->k1 = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->k2 = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->k3 = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->sigma1 = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->sigma2 = (STG_float *)malloc(sizeof(STG_float) * num_modes);
-	data->sigma3 = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	data->phi = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->psi = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->alpha = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->theta = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->k1 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->k2 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->k3 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->sigma1 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->sigma2 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
+	data->sigma3 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
 
 	STG_int mesh_size = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
 	data->u_p_prev = (STG_float *)malloc(sizeof(STG_float) * mesh_size);
@@ -193,11 +193,11 @@ void STG_compute_Davidson_stat_data(
                     &(data->a21[i]), &(data->a22[i]), &(data->a23[i]),
                     &(data->a31[i]), &(data->a32[i]), &(data->a33[i])
                     );
-        STG_compute_Davidson_auto_coef(ts, init_data.scales.ts_i[i], &(data->a[i]), &(data->b[i]));
+        STG_compute_Davidson_auto_coef((STG_float)ts, (STG_float)init_data.scales.ts_i[i], &(data->a[i]), &(data->b[i]));
         STG_int i_spec = i * num_modes;
         STG_compute_Davidson_spectrum(
                     delta_min, num_modes, init_data.re.re_uu[i], init_data.re.re_vv[i], init_data.re.re_ww[i],
-                    init_data.scales.ls_i[i], dissip_rate, visc,
+                    (STG_float)init_data.scales.ls_i[i], dissip_rate, visc,
                     &(data->energy[i_spec]), &(data->k_arr[i_spec]), &(data->u_abs[i_spec])
                     );
 
@@ -228,13 +228,19 @@ void STG_compute_Davidson_random_data(
 }
 
 void STG_compute_Davidson_trans_data(
-        STG_DavidsonData_Stationary stat_data, STG_int num_modes,
-        STG_float ts, STG_int num_ts, STG_DavidsonData_Transient * data)
+        STG_DavidsonData_Stationary stat_data, STG_int num_ts_tot, STG_DavidsonData_Transient * data)
 {
-    data->time = ts * num_ts;
-    STG_compute_Davidson_random_data(
-                num_modes, stat_data.k_arr, data->phi, data->psi, data->alpha, data->theta,
-                data->k1, data->k2, data->k3, data->sigma1, data->sigma2, data->sigma3);
+	data->num_modes = stat_data.num_modes;
+	data->num_ts = num_ts_tot;
+	for (STG_int i = 0; i < num_ts_tot + 1; i++)
+	{
+		STG_int i_mode = i * stat_data.num_modes;
+		STG_compute_Davidson_random_data(
+			stat_data.num_modes, stat_data.k_arr, &(data->phi[i_mode]), &(data->psi[i_mode]), 
+			&(data->alpha[i_mode]), &(data->theta[i_mode]),
+			&(data->k1[i_mode]), &(data->k2[i_mode]), &(data->k3[i_mode]), 
+			&(data->sigma1[i_mode]), &(data->sigma2[i_mode]), &(data->sigma3[i_mode]));
+	}
 }
 
 
@@ -273,10 +279,10 @@ void STG_compute_Davidson_pulsations(
 
 
 void STG_compute_Davidson_moment_field(STG_InitData init_data,
-	STG_DavidsonData_Stationary stat_data, STG_DavidsonData_Transient * trans_data, STG_float time,
+	STG_DavidsonData_Stationary stat_data, STG_DavidsonData_Transient * trans_data, STG_float ts, STG_int num_ts,
 	STG_VelMomField * mom_field)
 {
-	mom_field->time = time;
+	mom_field->time = ts * num_ts;
 	mom_field->i_cnt = init_data.i_cnt;
 	mom_field->j_cnt = init_data.j_cnt;
 	mom_field->k_cnt = init_data.k_cnt;
@@ -285,21 +291,35 @@ void STG_compute_Davidson_moment_field(STG_InitData init_data,
 	mom_field->v_p = (STG_float*)malloc(sizeof(STG_float) * mesh_size);
 	mom_field->w_p = (STG_float*)malloc(sizeof(STG_float) * mesh_size);
 
+	STG_float a;
+	STG_float b;
 	for (STG_int i = 0; i < mesh_size; i++)
 	{
+		if (num_ts == 0)
+		{
+			a = 0.;
+			b = 1.;
+		}
+		else
+		{
+			a = stat_data.a[i];
+			b = stat_data.b[i];
+		}
 		trans_data->u_p_prev[i] = 0.;
 		trans_data->v_p_prev[i] = 0.;
 		trans_data->w_p_prev[i] = 0.;
+		STG_int i_mode = num_ts * stat_data.num_modes;
 		STG_int i_spec = i * stat_data.num_modes;
 		STG_compute_Davidson_pulsations(
-			trans_data->k1, trans_data->k2, trans_data->k3,
-			trans_data->sigma1, trans_data->sigma2, trans_data->sigma3, trans_data->psi, &(stat_data.u_abs[i_spec]),
+			&(trans_data->k1[i_mode]), &(trans_data->k2[i_mode]), &(trans_data->k3[i_mode]),
+			&(trans_data->sigma1[i_mode]), &(trans_data->sigma2[i_mode]), &(trans_data->sigma3[i_mode]), 
+			&(trans_data->psi[i_mode]), &(stat_data.u_abs[i_spec]),
 			stat_data.c1[i], stat_data.c2[i], stat_data.c3[i],
 			stat_data.a11[i], stat_data.a12[i], stat_data.a13[i],
 			stat_data.a21[i], stat_data.a22[i], stat_data.a23[i],
 			stat_data.a31[i], stat_data.a32[i], stat_data.a33[i],
 			init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
-			stat_data.a[i], stat_data.b[i], stat_data.num_modes,
+			a, b, stat_data.num_modes,
 			trans_data->u_p_prev[i], trans_data->v_p_prev[i], trans_data->w_p_prev[i],
 			&(mom_field->u_p[i]), &(mom_field->v_p[i]), &(mom_field->w_p[i])
 		);
@@ -311,42 +331,48 @@ void STG_compute_Davidson_moment_field(STG_InitData init_data,
 
 
 void STG_compute_Davidson_node_hist(STG_InitData init_data,
-	STG_DavidsonData_Stationary stat_data, STG_float ts, STG_int num_ts,
+	STG_DavidsonData_Stationary stat_data, STG_float ts, STG_int num_ts_tot,
 	STG_DavidsonData_Transient * trans_data, STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k)
 {
 	node_hist->i = i;
 	node_hist->j = j;
 	node_hist->k = k;
 	STG_int num = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	node_hist->num_ts = num_ts;
-	node_hist->time = (STG_float *)malloc(sizeof(STG_float) * (num_ts + 1));
-	node_hist->u_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts + 1));
-	node_hist->v_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts + 1));
-	node_hist->w_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts + 1));
+	node_hist->num_ts = num_ts_tot;
+	node_hist->time = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+	node_hist->u_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+	node_hist->v_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+	node_hist->w_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
 
 	STG_float time;
-	for (STG_int it = 0; it < num_ts + 1; it++)
+	STG_float a, b;
+	for (STG_int it = 0; it < num_ts_tot + 1; it++)
 	{
-		STG_compute_Davidson_trans_data(stat_data, stat_data.num_modes, ts, it, trans_data);
 		if (it == 0) 
 		{
 			trans_data->u_p_prev[num] = 0.;
 			trans_data->v_p_prev[num] = 0.;
 			trans_data->w_p_prev[num] = 0.;
+			a = 0.;
+			b = 1.;
 		}
 		else
 		{
 			trans_data->u_p_prev[num] = node_hist->u_p[it - 1];
 			trans_data->v_p_prev[num] = node_hist->v_p[it - 1];
 			trans_data->w_p_prev[num] = node_hist->w_p[it - 1];
+			a = stat_data.a[num];
+			b = stat_data.b[num];
 		}
 		time = ts * it;
 		node_hist->time[it] = time;
+		STG_int i_mode = it * stat_data.num_modes;
 		STG_int num_spec = num * stat_data.num_modes;
 		STG_compute_Davidson_pulsations(
-			trans_data->k1, trans_data->k2, trans_data->k3,
-			trans_data->sigma1, trans_data->sigma2, trans_data->sigma3, trans_data->psi,
-			&(stat_data.u_abs[num_spec]), stat_data.c1[num], stat_data.c2[num], stat_data.c3[num],
+			&(trans_data->k1[i_mode]), &(trans_data->k2[i_mode]), &(trans_data->k3[i_mode]),
+			&(trans_data->sigma1[i_mode]), &(trans_data->sigma2[i_mode]), &(trans_data->sigma3[i_mode]), 
+			&(trans_data->psi[i_mode]), &(stat_data.u_abs[num_spec]), 
+			stat_data.c1[num], stat_data.c2[num], stat_data.c3[num],
 			stat_data.a11[num], stat_data.a12[num], stat_data.a13[num],
 			stat_data.a21[num], stat_data.a22[num], stat_data.a23[num],
 			stat_data.a31[num], stat_data.a32[num], stat_data.a33[num],

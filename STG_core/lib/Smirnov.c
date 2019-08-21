@@ -247,7 +247,7 @@ void STG_compute_Smirnov_moment_field(
             data.a21[i], data.a22[i], data.a23[i],
             data.a31[i], data.a32[i], data.a33[i],
             init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
-            init_data.scales.ls_i[i], init_data.scales.ts_i[i],
+            (STG_float)init_data.scales.ls_i[i], (STG_float)init_data.scales.ts_i[i],
             data.num_modes, time,
             &(mom_field->u_p[i]), &(mom_field->v_p[i]), &(mom_field->w_p[i])
         );
@@ -282,7 +282,7 @@ void STG_compute_Smirnov_node_hist(
             data.a21[num], data.a22[num], data.a23[num],
             data.a31[num], data.a32[num], data.a33[num],
 			init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num],
-            init_data.scales.ls_i[num], init_data.scales.ts_i[num],
+            (STG_float)init_data.scales.ls_i[num], (STG_float)init_data.scales.ts_i[num],
             data.num_modes, node_hist->time[it],
             &(node_hist->u_p[it]), &(node_hist->v_p[it]), &(node_hist->w_p[it])
 		);

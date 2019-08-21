@@ -7,7 +7,6 @@ import numpy as np
 class Analyzer:
     def __init__(self, generator: Generator):
         self.generator = generator
-        self.generator.compute_aux_data_transient(num_ts=0)
         self.generator.compute_velocity_field(num_ts=0)
 
     def plot_2d_velocity_field(

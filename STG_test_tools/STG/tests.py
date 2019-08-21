@@ -43,19 +43,19 @@ class TestSmirnov(unittest.TestCase):
     def setUp(self):
         mesh = np.meshgrid(np.linspace(1, 5, 2), np.linspace(6, 10, 7), np.linspace(11, 15, 1))
         self.re_uu = 1.
-        self.re_vv = 2.
-        self.re_ww = 3.
+        self.re_vv = 1.
+        self.re_ww = 1.
         self.init_data = common.get_init_data(
             mesh=(mesh[1], mesh[0], mesh[2]),
             re_uu=self.re_uu, re_vv=self.re_vv, re_ww=self.re_ww,
             re_uv=0., re_uw=0., re_vw=0.,
-            ls_i=1., ls_ux=0., ls_uy=0., ls_uz=0.,
+            ls_i=1, ls_ux=0., ls_uy=0., ls_uz=0.,
             ls_vx=0., ls_vy=0., ls_vz=0.,
             ls_wx=0., ls_wy=0., ls_wz=0.,
-            ts_i=1., ts_u=0., ts_v=0., ts_w=0.
+            ts_i=1, ts_u=0., ts_v=0., ts_w=0.
         )
-        self.num_modes = 100
-        self.time_arr = np.linspace(1, 5, 5)
+        self.num_modes = 1000
+        self.time_arr = np.linspace(0, 1, 5000)
 
     def test_compute_smirnov_data(self):
         data = smirnov.STG_SmirnovData()
@@ -73,7 +73,7 @@ class TestSmirnov(unittest.TestCase):
         data = smirnov.STG_SmirnovData()
         node_hist = smirnov.STG_VelNodeHist()
         smirnov.compute_smirnov_data(self.init_data, self.num_modes, data)
-        num_ts = len(self.time_arr - 1)
+        num_ts = len(self.time_arr) - 1
         ts = self.time_arr[1] - self.time_arr[0]
         smirnov.compute_smirnov_node_hist(self.init_data, data, ts, num_ts, node_hist, 0, 0, 0)
         u, v, w = common.extract_pulsations_from_node_hist(node_hist)

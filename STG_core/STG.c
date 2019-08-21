@@ -266,7 +266,7 @@ static void fill_scales(
 	
 }
 
-static void test_Davidson_mom_filed(
+static void test_Davidson_mom_field(
 	STG_int node_cnt, STG_float length, STG_float re_uu, STG_float re_vv, STG_float re_ww,
 	STG_float re_uv, STG_float re_uw, STG_float re_vw, 
 	STG_float ls_i, STG_int num_modes
@@ -289,17 +289,18 @@ static void test_Davidson_mom_filed(
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
 	
 
-	STG_float time = 0.;
+	STG_int num_ts = 1;
+	STG_float ts = 0.01;
 	STG_float visc = 1.8e-5;
 	STG_float dissip = pow(0.09, 0.75) * pow((re_uu + re_vv + re_ww) / 2, 1.5) / ls_i;
 	STG_DavidsonData_Stationary stat_data;
 	STG_DavidsonData_Transient trans_data;
 	STG_VelMomField mom_field;
 
-	STG_alloc_Davidson_trans_data(init_data, num_modes, &trans_data);
-	STG_compute_Davidson_stat_data(init_data, num_modes, dissip, visc, 0.1, &stat_data);
-	STG_compute_Davidson_trans_data(stat_data, num_modes, 0.1, 1, &trans_data);
-	STG_compute_Davidson_moment_field(init_data, stat_data, &trans_data, time, &mom_field);
+	STG_alloc_Davidson_trans_data(init_data, num_modes, num_ts, &trans_data);
+	STG_compute_Davidson_stat_data(init_data, num_modes, dissip, visc, ts, &stat_data);
+	STG_compute_Davidson_trans_data(stat_data, num_ts, &trans_data);
+	STG_compute_Davidson_moment_field(init_data, stat_data, &trans_data, ts, 0, &mom_field);
 
 	printf("First 5 u_abs: \n");
 	for (STG_int i = 0; i < 5; i++)
@@ -347,8 +348,9 @@ static void test_Davidson_node_hist(
 	STG_DavidsonData_Transient trans_data;
 	STG_VelNodeHist node_hist;
 
-	STG_alloc_Davidson_trans_data(init_data, num_modes, &trans_data);
+	STG_alloc_Davidson_trans_data(init_data, num_modes, num_ts, &trans_data);
 	STG_compute_Davidson_stat_data(init_data, num_modes, dissip, visc, ts, &stat_data);
+	STG_compute_Davidson_trans_data(stat_data, num_ts, &trans_data);
 	STG_compute_Davidson_node_hist(init_data, stat_data, ts, num_ts, &trans_data, &node_hist, 1, 1, 1);
 
 	printf("Velosity history\n");
@@ -423,9 +425,9 @@ static void test_Smirnov_node_hist(
 	init_data.mesh.x = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.mesh.y = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.mesh.z = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.mesh.x[0] = 1;
-	init_data.mesh.y[0] = 1;
-	init_data.mesh.z[0] = 1;
+	init_data.mesh.x[0] = 0;
+	init_data.mesh.y[0] = 0;
+	init_data.mesh.z[0] = 0;
 
 	init_data.re.re_uu = (STG_float*)malloc(sizeof(STG_float) * num);
 	init_data.re.re_vv = (STG_float*)malloc(sizeof(STG_float) * num);
@@ -456,19 +458,19 @@ static void test_Smirnov_node_hist(
     init_data.scales.ts_v = (STG_float*)malloc(sizeof(STG_float) * num);
     init_data.scales.ts_w = (STG_float*)malloc(sizeof(STG_float) * num);
 
-    init_data.scales.ls_i[0] = 0.0019;
+    init_data.scales.ls_i[0] = 1;
     init_data.scales.ts_i[0] = 1;
 
     STG_SmirnovData data;
     STG_float ts = 0.1;
-    STG_int num_ts = 0;
+    STG_int num_ts = 10;
     STG_VelNodeHist node_hist;
 
     STG_compute_Smirnov_data(init_data, num_modes, &data);
 
     STG_compute_Smirnov_node_hist(init_data, data, ts, num_ts, &node_hist, 0, 0, 0);
 
-    printf("u = %.3f   v = %.3f  w = %.3f \n", node_hist.u_p[0], node_hist.v_p[0], node_hist.w_p[0]);
+    printf("u = %.3f   v = %.3f  w = %.3f \n", node_hist.u_p[1], node_hist.v_p[1], node_hist.w_p[1]);
 	printf("\n");
 
     STG_free_Smirnov_data(&data);
@@ -496,10 +498,10 @@ int main(int argc, char * argv[])
 	test_Smirnov_mom_field(5, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.01, 100);
 	test_Smirnov_node_hist(32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 100);
 	test_Smirnov_mom_field(5, 0.1, 0.000001, 0.000001, 0.0000, 1.19e-8, -3.08e-7, 0.000000, 0.01, 100);
+	test_Smirnov_node_hist(1, 1, 1, 0, 0, 0, 1000);
 
-	test_Davidson_mom_filed(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
-	test_Davidson_mom_filed(10, 10, 1, 2, 3, 0, 0, 0, 1, 100);
+	test_Davidson_mom_field(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
+	test_Davidson_mom_field(10, 10, 1, 2, 3, 0, 0, 0, 1, 100);
 	test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
-
 	return 0;
 }

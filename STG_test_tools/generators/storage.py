@@ -65,7 +65,7 @@ class Lund(Generator):
     def _compute_aux_data_stationary(self):
         self._compute_cholesky()
 
-    def compute_aux_data_transient(self, num_ts):
+    def _compute_aux_data_transient(self):
         pass
 
     def _alloc_aux_data_transient(self):
@@ -96,13 +96,13 @@ class Smirnov(Generator):
     def _compute_aux_data_stationary(self):
         compute_smirnov_data(self._c_init_data, self.mode_num, self._c_data)
 
-    def compute_aux_data_transient(self, num_ts):
+    def _compute_aux_data_transient(self):
         pass
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
         compute_smirnov_node_hist(
-            init_data=self._c_init_data, data=self._c_data, ts=self._ts, num_ts=self._num_ts,
+            init_data=self._c_init_data, data=self._c_data, ts=self._ts, num_ts=self._num_ts_tot,
             node_hist=self._c_node_hist, i=i, j=j, k=k)
         self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
         free_node_hist(self._c_node_hist)
@@ -138,8 +138,7 @@ class Davidson(Generator):
         self.visc = visc
         self.num_modes = num_modes
         self._c_stat_data = STG_DavidsonData_Stationary()
-        self._c_trans_data_node = STG_DavidsonData_Transient()
-        self._c_trans_data_field = STG_DavidsonData_Transient()
+        self._c_trans_data = STG_DavidsonData_Transient()
         Generator.__init__(
             self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, ls_i=ls_i,
             ls_ux=0, ls_uy=0, ls_uz=0,
@@ -149,11 +148,10 @@ class Davidson(Generator):
         )
 
     def _alloc_aux_data_transient(self):
-        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._c_trans_data_field)
-        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._c_trans_data_node)
+        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._num_ts_tot, self._c_trans_data)
 
-    def compute_aux_data_transient(self, num_ts):
-        compute_davidson_trans_data(self._c_stat_data, self.num_modes, self._ts, num_ts, self._c_trans_data_field)
+    def _compute_aux_data_transient(self):
+        compute_davidson_trans_data(self._c_stat_data, self._num_ts_tot, self._c_trans_data)
 
     def _compute_aux_data_stationary(self):
         compute_davidson_stat_data(self._c_init_data, self.num_modes, self.dissip_rate, self.visc, self._ts,
@@ -161,7 +159,7 @@ class Davidson(Generator):
 
     def compute_velocity_field(self, num_ts):
         compute_davidson_moment_field(
-            self._c_init_data, self._c_stat_data, self._c_trans_data_field, self.time_arr[num_ts], self._c_mom_field
+            self._c_init_data, self._c_stat_data, self._c_trans_data, self._ts, num_ts, self._c_mom_field
         )
         self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
         free_mom_field(self._c_mom_field)
@@ -169,7 +167,7 @@ class Davidson(Generator):
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
         compute_davidson_node_hist(
-            self._c_init_data, self._c_stat_data, self._ts, self._num_ts, self._c_trans_data_node, self._c_node_hist,
+            self._c_init_data, self._c_stat_data, self._ts, self._num_ts_tot, self._c_trans_data, self._c_node_hist,
             i, j, k
         )
         self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
@@ -177,8 +175,7 @@ class Davidson(Generator):
 
     def free_data(self):
         free_davidson_stat_data(self._c_stat_data)
-        free_davidson_trans_data(self._c_trans_data_field)
-        free_davidson_trans_data(self._c_trans_data_node)
+        free_davidson_trans_data(self._c_trans_data)
 
     def _get_energy_desired(self, k):
         k_arr = np.zeros(self.num_modes)
@@ -340,7 +337,7 @@ class OriginalSEM(Generator):
     def _compute_aux_data_space(self):
         self._compute_cholesky()
 
-    def compute_aux_data_transient(self):
+    def _compute_aux_data_transient(self):
         self.eddy_positions_field = self.get_eddies_params(
             self.time_arr_field.max() - self.time_arr_field.min(),
             self.time_arr_field.shape[0] - 1
