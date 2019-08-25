@@ -478,6 +478,7 @@ static void test_Smirnov_node_hist(
     STG_free_VelNodeHist(&node_hist);
 }
 
+
 int main(int argc, char * argv[])
 {
 	STG_init_rand();
@@ -503,5 +504,6 @@ int main(int argc, char * argv[])
 	test_Davidson_mom_field(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
 	test_Davidson_mom_field(10, 10, 1, 2, 3, 0, 0, 0, 1, 100);
 	test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
+
 	return 0;
 }

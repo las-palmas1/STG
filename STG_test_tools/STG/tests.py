@@ -107,6 +107,7 @@ class TestDavidson(unittest.TestCase):
         self.time_arr = np.linspace(1, 5, 5)
         self.visc = 1.8e-5
         self.dissip_rate = 0.09**0.75 * (0.5 * (self.re_uu + self.re_vv + self.re_ww))**1.5 / self.ls_i
+        common.init_rand()
 
     def test_compute_davidson_stat_data(self):
         ts = self.time_arr[1] - self.time_arr[0]
@@ -125,7 +126,8 @@ class TestDavidson(unittest.TestCase):
         davidson.compute_davidson_stat_data(self.init_data, self.num_modes, self.dissip_rate,
                                             self.visc, ts, stat_data)
         trans_data = davidson.STG_DavidsonData_Transient()
-        davidson.alloc_davidson_trans_data(self.init_data, self.num_modes, trans_data)
+        davidson.alloc_davidson_trans_data(self.init_data, self.num_modes, len(self.time_arr) - 1, trans_data)
+        davidson.compute_davidson_trans_data(stat_data, len(self.time_arr) - 1, trans_data)
         node_hist = common.STG_VelNodeHist()
         davidson.compute_davidson_node_hist(
             self.init_data, stat_data, ts, len(self.time_arr) - 1, trans_data, node_hist, 0, 0, 0)
