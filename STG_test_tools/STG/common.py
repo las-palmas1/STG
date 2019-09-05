@@ -252,6 +252,129 @@ def get_init_data(
     return init_data
 
 
+def get_mesh(x: np.ndarray, y: np.ndarray, z: np.ndarray):
+    i_cnt = x.shape[0]
+    j_cnt = y.shape[0]
+    k_cnt = z.shape[0]
+    x3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    y3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    z3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    for i in range(i_cnt):
+        for j in range(j_cnt):
+            for k in range(k_cnt):
+                x3d[i, j, k] = x[i]
+                y3d[i, j, k] = y[j]
+                z3d[i, j, k] = z[k]
+    return x3d, y3d, z3d
+
+
+def get_y_hetero_mesh(y: np.ndarray, num):
+    size = y.max() - y.min()
+    mesh = get_mesh(np.array(np.linspace(0, size, num)), y, np.array([0, size / (num - 1)]))
+    return mesh
+
+# NOTE: в методе СЕМ временной масштаб масштаб определяется линейным масштабом и
+# скоростью переноса вихрей. Полагаю, что в случае однородного распределения параметров
+# турбулентности на границе следует задавать линейный и временной масштабы, а также направление переноса вихрей.
+# Второй вариант - задавать только линейный масштаб, а скорость переноса определять интегрированием по входной
+# границе на каждом шаге по времени.
+
+
+def get_init_data_y_hetero(
+        mesh: Tuple[np.ndarray, np.ndarray, np.ndarray],
+        re_uu: np.ndarray, re_vv: np.ndarray, re_ww: np.ndarray,
+        re_uv: np.ndarray, re_uw: np.ndarray, re_vw: np.ndarray,
+        ls_ux: np.ndarray, ls_uy: np.ndarray, ls_uz: np.ndarray,
+        ls_vx: np.ndarray, ls_vy: np.ndarray, ls_vz: np.ndarray,
+        ls_wx: np.ndarray, ls_wy: np.ndarray, ls_wz: np.ndarray,
+        ts_u: np.ndarray, ts_v: np.ndarray, ts_w: np.ndarray,
+):
+    i_cnt = mesh[0].shape[0]
+    j_cnt = mesh[0].shape[1]
+    k_cnt = mesh[0].shape[2]
+    assert mesh[0].shape[1] == re_uu.shape[0]
+    num = i_cnt * j_cnt * k_cnt
+    x = (STG_float * num)(*mesh[0].reshape(num))
+    y = (STG_float * num)(*mesh[1].reshape(num))
+    z = (STG_float * num)(*mesh[2].reshape(num))
+    mesh_c = STG_Mesh(x, y, z)
+
+    re_uu_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    re_vv_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    re_ww_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    re_uv_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    re_uw_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    re_vw_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+
+    ls_ux_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_uy_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_uz_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_vx_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_vy_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_vz_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_wx_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_wy_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ls_wz_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+
+    ts_u_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ts_v_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+    ts_w_3d = np.zeros([i_cnt, j_cnt, k_cnt])
+
+    for i in range(i_cnt):
+        for j in range(j_cnt):
+            for k in range(k_cnt):
+                re_uu_3d[i, j, k] = re_uu[j]
+                re_vv_3d[i, j, k] = re_vv[j]
+                re_ww_3d[i, j, k] = re_ww[j]
+                re_uv_3d[i, j, k] = re_uv[j]
+                re_uw_3d[i, j, k] = re_uw[j]
+                re_vw_3d[i, j, k] = re_vw[j]
+
+                ls_ux_3d[i, j, k] = ls_ux[j]
+                ls_uy_3d[i, j, k] = ls_uy[j]
+                ls_uz_3d[i, j, k] = ls_uz[j]
+                ls_vx_3d[i, j, k] = ls_vx[j]
+                ls_vy_3d[i, j, k] = ls_vy[j]
+                ls_vz_3d[i, j, k] = ls_vz[j]
+                ls_wx_3d[i, j, k] = ls_wx[j]
+                ls_wy_3d[i, j, k] = ls_wy[j]
+                ls_wz_3d[i, j, k] = ls_wz[j]
+
+                ts_u_3d[i, j, k] = ts_u[j]
+                ts_v_3d[i, j, k] = ts_v[j]
+                ts_w_3d[i, j, k] = ts_w[j]
+
+    ls_i_3d = (ls_ux_3d + ls_vx_3d + ls_wx_3d + ls_uy_3d + ls_vy_3d + ls_wy_3d) / 6
+    ts_i_3d = (ts_u_3d + ts_v_3d + ts_w_3d) / 3
+
+    re_stress_c = STG_ReStress(
+        re_uu=(STG_float * num)(*re_uu_3d.reshape(num)),
+        re_vv=(STG_float * num)(*re_vv_3d.reshape(num)),
+        re_ww=(STG_float * num)(*re_ww_3d.reshape(num)),
+        re_uv=(STG_float * num)(*re_uv_3d.reshape(num)),
+        re_uw=(STG_float * num)(*re_uw_3d.reshape(num)),
+        re_vw=(STG_float * num)(*re_vw_3d.reshape(num))
+    )
+    scales_c = STG_Scales(
+        ls_i=(STG_float * num)(*ls_i_3d.reshape(num)),
+        ls_ux=(STG_float * num)(*ls_ux_3d.reshape(num)),
+        ls_uy=(STG_float * num)(*ls_uy_3d.reshape(num)),
+        ls_uz=(STG_float * num)(*ls_uz_3d.reshape(num)),
+        ls_vx=(STG_float * num)(*ls_vx_3d.reshape(num)),
+        ls_vy=(STG_float * num)(*ls_vy_3d.reshape(num)),
+        ls_vz=(STG_float * num)(*ls_vz_3d.reshape(num)),
+        ls_wx=(STG_float * num)(*ls_wx_3d.reshape(num)),
+        ls_wy=(STG_float * num)(*ls_wy_3d.reshape(num)),
+        ls_wz=(STG_float * num)(*ls_wz_3d.reshape(num)),
+        ts_i=(STG_float * num)(*ts_i_3d.reshape(num)),
+        ts_u=(STG_float * num)(*ts_u_3d.reshape(num)),
+        ts_v=(STG_float * num)(*ts_v_3d.reshape(num)),
+        ts_w=(STG_float * num)(*ts_w_3d.reshape(num))
+    )
+    init_data = STG_InitData(i_cnt=i_cnt, j_cnt=j_cnt, k_cnt=k_cnt, mesh=mesh_c, re=re_stress_c, scales=scales_c)
+    return init_data
+
+
 def free_node_hist(data: STG_VelNodeHist):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_VelNodeHist

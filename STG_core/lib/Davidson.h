@@ -76,7 +76,7 @@ STG_SHARED_LIB_API void STG_compute_Davidson_trans_data(
 
 STG_SHARED_LIB_API void STG_free_Davidson_trans_data(STG_DavidsonData_Transient * data);
 
-// num_ts - number of current time step
+// num_ts - number of current time step (start with 0)
 STG_SHARED_LIB_API void STG_compute_Davidson_moment_field(STG_InitData init_data,
 	STG_DavidsonData_Stationary stat_data, STG_DavidsonData_Transient * trans_data, STG_float ts, STG_int num_ts,
 	STG_VelMomField * mom_field);
