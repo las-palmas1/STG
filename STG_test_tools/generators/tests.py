@@ -17,7 +17,7 @@ class TestSEM(unittest.TestCase):
         )
         self.sem = OriginalSEM(
             block=self.block,
-            u_av=(0.5, 0.5, 0.5),
+            u_e=(0.5, 0.5, 0.5),
             sigma=0.3,
             re_uu=1.,
             re_vv=1.,
@@ -25,7 +25,7 @@ class TestSEM(unittest.TestCase):
             re_uv=0.,
             re_uw=0.,
             re_vw=0.,
-            eddy_num=500,
+            eddies_num=500,
             time_arr=np.array([0])
         )
         self.sem._compute_init_eddies_pos()

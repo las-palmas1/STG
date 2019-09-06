@@ -232,8 +232,8 @@ void STG_compute_SEM_stat_data(
 			init_data.re.re_uu[i], init_data.re.re_vv[i], init_data.re.re_ww[i],
 			init_data.re.re_uv[i], init_data.re.re_uw[i], init_data.re.re_vw[i],
 			&(stat_data->a11[i]), &(stat_data->a12[i]), &(stat_data->a13[i]),
-			&(stat_data->a21[i]), &(stat_data->a21[i]), &(stat_data->a21[i]),
-			&(stat_data->a31[i]), &(stat_data->a31[i]), &(stat_data->a31[i])
+			&(stat_data->a21[i]), &(stat_data->a22[i]), &(stat_data->a23[i]),
+			&(stat_data->a31[i]), &(stat_data->a32[i]), &(stat_data->a33[i])
 		);
 	}
 
@@ -274,26 +274,24 @@ void STG_compute_SEM_trans_data(
 	trans_data->num_eddies = stat_data.num_eddies;
 	trans_data->num_ts = num_ts;
 	trans_data->ts = ts;
-	trans_data->eddies_int = (Vector *)malloc(sizeof(Vector) * num_ts * stat_data.num_eddies);
-	trans_data->eddies_int = (Vector *)malloc(sizeof(Vector) * num_ts * stat_data.num_eddies);
+	trans_data->eddies_int = (Vector *)malloc(sizeof(Vector) * (num_ts + 1) * stat_data.num_eddies);
+	trans_data->eddies_pos = (Vector *)malloc(sizeof(Vector) * (num_ts + 1) * stat_data.num_eddies);
 
 	for (STG_int i = 0; i < stat_data.num_eddies; i++)
 	{
 		trans_data->eddies_int[i] = stat_data.eddies_int_init[i];
 		trans_data->eddies_pos[i] = stat_data.eddies_pos_init[i];
 	}
-	for (STG_int it = 0; it < num_ts - 1; it++)
+	for (STG_int it = 0; it < num_ts; it++)
 	{
-		for (STG_int i = 0; i < stat_data.num_eddies; i++)
-		{
-			STG_int i_cur = it * stat_data.num_eddies + i;
-			STG_int i_next = (it + 1) * stat_data.num_eddies + i;
-			STG_compute_SEM_new_eddies_params(
-				&(trans_data->eddies_pos[i_cur]), &(trans_data->eddies_int[i_cur]), stat_data.num_eddies,
-				stat_data.vol_lims, stat_data.eddies_vel, ts, stat_data.in_planes_lims,
-				&(trans_data->eddies_pos[i_next]), &(trans_data->eddies_int[i_next])
-			);
-		}
+		STG_int i_cur = it * stat_data.num_eddies;
+		STG_int i_next = (it + 1) * stat_data.num_eddies;
+		STG_compute_SEM_new_eddies_params(
+			&(trans_data->eddies_pos[i_cur]), &(trans_data->eddies_int[i_cur]), stat_data.num_eddies,
+			stat_data.vol_lims, stat_data.eddies_vel, ts, stat_data.in_planes_lims,
+			&(trans_data->eddies_pos[i_next]), &(trans_data->eddies_int[i_next])
+		);
+		
 	}
 }
 
@@ -361,21 +359,21 @@ void STG_compute_SEM_pulsations(
 }
 
 
-static void extract_arrays(Vector * vec, STG_int num, STG_float * x, STG_float * y, STG_float * z)
+static void extract_arrays(Vector * vec, STG_int num, STG_float ** x, STG_float ** y, STG_float ** z)
 {
-    x = (STG_float *)malloc(sizeof (STG_float) * num);
-    y = (STG_float *)malloc(sizeof (STG_float) * num);
-    z = (STG_float *)malloc(sizeof (STG_float) * num);
+    *x = (STG_float *)malloc(sizeof (STG_float) * num);
+    *y = (STG_float *)malloc(sizeof (STG_float) * num);
+    *z = (STG_float *)malloc(sizeof (STG_float) * num);
     for (STG_int i = 0; i < num; i++)
     {
-        x[i] = vec[i].x;
-        y[i] = vec[i].y;
-        z[i] = vec[i].z;
+        (*x)[i] = vec[i].x;
+        (*y)[i] = vec[i].y;
+        (*z)[i] = vec[i].z;
     }
 }
 
 void STG_compute_SEM_moment_field(
-        STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data, STG_float ts,
+		STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data, STG_float ts,
         STG_int num_ts, STG_VelMomField * mom_field
 )
 {
@@ -393,13 +391,81 @@ void STG_compute_SEM_moment_field(
     STG_float * eps_x, * eps_y, * eps_z;
     STG_int i_ts_start = num_ts * stat_data.num_eddies;
 
-    extract_arrays(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, x_e, y_e, z_e);
-    extract_arrays(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, eps_x, eps_x, eps_z);
+    extract_arrays(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, &x_e, &y_e, &z_e);
+    extract_arrays(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, &eps_x, &eps_y, &eps_z);
+
+	STG_float volume = (stat_data.vol_lims.x_max - stat_data.vol_lims.x_min) * (stat_data.vol_lims.y_max -
+		stat_data.vol_lims.y_min) * (stat_data.vol_lims.z_max - stat_data.vol_lims.z_min);
 
     for (STG_int i = 0; i < mesh_size; i++)
     {
-//        STG_compute_SEM_pulsations()
+		STG_compute_SEM_pulsations(
+			x_e, y_e, z_e, eps_x, eps_y, eps_z, stat_data.num_eddies, 
+			init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i], volume, 
+			init_data.scales.ls_ux[i], init_data.scales.ls_uy[i], init_data.scales.ls_uz[i],
+			init_data.scales.ls_vx[i], init_data.scales.ls_vy[i], init_data.scales.ls_vz[i],
+			init_data.scales.ls_wx[i], init_data.scales.ls_wy[i], init_data.scales.ls_wz[i],
+			stat_data.a11[i], stat_data.a12[i], stat_data.a13[i],
+			stat_data.a21[i], stat_data.a22[i], stat_data.a23[i],
+			stat_data.a31[i], stat_data.a32[i], stat_data.a33[i],
+			&(mom_field->u_p[i]), &(mom_field->v_p[i]), &(mom_field->w_p[i])
+		);
     }
+	free(x_e);
+	free(y_e);
+	free(z_e);
+	free(eps_x);
+	free(eps_y);
+	free(eps_z);
+
+}
+
+
+void STG_compute_SEM_node_hist(
+	STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data,
+	STG_float ts, STG_int num_ts_tot, STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k
+)
+{
+	node_hist->i = i;
+	node_hist->j = j;
+	node_hist->k = k;
+	STG_int num = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+	node_hist->num_ts = num_ts_tot;
+	node_hist->time = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+	node_hist->u_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+	node_hist->v_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+	node_hist->w_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+
+	STG_float *x_e, *y_e, *z_e;
+	STG_float *eps_x, *eps_y, *eps_z;
+	STG_float volume = (stat_data.vol_lims.x_max - stat_data.vol_lims.x_min) * (stat_data.vol_lims.y_max -
+		stat_data.vol_lims.y_min) * (stat_data.vol_lims.z_max - stat_data.vol_lims.z_min);
+	
+	for (STG_int i = 0; i < num_ts_tot + 1; i++)
+	{
+		STG_int i_ts_start = i * stat_data.num_eddies;
+		extract_arrays(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, &x_e, &y_e, &z_e);
+		extract_arrays(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, &eps_x, &eps_y, &eps_z);
+		
+		node_hist->time[i] = i * ts;
+		STG_compute_SEM_pulsations(
+			x_e, y_e, z_e, eps_x, eps_y, eps_z, stat_data.num_eddies, 
+			init_data.mesh.x[num], init_data.mesh.y[i], init_data.mesh.z[i], volume,
+			init_data.scales.ls_ux[num], init_data.scales.ls_uy[num], init_data.scales.ls_uz[num],
+			init_data.scales.ls_vx[num], init_data.scales.ls_vy[num], init_data.scales.ls_vz[num],
+			init_data.scales.ls_wx[num], init_data.scales.ls_wy[num], init_data.scales.ls_wz[num],
+			stat_data.a11[num], stat_data.a12[num], stat_data.a13[num],
+			stat_data.a21[num], stat_data.a22[num], stat_data.a23[num],
+			stat_data.a31[num], stat_data.a32[num], stat_data.a33[num],
+			&(node_hist->u_p[i]), &(node_hist->v_p[i]), &(node_hist->w_p[i])
+		);
+		free(x_e);
+		free(y_e);
+		free(z_e);
+		free(eps_x);
+		free(eps_y);
+		free(eps_z);
+	}
 
 }
 

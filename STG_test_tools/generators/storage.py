@@ -1,10 +1,7 @@
 from generators.abstract import BCType, Generator, Block
 from typing import List, Tuple
 import numpy as np
-import numpy.linalg as la
-from random import choices
 from scipy.interpolate import interp1d
-from scipy.optimize import fsolve
 
 from STG.common import STG_VelNodeHist, STG_VelMomField, free_mom_field, free_node_hist, free_init_data, \
     extract_pulsations_from_mom_field, extract_pulsations_from_node_hist
@@ -18,6 +15,9 @@ from generators.tools import davidson_compute_velocity_field, davidson_compute_v
 from STG.davidson import STG_DavidsonData_Transient, STG_DavidsonData_Stationary, free_davidson_trans_data, \
     free_davidson_stat_data, alloc_davidson_trans_data, compute_davidson_node_hist, compute_davidson_stat_data, \
     compute_davidson_moment_field, compute_davidson_trans_data
+
+from STG.sem import STG_SEMData_Transient, STG_SEMData_Stationary, free_sem_stat_data, free_sem_trans_data, \
+    compute_sem_stat_data, compute_sem_trans_data, compute_sem_moment_field, compute_sem_node_hist
 
 
 class Lund(Generator):
@@ -188,193 +188,57 @@ class Davidson(Generator):
 
 class OriginalSEM(Generator):
     def __init__(
-            self, block: Block, u_av: Tuple[float, float, float], sigma: float, eddy_num: int,
+            self, block: Block, u_e: Tuple[float, float, float], eddies_num: int,
+            ls_ux: float, ls_uy: float, ls_uz: float,
+            ls_vx: float, ls_vy: float, ls_vz: float,
+            ls_wx: float, ls_wy: float, ls_wz: float,
             re_uu: float, re_vv: float, re_ww: float,
             re_uv: float, re_uw: float, re_vw: float,
             time_arr: np.ndarray,
     ):
-        self.sigma = sigma
-        self.eddy_num = eddy_num
-        self.eddy_positions_field: np.ndarray = []
-        self.eddy_positions_puls: np.ndarray = []
-        Generator.__init__(self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, time_arr)
-
-    def _compute_cholesky(self):
-        """Вычисление разложения тензора рейнольдсовых напряжений по Холецкому в каждой точке."""
-        self.a11 = np.sqrt(self.re_uu)
-        self.a12 = 0
-        self.a13 = 0
-        self.a21 = self.re_uv / self.a11
-        self.a22 = np.sqrt(self.re_vv - self.a21 ** 2)
-        self.a23 = 0
-        self.a31 = self.re_uw / self.a11
-        self.a32 = (self.re_vw - self.a21 * self.a31) / self.a22
-        self.a33 = np.sqrt(self.re_ww - self.a31 ** 2 - self.a32 ** 2)
-
-    def _compute_init_eddies_pos(self):
-        self.u0 = self.u_av[0]
-        self.v0 = self.u_av[1]
-        self.w0 = self.u_av[2]
-        self.x_min = self.block.mesh[0].min() - self.sigma
-        self.x_max = self.block.mesh[0].max() + self.sigma
-        self.y_min = self.block.mesh[1].min() - self.sigma
-        self.y_max = self.block.mesh[1].max() + self.sigma
-        self.z_min = self.block.mesh[2].min() - self.sigma
-        self.z_max = self.block.mesh[2].max() + self.sigma
-        self.volume = (self.x_max - self.x_min) * (self.y_max - self.y_min) * (self.z_max - self.z_min)
-        # self.eddy_num = int(self.volume / self.sigma**3)
-        self.x_e_init = np.random.uniform(self.x_min, self.x_max, self.eddy_num)
-        self.y_e_init = np.random.uniform(self.y_min, self.y_max, self.eddy_num)
-        self.z_e_init = np.random.uniform(self.z_min, self.z_max, self.eddy_num)
-        self.epsilon_init = np.random.normal(0, 1, (self.eddy_num, 3))
-        # self.epsilon_init = np.random.uniform(-1, 1, (self.eddy_num, 3))
-
-    @classmethod
-    def _get_line_plane_intersection(cls, x0, y0, z0, xv, yv, zv, a, b, c, d):
-        k = a * xv + b * yv + c * zv
-        x_res = (x0 * (b * yv + c * zv) - xv * (b * y0 + c * z0 + d))
-        y_res = (y0 * (a * xv + c * zv) - yv * (a * x0 + c * z0 + d))
-        z_res = (z0 * (b * yv + a * xv) - zv * (b * y0 + a * x0 + d))
-        if k == 0:
-            return None
-        else:
-            return x_res / k, y_res / k, z_res / k
-
-    @classmethod
-    def get_scalar_prod(cls, x1, y1, z1, x2, y2, z2):
-        return x1 * x2 + y1 * y2 + z1 * z2
-
-    @classmethod
-    def get_in_planes(cls, x_min, x_max, y_min, y_max, z_min, z_max,
-                      x_e: np.ndarray, y_e: np.ndarray, z_e: np.ndarray, u0, v0, w0):
-        # коэффициенты плоскостей, ограничивающих область
-        bounds_coef = (
-            (1, 0, 0, -x_min), (1, 0, 0, -x_max),
-            (0, 1, 0, -y_min), (0, 1, 0, -y_max),
-            (0, 0, 1, -z_min), (0, 0, 1, -z_max),
+        self.eddies_num = eddies_num
+        self.u_e = u_e
+        self._c_stat_data = STG_SEMData_Stationary()
+        self._c_trans_data = STG_SEMData_Transient()
+        ls_i = (ls_ux + ls_uy + ls_uz + ls_vx + ls_vy + ls_vz + ls_wx + ls_wy + ls_wz)
+        Generator.__init__(
+            self, block, u_e, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
+            ls_i=ls_i, ls_ux=ls_ux, ls_uy=ls_uy, ls_uz=ls_uz,
+            ls_vx=ls_vx, ls_vy=ls_vy, ls_vz=ls_vz,
+            ls_wx=ls_wx, ls_wy=ls_wy, ls_wz=ls_wz,
+            ts_i=0., ts_u=0., ts_v=0., ts_w=0.,
+            time_arr=time_arr
         )
-        # интервалы координат, в которых расположена каждая из 6 граничных граней области
-        bounds = (
-            ((x_min, x_min), (y_min, y_max), (z_min, z_max)),
-            ((x_max, x_max), (y_min, y_max), (z_min, z_max)),
-            ((x_min, x_max), (y_min, y_min), (z_min, z_max)),
-            ((x_min, x_max), (y_max, y_max), (z_min, z_max)),
-            ((x_min, x_max), (y_min, y_max), (z_min, z_min)),
-            ((x_min, x_max), (y_min, y_max), (z_max, z_max)),
-        )
-        in_planes = []
-        for x0, y0, z0 in zip(x_e, y_e, z_e):
-            intersecs = (
-                cls._get_line_plane_intersection(x0, y0, z0, u0, v0, w0, *bounds_coef[0]),
-                cls._get_line_plane_intersection(x0, y0, z0, u0, v0, w0, *bounds_coef[1]),
-                cls._get_line_plane_intersection(x0, y0, z0, u0, v0, w0, *bounds_coef[2]),
-                cls._get_line_plane_intersection(x0, y0, z0, u0, v0, w0, *bounds_coef[3]),
-                cls._get_line_plane_intersection(x0, y0, z0, u0, v0, w0, *bounds_coef[4]),
-                cls._get_line_plane_intersection(x0, y0, z0, u0, v0, w0, *bounds_coef[5]),
-            )
-            for intersec, bound in zip(intersecs, bounds):
-                if intersec:
-                    if (
-                            (intersec[0] >= x_min or intersec[0] <= x_max) and
-                            (intersec[1] >= y_min or intersec[1] <= y_max) and
-                            (intersec[2] >= z_min or intersec[2] <= z_max)
-                    ):
-                        s = cls.get_scalar_prod(
-                            (intersec[0] - x0), (intersec[1] - y0), (intersec[2] - z0), u0, v0, w0
-                        )
-                        if s < 0:
-                            in_planes.append(bound)
-        return in_planes
 
-    def get_eddies_params(self, time, num_ts: int = 100):
-        """
-        :param time: Временной интервал, на котором нужно вычислить позиции вихрей
-        :param num_ts: Число отрезков на этом интервале.
-
-        Возвращает набор значений координат позиций вихрей и их интенсивностей в различные моменты времени.
-        """
-        if num_ts != 0:
-            dt = time / num_ts
-        else:
-            dt = 0
-        in_planes = self.get_in_planes(
-            self.x_min, self.x_max, self.y_min, self.y_max, self.z_min, self.z_max,
-            self.x_e_init, self.y_e_init, self.z_e_init, self.u0, self.v0, self.w0,
-        )
-        x_e = self.x_e_init
-        y_e = self.y_e_init
-        z_e = self.z_e_init
-        epsilon = self.epsilon_init
-        res = np.zeros((num_ts + 1, 6, self.eddy_num))
-        for n in range(num_ts + 1):
-            if n > 0:
-                x_e = x_e + dt * self.u0
-                y_e = y_e + dt * self.v0
-                z_e = z_e + dt * self.w0
-            for i in range(self.eddy_num):
-                if (
-                        x_e[i] < self.x_min or x_e[i] > self.x_max or
-                        y_e[i] < self.y_min or y_e[i] > self.y_max or
-                        z_e[i] < self.z_min or z_e[i] > self.z_max
-                ):
-                    x_e[i] = np.random.uniform(in_planes[i][0][0], in_planes[i][0][1])
-                    y_e[i] = np.random.uniform(in_planes[i][1][0], in_planes[i][1][1])
-                    z_e[i] = np.random.uniform(in_planes[i][2][0], in_planes[i][2][1])
-                    epsilon[i] = np.random.normal(0, 1, 3)
-                    # epsilon[i] = np.random.uniform(-1, 1, 3)
-
-            res[n, 0, :] = x_e
-            res[n, 1, :] = y_e
-            res[n, 2, :] = z_e
-            res[n, 3, :] = epsilon[:, 0]
-            res[n, 4, :] = epsilon[:, 1]
-            res[n, 5, :] = epsilon[:, 2]
-        return res
-
-    def _compute_aux_data_stationary(self):
-        self._compute_init_eddies_pos()
-
-    def _compute_aux_data_space(self):
-        self._compute_cholesky()
+    def _alloc_aux_data_transient(self):
+        pass
 
     def _compute_aux_data_transient(self):
-        self.eddy_positions_field = self.get_eddies_params(
-            self.time_arr_field.max() - self.time_arr_field.min(),
-            self.time_arr_field.shape[0] - 1
-        )
+        compute_sem_trans_data(self._c_stat_data, self._ts, self._num_ts_tot, self._c_trans_data)
 
-    def compute_aux_data_transient_node(self):
-        self.eddy_positions_puls = self.get_eddies_params(
-            self.time_arr.max() - self.time_arr.min(),
-            self.time_arr.shape[0] - 1
-        )
+    def _compute_aux_data_stationary(self):
+        compute_sem_stat_data(self._c_init_data, self.eddies_num, self.u_e[0], self.u_e[1],
+                              self.u_e[2], self._c_stat_data)
 
-    @classmethod
-    def form_func(cls, x):
-        return (np.abs(x) < 1) * (np.sqrt(1.5) * (1 - np.abs(x)))
-
-    def compute_velocity_field(self):
-        vel = original_sem_compute_velocity_field(
-            positions=self.eddy_positions_field,
-            x=self.block.mesh[0], y=self.block.mesh[1], z=self.block.mesh[2],
-            sigma=self.sigma, volume=self.volume, eddy_num=self.eddy_num,
-            a11=self.a11, a12=self.a12, a13=self.a13,
-            a21=self.a21, a22=self.a22, a23=self.a23,
-            a31=self.a31, a32=self.a32, a33=self.a33,
-        )
-        for i in range(vel.shape[0]):
-            self._vel_field.append((vel[i, 0, :, :, :], vel[i, 1, :, :, :], vel[i, 2, :, :, :]))
+    def compute_velocity_field(self, num_ts):
+        compute_sem_moment_field(self._c_init_data, self._c_stat_data, self._c_trans_data, self._ts,
+                                 self._num_ts_tot, self._c_mom_field)
+        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
+        free_mom_field(self._c_mom_field)
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
-        self._vel_puls = original_sem_compute_pulsation(
-            positions=self.eddy_positions_puls,
-            x=self.block.mesh[0][i, j, k], y=self.block.mesh[1][i, j, k], z=self.block.mesh[2][i, j, k],
-            sigma=self.sigma, volume=self.volume, eddy_num=self.eddy_num,
-            a11=self.a11, a12=self.a12, a13=self.a13,
-            a21=self.a21, a22=self.a22, a23=self.a23,
-            a31=self.a31, a32=self.a32, a33=self.a33,
-        )
+        compute_sem_node_hist(self._c_init_data, self._c_stat_data, self._c_trans_data, self._ts,
+                              self._num_ts_tot, self._c_node_hist, i, j, k)
+        self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
+        free_node_hist(self._c_node_hist)
+
+    def free_data(self):
+        free_sem_stat_data(self._c_stat_data)
+        free_sem_trans_data(self._c_trans_data)
+
+
+
 
 
 

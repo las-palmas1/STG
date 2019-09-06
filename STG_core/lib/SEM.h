@@ -119,22 +119,22 @@ void STG_compute_SEM_new_eddies_params(
 );
 
 
-void STG_compute_SEM_stat_data(STG_InitData init_data, STG_int num_eddies, 
+STG_SHARED_LIB_API void STG_compute_SEM_stat_data(STG_InitData init_data, STG_int num_eddies,
 	Vector eddies_vel, STG_SEMData_Stationary * stat_data);
 
 
-void STG_free_SEM_stat_data(STG_SEMData_Stationary * stat_data);
+STG_SHARED_LIB_API void STG_free_SEM_stat_data(STG_SEMData_Stationary * stat_data);
 
 
-void STG_compute_SEM_trans_data(
+STG_SHARED_LIB_API void STG_compute_SEM_trans_data(
 	STG_SEMData_Stationary stat_data, STG_float ts, STG_int num_ts, STG_SEMData_Transient * trans_data
 );
 
 
-void STG_free_SEM_trans_data(STG_SEMData_Transient * trans_data);
+STG_SHARED_LIB_API void STG_free_SEM_trans_data(STG_SEMData_Transient * trans_data);
 
 
-void STG_compute_SEM_pulsations(
+STG_SHARED_LIB_API void STG_compute_SEM_pulsations(
         STG_float * x_e, STG_float * y_e, STG_float * z_e, STG_float * eps_x, STG_float * eps_y, STG_float * eps_z,
         STG_int num_eddies, STG_float x, STG_float y, STG_float z, STG_float volume,
         STG_float ls_ux, STG_float ls_uy, STG_float ls_uz,
@@ -147,9 +147,15 @@ void STG_compute_SEM_pulsations(
 );
 
 
-void STG_compute_SEM_moment_field(
-        STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data,
+STG_SHARED_LIB_API void STG_compute_SEM_moment_field(
+		STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data,
         STG_float ts, STG_int num_ts, STG_VelMomField * mom_field
+);
+
+
+STG_SHARED_LIB_API void STG_compute_SEM_node_hist(
+	STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data,
+	STG_float ts, STG_int num_ts_tot, STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k
 );
 #endif // !SEM_H
 

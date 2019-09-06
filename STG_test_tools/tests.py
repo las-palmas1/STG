@@ -211,7 +211,7 @@ class OriginalSEMTest(unittest.TestCase):
         )
         self.generator = OriginalSEM(
             block=self.block,
-            u_av=(10, 0, 0),
+            u_e=(10, 0, 0),
             re_uu=1.,
             re_vv=1.,
             re_ww=1.,
@@ -220,7 +220,7 @@ class OriginalSEMTest(unittest.TestCase):
             re_vw=0.,
             time_arr=np.array([0]),
             sigma=0.5,
-            eddy_num=1000
+            eddies_num=1000
         )
         self.analyzer = Analyzer(self.generator)
 

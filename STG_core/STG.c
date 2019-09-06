@@ -4,10 +4,12 @@
     #include "lib/Smirnov.h"
     #include "lib/common.h"
 	#include "lib/Davidson.h"
+	#include "lib/SEM.h"
 #else
     #include "lib\common.h"
     #include "lib\Smirnov.h"
 	#include "lib\Davidson.h"
+	#include "lib\SEM.h"
 #endif
 
 
@@ -407,9 +409,13 @@ static void test_Smirnov_mom_field(
 
 
 static void test_Smirnov_node_hist(
-	STG_float re_uu, STG_float re_vv, STG_float re_ww, STG_float re_uv, STG_float re_uw, STG_float re_vw, STG_int num_modes
+	STG_float ts, STG_int num_ts, STG_float ts_i, STG_float re_uu, STG_float re_vv, STG_float re_ww,
+	STG_float re_uv, STG_float re_uw, STG_float re_vw, STG_int num_modes
 )
 {
+	STG_int node_cnt = 10;
+	STG_float length = 0.1;
+	STG_float ls_i = 0.01;
 	printf("Test Smirnov pulsations at node.\n");
 	printf("Reynolds stresses:\n");
 	printf("%.2f  %.2f  %.2f \n", re_uu, re_uv, re_uw);
@@ -417,60 +423,26 @@ static void test_Smirnov_node_hist(
 	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
 	printf("Modes number: %d \n", num_modes);
 	STG_InitData init_data;
-	init_data.i_cnt = 1;
-	init_data.j_cnt = 1;
-    init_data.k_cnt = 1;
-    STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
-
-	init_data.mesh.x = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.mesh.y = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.mesh.z = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.mesh.x[0] = 0;
-	init_data.mesh.y[0] = 0;
-	init_data.mesh.z[0] = 0;
-
-	init_data.re.re_uu = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.re.re_vv = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.re.re_ww = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.re.re_uv = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.re.re_uw = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.re.re_vw = (STG_float*)malloc(sizeof(STG_float) * num);
-	init_data.re.re_uu[0] = re_uu;
-	init_data.re.re_vv[0] = re_vv;
-	init_data.re.re_ww[0] = re_ww;
-	init_data.re.re_uv[0] = re_uv;
-	init_data.re.re_uw[0] = re_uw;
-	init_data.re.re_vw[0] = re_vw;
-
-    init_data.scales.ls_i = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_ux = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_uy = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_uz = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_vx = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_vy = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_vz = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_wx = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_wy = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ls_wz = (STG_float*)malloc(sizeof(STG_float) * num);
-
-    init_data.scales.ts_i = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ts_u = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ts_v = (STG_float*)malloc(sizeof(STG_float) * num);
-    init_data.scales.ts_w = (STG_float*)malloc(sizeof(STG_float) * num);
-
-    init_data.scales.ls_i[0] = 1;
-    init_data.scales.ts_i[0] = 1;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+	STG_int num = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+	
+	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
+	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
 
     STG_SmirnovData data;
-    STG_float ts = 0.1;
-    STG_int num_ts = 10;
     STG_VelNodeHist node_hist;
 
     STG_compute_Smirnov_data(init_data, num_modes, &data);
-
     STG_compute_Smirnov_node_hist(init_data, data, ts, num_ts, &node_hist, 0, 0, 0);
 
-    printf("u = %.3f   v = %.3f  w = %.3f \n", node_hist.u_p[1], node_hist.v_p[1], node_hist.w_p[1]);
+	printf("Velosity history\n");
+	for (STG_int i = 0; i < num_ts + 1; i++)
+	{
+		printf("time = %.3f  u = %.3f  v = %.3f  w = %.3f \n", node_hist.time[i], node_hist.u_p[i], node_hist.v_p[i], node_hist.w_p[i]);
+	}
 	printf("\n");
 
     STG_free_Smirnov_data(&data);
@@ -478,6 +450,125 @@ static void test_Smirnov_node_hist(
     STG_free_VelNodeHist(&node_hist);
 }
 
+
+static void test_SEM_vol_lims_computing(
+	STG_float x_size, STG_float y_size, STG_float z_size,
+	STG_float ls_ux, STG_float ls_uy, STG_float ls_uz,
+	STG_float ls_vx, STG_float ls_vy, STG_float ls_vz,
+	STG_float ls_wx, STG_float ls_wy, STG_float ls_wz
+)
+{
+	printf("Test volume limits computing \n");
+	printf("x_s = %.1f  y_s = %.1f  z_s = %.1f \n", x_size, y_size, z_size);
+	printf("ls_ux = %.1f  ls_uy = %.1f  ls_uz = %.1f \n", ls_ux, ls_uy, ls_uz);
+	printf("ls_vx = %.1f  ls_vy = %.1f  ls_vz = %.1f \n", ls_vx, ls_vy, ls_vz);
+	printf("ls_wx = %.1f  ls_wy = %.1f  ls_wz = %.1f \n", ls_wx, ls_wy, ls_wz);
+	printf("\n");
+	STG_int node_cnt = 10;
+	STG_InitData init_data;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+
+	STG_float ls_i = (ls_ux + ls_uy + ls_uz + ls_vx + ls_vy + ls_vz + ls_wx + ls_wy + ls_wz);
+
+	compute_mesh(x_size, y_size, z_size, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, 1, 1, 1, 0, 0, 0, &(init_data.re));
+	fill_scales(
+		node_cnt, node_cnt, node_cnt, 
+		ls_i, ls_ux, ls_uy, ls_uz, ls_vx, ls_vy, 
+		ls_vz, ls_wx, ls_wy, ls_wz, 1, 1, 1, 1, &(init_data.scales)
+	);
+
+	Limits lims;
+	compute_limits(init_data, &lims);
+	printf("x_min = %.1f  x_max = %.1f \n", lims.x_min, lims.x_max);
+	printf("y_min = %.1f  y_max = %.1f \n", lims.y_min, lims.y_max);
+	printf("z_min = %.1f  z_max = %.1f \n", lims.z_min, lims.z_max);
+	printf("\n");
+}
+
+
+static void test_SEM_in_planes_lims_computing(
+	STG_float x_e, STG_float y_e, STG_float z_e, STG_float u_e, STG_float v_e, STG_float w_e 
+)
+{
+	STG_int node_cnt = 10;
+	STG_float vol_size = 10.;
+	STG_float ls = 0;
+	STG_InitData init_data;
+	printf("Test in planes lims computing \n");
+	printf("x_e = %.1f  y_e = %.1f  z_e = %.1f \n", x_e, y_e, z_e);
+	printf("u_e = %.1f  v_e = %.1f  w_e = %.1f \n", u_e, v_e, w_e);
+	printf("size = %.1f \n", vol_size);
+	printf("\n");
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+
+	compute_mesh(vol_size, vol_size, vol_size, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, 1, 1, 1, 0, 0, 0, &(init_data.re));
+	fill_scales(
+		node_cnt, node_cnt, node_cnt,
+		ls, ls, ls, ls, ls, ls,
+		ls, ls, ls, ls, 1, 1, 1, 1, &(init_data.scales)
+	);
+
+	Limits lims;
+	compute_limits(init_data, &lims);
+
+	Vector eddies_pos[1] = { {.x = x_e, .y = y_e, .z = z_e} };
+	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
+
+	Limits * in_plane_lims;
+	in_plane_lims = get_in_planes_lims(lims, eddies_pos, 1, eddies_vel);
+	
+	printf("x_min = %.1f  x_max = %.1f \n", in_plane_lims[0].x_min, in_plane_lims[0].x_max);
+	printf("y_min = %.1f  y_max = %.1f \n", in_plane_lims[0].y_min, in_plane_lims[0].y_max);
+	printf("z_min = %.1f  z_max = %.1f \n", in_plane_lims[0].z_min, in_plane_lims[0].z_max);
+	printf("\n");
+}
+
+
+static void test_SEM_mom_field(
+	STG_int node_cnt, STG_float length, STG_float re_uu, STG_float re_vv, STG_float re_ww,
+	STG_float re_uv, STG_float re_uw, STG_float re_vw,
+	STG_float ls_i, STG_float ts, STG_int num_ts, STG_int num_eddies, STG_float u_e, STG_float v_e, STG_float w_e
+)
+{
+	printf("Test SEM pulsations.\n");
+	printf("Reynolds stresses:\n");
+	printf("%.2f  %.2f  %.2f \n", re_uu, re_uv, re_uw);
+	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
+	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
+	printf("Eddies number: %d \n", num_eddies);
+	STG_InitData init_data;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+	
+	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
+	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, 
+		1, 1, 1, 1, &(init_data.scales));
+
+
+	STG_SEMData_Stationary stat_data;
+	STG_SEMData_Transient trans_data;
+	STG_VelMomField mom_field;
+	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
+
+	STG_compute_SEM_stat_data(init_data, num_eddies, eddies_vel, &stat_data);
+	STG_compute_SEM_trans_data(stat_data, ts, num_ts, &trans_data);
+	STG_compute_SEM_moment_field(init_data, stat_data, trans_data, ts, num_ts, &mom_field);
+
+	printf("u = %.3f   v = %.3f  w = %.3f \n", mom_field.u_p[0], mom_field.v_p[0], mom_field.w_p[0]);
+	printf("\n");
+
+	STG_free_SEM_stat_data(&stat_data);
+	STG_free_SEM_trans_data(&trans_data);
+	STG_free_VelMomField(&mom_field);
+}
 
 int main(int argc, char * argv[])
 {
@@ -497,13 +588,38 @@ int main(int argc, char * argv[])
 	test_Smirnov_mom_field(5, 0.1, 1, 3, 2, 0, 0, 0, 0.01, 100);
 	test_Smirnov_mom_field(5, 0.1, 1, 1, 1, 0, 0, 0, 0.01, 100);
 	test_Smirnov_mom_field(5, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.01, 100);
-	test_Smirnov_node_hist(32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 100);
+	test_Smirnov_node_hist(0.01, 5, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 100);
 	test_Smirnov_mom_field(5, 0.1, 0.000001, 0.000001, 0.0000, 1.19e-8, -3.08e-7, 0.000000, 0.01, 100);
-	test_Smirnov_node_hist(1, 1, 1, 0, 0, 0, 1000);
+	test_Smirnov_node_hist(0.01, 5, 0.1, 1, 1, 1, 0, 0, 0, 1000);
 
 	test_Davidson_mom_field(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
 	test_Davidson_mom_field(10, 10, 1, 2, 3, 0, 0, 0, 1, 100);
 	test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
 
+
+	test_SEM_vol_lims_computing(
+		1, 2, 3,
+		3, 5, 2,
+		4, 1, 6,
+		12, 5, 8
+	);
+	
+
+	test_SEM_in_planes_lims_computing(5, 5, 5, 1, 0, 0);
+	test_SEM_in_planes_lims_computing(5, 5, 5, 0, 1, 0);
+	test_SEM_in_planes_lims_computing(5, 5, 5, 0, 0, 1);
+	test_SEM_in_planes_lims_computing(5, 5, 5, 1, 1, 0);
+
+	test_SEM_in_planes_lims_computing(4, 5, 5, 1, 1, 0);
+	test_SEM_in_planes_lims_computing(6, 5, 5, 1, 1, 0);
+
+	test_SEM_in_planes_lims_computing(5, 4, 5, 0, 1, 1);
+	test_SEM_in_planes_lims_computing(5, 6, 5, 0, 1, 1);
+
+	test_SEM_in_planes_lims_computing(5, 5, 4, 1, 0, 1);
+	test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
+
+
+	test_SEM_mom_field(10, 3, 1, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 200, 1, 0, 0);
 	return 0;
 }
