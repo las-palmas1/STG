@@ -9,9 +9,6 @@ from STG.common import STG_VelNodeHist, STG_VelMomField, free_mom_field, free_no
 from STG.smirnov import compute_smirnov_data, compute_smirnov_node_hist, compute_smirnov_moment_field, \
     free_smirnov_data, STG_SmirnovData
 
-from generators.tools import davidson_compute_velocity_field, davidson_compute_velocity_pulsation, \
-    original_sem_compute_velocity_field, original_sem_compute_pulsation
-
 from STG.davidson import STG_DavidsonData_Transient, STG_DavidsonData_Stationary, free_davidson_trans_data, \
     free_davidson_stat_data, alloc_davidson_trans_data, compute_davidson_node_hist, compute_davidson_stat_data, \
     compute_davidson_moment_field, compute_davidson_trans_data
@@ -84,7 +81,7 @@ class Smirnov(Generator):
         self.ts_i = ts_i
         self.ls_i = ls_i
         self.mode_num = mode_num
-        self._c_data = STG_SmirnovData()
+        self.c_data = STG_SmirnovData()
         Generator.__init__(
             self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
             ls_i=ls_i, ls_ux=0, ls_uy=0, ls_uz=0, ls_vx=0, ls_vy=0, ls_vz=0,
@@ -94,7 +91,7 @@ class Smirnov(Generator):
         )
 
     def _compute_aux_data_stationary(self):
-        compute_smirnov_data(self._c_init_data, self.mode_num, self._c_data)
+        compute_smirnov_data(self._c_init_data, self.mode_num, self.c_data)
 
     def _compute_aux_data_transient(self):
         pass
@@ -102,17 +99,17 @@ class Smirnov(Generator):
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
         compute_smirnov_node_hist(
-            init_data=self._c_init_data, data=self._c_data, ts=self._ts, num_ts=self._num_ts_tot,
-            node_hist=self._c_node_hist, i=i, j=j, k=k)
-        self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
-        free_node_hist(self._c_node_hist)
+            init_data=self._c_init_data, data=self.c_data, ts=self._ts, num_ts=self._num_ts_tot,
+            node_hist=self.c_node_hist, i=i, j=j, k=k)
+        self._vel_puls = extract_pulsations_from_node_hist(self.c_node_hist)
+        free_node_hist(self.c_node_hist)
 
     def compute_velocity_field(self, num_ts):
         compute_smirnov_moment_field(
-            init_data=self._c_init_data, data=self._c_data, time=self.time_arr[num_ts], mom_field=self._c_mom_field
+            init_data=self._c_init_data, data=self.c_data, time=self.time_arr[num_ts], mom_field=self.c_mom_field
         )
-        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
-        free_mom_field(self._c_mom_field)
+        self._vel_field = extract_pulsations_from_mom_field(self.c_mom_field)
+        free_mom_field(self.c_mom_field)
 
     def _get_energy_desired(self, k):
         return 16 * (2 / np.pi) ** 0.5 * k**4 * np.exp(-2 * k**2)
@@ -121,7 +118,7 @@ class Smirnov(Generator):
         pass
 
     def free_data(self):
-        free_smirnov_data(self._c_data)
+        free_smirnov_data(self.c_data)
 
 
 class Davidson(Generator):
@@ -137,8 +134,8 @@ class Davidson(Generator):
         self.dissip_rate = dissip_rate
         self.visc = visc
         self.num_modes = num_modes
-        self._c_stat_data = STG_DavidsonData_Stationary()
-        self._c_trans_data = STG_DavidsonData_Transient()
+        self.c_stat_data = STG_DavidsonData_Stationary()
+        self.c_trans_data = STG_DavidsonData_Transient()
         Generator.__init__(
             self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, ls_i=ls_i,
             ls_ux=0, ls_uy=0, ls_uz=0,
@@ -148,41 +145,41 @@ class Davidson(Generator):
         )
 
     def _alloc_aux_data_transient(self):
-        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._num_ts_tot, self._c_trans_data)
+        alloc_davidson_trans_data(self._c_init_data, self.num_modes, self._num_ts_tot, self.c_trans_data)
 
     def _compute_aux_data_transient(self):
-        compute_davidson_trans_data(self._c_stat_data, self._num_ts_tot, self._c_trans_data)
+        compute_davidson_trans_data(self.c_stat_data, self._num_ts_tot, self.c_trans_data)
 
     def _compute_aux_data_stationary(self):
         compute_davidson_stat_data(self._c_init_data, self.num_modes, self.dissip_rate, self.visc, self._ts,
-                                   self._c_stat_data)
+                                   self.c_stat_data)
 
     def compute_velocity_field(self, num_ts):
         compute_davidson_moment_field(
-            self._c_init_data, self._c_stat_data, self._c_trans_data, self._ts, num_ts, self._c_mom_field
+            self._c_init_data, self.c_stat_data, self.c_trans_data, self._ts, num_ts, self.c_mom_field
         )
-        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
-        free_mom_field(self._c_mom_field)
+        self._vel_field = extract_pulsations_from_mom_field(self.c_mom_field)
+        free_mom_field(self.c_mom_field)
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
         compute_davidson_node_hist(
-            self._c_init_data, self._c_stat_data, self._ts, self._num_ts_tot, self._c_trans_data, self._c_node_hist,
+            self._c_init_data, self.c_stat_data, self._ts, self._num_ts_tot, self.c_trans_data, self.c_node_hist,
             i, j, k
         )
-        self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
-        free_node_hist(self._c_node_hist)
+        self._vel_puls = extract_pulsations_from_node_hist(self.c_node_hist)
+        free_node_hist(self.c_node_hist)
 
     def free_data(self):
-        free_davidson_stat_data(self._c_stat_data)
-        free_davidson_trans_data(self._c_trans_data)
+        free_davidson_stat_data(self.c_stat_data)
+        free_davidson_trans_data(self.c_trans_data)
 
     def _get_energy_desired(self, k):
         k_arr = np.zeros(self.num_modes)
         energy = np.zeros(self.num_modes)
         for i in range(self.num_modes):
-            k_arr[i] = self._c_stat_data.k_arr[i]
-            energy[i] = self._c_stat_data.energy[i]
+            k_arr[i] = self.c_stat_data.k_arr[i]
+            energy[i] = self.c_stat_data.energy[i]
         return float(interp1d(k_arr, energy, fill_value=0, bounds_error=False)(k))
 
 
@@ -198,9 +195,9 @@ class OriginalSEM(Generator):
     ):
         self.eddies_num = eddies_num
         self.u_e = u_e
-        self._c_stat_data = STG_SEMData_Stationary()
-        self._c_trans_data = STG_SEMData_Transient()
-        ls_i = (ls_ux + ls_uy + ls_uz + ls_vx + ls_vy + ls_vz + ls_wx + ls_wy + ls_wz)
+        self.c_stat_data = STG_SEMData_Stationary()
+        self.c_trans_data = STG_SEMData_Transient()
+        ls_i = (ls_ux + ls_uy + ls_uz + ls_vx + ls_vy + ls_vz + ls_wx + ls_wy + ls_wz) / 9
         Generator.__init__(
             self, block, u_e, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
             ls_i=ls_i, ls_ux=ls_ux, ls_uy=ls_uy, ls_uz=ls_uz,
@@ -214,28 +211,28 @@ class OriginalSEM(Generator):
         pass
 
     def _compute_aux_data_transient(self):
-        compute_sem_trans_data(self._c_stat_data, self._ts, self._num_ts_tot, self._c_trans_data)
+        compute_sem_trans_data(self.c_stat_data, self._ts, self._num_ts_tot, self.c_trans_data)
 
     def _compute_aux_data_stationary(self):
         compute_sem_stat_data(self._c_init_data, self.eddies_num, self.u_e[0], self.u_e[1],
-                              self.u_e[2], self._c_stat_data)
+                              self.u_e[2], self.c_stat_data)
 
     def compute_velocity_field(self, num_ts):
-        compute_sem_moment_field(self._c_init_data, self._c_stat_data, self._c_trans_data, self._ts,
-                                 self._num_ts_tot, self._c_mom_field)
-        self._vel_field = extract_pulsations_from_mom_field(self._c_mom_field)
-        free_mom_field(self._c_mom_field)
+        compute_sem_moment_field(self._c_init_data, self.c_stat_data, self.c_trans_data, self._ts,
+                                 self._num_ts_tot, self.c_mom_field)
+        self._vel_field = extract_pulsations_from_mom_field(self.c_mom_field)
+        free_mom_field(self.c_mom_field)
 
     def compute_pulsation_at_node(self):
         i, j, k = self.get_puls_node()
-        compute_sem_node_hist(self._c_init_data, self._c_stat_data, self._c_trans_data, self._ts,
-                              self._num_ts_tot, self._c_node_hist, i, j, k)
-        self._vel_puls = extract_pulsations_from_node_hist(self._c_node_hist)
-        free_node_hist(self._c_node_hist)
+        compute_sem_node_hist(self._c_init_data, self.c_stat_data, self.c_trans_data, self._ts,
+                              self._num_ts_tot, self.c_node_hist, i, j, k)
+        self._vel_puls = extract_pulsations_from_node_hist(self.c_node_hist)
+        free_node_hist(self.c_node_hist)
 
     def free_data(self):
-        free_sem_stat_data(self._c_stat_data)
-        free_sem_trans_data(self._c_trans_data)
+        free_sem_stat_data(self.c_stat_data)
+        free_sem_trans_data(self.c_trans_data)
 
 
 

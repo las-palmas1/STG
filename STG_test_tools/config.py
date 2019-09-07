@@ -1,6 +1,6 @@
 
 conf = 'Release'
-STG_lib_name = 'STG_shared_lib'
+STG_lib_name = 'libstg'
 
 # путь к папке с картинками
 pic_dir = 'pictures'

@@ -16,6 +16,7 @@ void compute_line_plane_intersection(Vector p0, Vector vec, Plane pl, Vector * p
 }
 
 
+
 void STG_compute_SEM_matrix_data(
         STG_float re_uu, STG_float re_vv, STG_float re_ww,
         STG_float re_uv, STG_float re_uw, STG_float re_vw,
@@ -41,6 +42,7 @@ STG_float get_scalar_prod(Vector v1, Vector v2)
 }
 
 
+
 static STG_float find_max(STG_float * arr, STG_int num)
 {
     STG_float res = arr[0];
@@ -54,6 +56,7 @@ static STG_float find_max(STG_float * arr, STG_int num)
     return  res;
 }
 
+
 static STG_float find_min(STG_float * arr, STG_int num)
 {
     STG_float res = arr[0];
@@ -66,6 +69,8 @@ static STG_float find_min(STG_float * arr, STG_int num)
     }
     return  res;
 }
+
+
 
 void compute_limits(STG_InitData init_data, Limits * lims)
 {
@@ -104,6 +109,8 @@ void compute_limits(STG_InitData init_data, Limits * lims)
     lims->z_max = z_max;
     lims->z_min = z_min;
 }
+
+
 
 Limits * get_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int num_eddies, Vector vel)
 {
@@ -161,6 +168,7 @@ Limits * get_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int num_eddi
 }
 
 
+
 void STG_compute_SEM_init_eddies_params(Vector * eddies_pos, Vector * eddies_int, STG_int num_eddies, Limits vol_lims)
 {
     for (STG_int i = 0; i < num_eddies; i++)
@@ -186,9 +194,9 @@ void STG_compute_SEM_new_eddies_params(
         eddies_pos_new[i].y = eddies_pos_cur[i].y + ts * vel.y;
         eddies_pos_new[i].z = eddies_pos_cur[i].z + ts * vel.z;
 
-        if (eddies_pos_new[i].x < vol_lims.x_min || eddies_int_new[i].x > vol_lims.x_max ||
-                eddies_pos_new[i].y < vol_lims.y_min || eddies_int_new[i].y > vol_lims.y_max ||
-                eddies_pos_new[i].z < vol_lims.z_min || eddies_int_new[i].z > vol_lims.z_max)
+        if ((eddies_pos_new[i].x < vol_lims.x_min) || (eddies_pos_new[i].x > vol_lims.x_max) ||
+                (eddies_pos_new[i].y < vol_lims.y_min) || (eddies_pos_new[i].y > vol_lims.y_max) ||
+                (eddies_pos_new[i].z < vol_lims.z_min) || (eddies_pos_new[i].z > vol_lims.z_max))
         {
             get_uniform_ref(in_planes_lims[i].x_min, in_planes_lims[i].x_max, 1, &(eddies_pos_new[i].x));
             get_uniform_ref(in_planes_lims[i].y_min, in_planes_lims[i].y_max, 1, &(eddies_pos_new[i].y));
@@ -203,8 +211,8 @@ void STG_compute_SEM_new_eddies_params(
             eddies_int_new[i].z = eddies_int_cur[i].z;
         }
     }
-
 }
+
 
 
 void STG_compute_SEM_stat_data(
@@ -239,15 +247,17 @@ void STG_compute_SEM_stat_data(
 
 	stat_data->num_eddies = num_eddies;
 	stat_data->eddies_vel = eddies_vel;
+
 	stat_data->eddies_pos_init = (Vector*)malloc(sizeof(Vector) * num_eddies);
 	stat_data->eddies_int_init = (Vector*)malloc(sizeof(Vector) * num_eddies);
 	compute_limits(init_data, &(stat_data->vol_lims));
 
 	STG_compute_SEM_init_eddies_params(stat_data->eddies_pos_init, stat_data->eddies_int_init, 
 		num_eddies, stat_data->vol_lims);
-
-	stat_data->in_planes_lims = get_in_planes_lims(stat_data->vol_lims, stat_data->eddies_pos_init, num_eddies, eddies_vel);
+    stat_data->in_planes_lims = get_in_planes_lims(stat_data->vol_lims, stat_data->eddies_pos_init, num_eddies, eddies_vel);
 }
+
+
 
 void STG_free_SEM_stat_data(STG_SEMData_Stationary * stat_data)
 {
@@ -265,6 +275,7 @@ void STG_free_SEM_stat_data(STG_SEMData_Stationary * stat_data)
 	free(stat_data->eddies_pos_init);
 	free(stat_data->in_planes_lims);
 }
+
 
 
 void STG_compute_SEM_trans_data(
@@ -290,10 +301,10 @@ void STG_compute_SEM_trans_data(
 			&(trans_data->eddies_pos[i_cur]), &(trans_data->eddies_int[i_cur]), stat_data.num_eddies,
 			stat_data.vol_lims, stat_data.eddies_vel, ts, stat_data.in_planes_lims,
 			&(trans_data->eddies_pos[i_next]), &(trans_data->eddies_int[i_next])
-		);
-		
+		);		
 	}
 }
+
 
 void STG_free_SEM_trans_data(STG_SEMData_Transient * trans_data)
 {
@@ -305,9 +316,9 @@ void STG_free_SEM_trans_data(STG_SEMData_Transient * trans_data)
 static STG_float form_func(STG_float x, STG_float x_e, STG_float ls)
 {
 	STG_float res;
-	if ((abs(x - x_e) / ls) < 1)
+    if ((fabs(x - x_e) / ls) < 1.)
 	{
-		res = sqrt(1.5) * (1 - abs((x - x_e) / ls));
+        res = sqrt(1.5) * (1 - fabs((x - x_e) / ls));
 	}
 	else
 	{
@@ -372,6 +383,8 @@ static void extract_arrays(Vector * vec, STG_int num, STG_float ** x, STG_float 
     }
 }
 
+
+
 void STG_compute_SEM_moment_field(
 		STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data, STG_float ts,
         STG_int num_ts, STG_VelMomField * mom_field
@@ -417,8 +430,8 @@ void STG_compute_SEM_moment_field(
 	free(eps_x);
 	free(eps_y);
 	free(eps_z);
-
 }
+
 
 
 void STG_compute_SEM_node_hist(
@@ -466,7 +479,6 @@ void STG_compute_SEM_node_hist(
 		free(eps_y);
 		free(eps_z);
 	}
-
 }
 
 

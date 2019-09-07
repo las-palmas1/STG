@@ -70,11 +70,11 @@ class SmirnovTest(unittest.TestCase):
     def setUp(self):
         n = 55
         size = 20
-        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
-        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
+        # mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
+        mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.array([0, size / (n - 1)]))
         self.block = Block(
             shape=(n, n, 2),
-            mesh=(mesh[1], mesh[0], mesh[2]),
+            mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
         STG.common.init_rand()
@@ -133,11 +133,11 @@ class DavidsonTest(unittest.TestCase):
     def setUp(self):
         n = 50
         size = 0.1 * n
-        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
-        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
+        # mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
+        mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.array([0, size / (n - 1)]))
         self.block = Block(
             shape=(n, n, 2),
-            mesh=(mesh[1], mesh[0], mesh[2]),
+            mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
         self.visc = 1.5e-5
@@ -202,11 +202,11 @@ class OriginalSEMTest(unittest.TestCase):
     def setUp(self):
         n = 70
         size = 6.28
-        # mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
-        mesh = np.meshgrid(np.linspace(0, size, n), np.linspace(0, size, n), [0, size / (n - 1)])
+        # mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
+        mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.array([0, size / (n - 1)]))
         self.block = Block(
             shape=(n, n, 2),
-            mesh=(mesh[1], mesh[0], mesh[2]),
+            mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
         self.generator = OriginalSEM(
@@ -218,11 +218,16 @@ class OriginalSEMTest(unittest.TestCase):
             re_uv=0.,
             re_uw=0.,
             re_vw=0.,
-            time_arr=np.array([0]),
-            sigma=0.5,
+            time_arr=np.array([0, 0.01]),
+            ls_ux=0.5, ls_uy=0.5, ls_uz=0.5,
+            ls_vx=0.5, ls_vy=0.5, ls_vz=0.5,
+            ls_wx=0.5, ls_wy=0.5, ls_wz=0.5,
             eddies_num=1000
         )
         self.analyzer = Analyzer(self.generator)
+
+    def tearDown(self):
+        self.generator.free_data()
 
     def test_plot_2d_velocity_field(self):
         self.analyzer.plot_2d_velocity_field(figsize=(7, 7), num_levels=20, vmin=-4, vmax=4, grid=False)
@@ -231,19 +236,19 @@ class OriginalSEMTest(unittest.TestCase):
         self.analyzer.plot_velocity_history(10, 10, 0, 0.01, 1000)
 
     def test_plot_moments(self):
-        self.analyzer.plot_moments(20, 20, 0, 0.005, 9000)
+        self.analyzer.plot_moments(20, 20, 0, 0.005, 9000, ylim=(-0.5, 1.5))
 
     def test_plot_divergence_field_2d(self):
         self.analyzer.plot_divergence_field_2d(vmin=-15, vmax=15, grid=False, num_levels=20)
 
     def test_plot_two_point_space_correlation(self):
         self.analyzer.plot_two_point_space_correlation(
-            i0=0, j0=0, k0=0, ts=0.003, num_ts=6000, di=1, dj=1, dk=0, num=25
+            i0=0, j0=0, k0=0, ts=0.003, num_ts=6000, di=1, dj=1, dk=0, num=60
         )
 
     def test_plot_two_point_time_correlation(self):
         self.analyzer.plot_two_point_time_correlation(
-            i=0, j=0, k=0, t0=0, t1=5, num_dt_av=1000, num_dt=1000)
+            i=0, j=0, k=0, t0=0, t1=4, num_dt_av=3000, num_dt=40)
 
     def test_plot_spectrum_2d(self):
         self.analyzer.plot_spectrum_2d(num_pnt=200)

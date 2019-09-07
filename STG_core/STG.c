@@ -621,5 +621,6 @@ int main(int argc, char * argv[])
 
 
 	test_SEM_mom_field(10, 3, 1, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 200, 1, 0, 0);
+
 	return 0;
 }

@@ -27,16 +27,17 @@ class STG_SEMData_Stationary(ctypes.Structure):
         ('j_cnt', STG_int),
         ('k_cnt', STG_int),
 
-        ('a11', STG_float),
-        ('a12', STG_float),
-        ('a13', STG_float),
-        ('a21', STG_float),
-        ('a22', STG_float),
-        ('a23', STG_float),
-        ('a31', STG_float),
-        ('a32', STG_float),
-        ('a33', STG_float),
+        ('a11', ctypes.POINTER(STG_float)),
+        ('a12', ctypes.POINTER(STG_float)),
+        ('a13', ctypes.POINTER(STG_float)),
+        ('a21', ctypes.POINTER(STG_float)),
+        ('a22', ctypes.POINTER(STG_float)),
+        ('a23', ctypes.POINTER(STG_float)),
+        ('a31', ctypes.POINTER(STG_float)),
+        ('a32', ctypes.POINTER(STG_float)),
+        ('a33', ctypes.POINTER(STG_float)),
 
+        # NOTE: порядок должен быть такой же, как в СИ
         ('num_eddies', STG_int),
         ('vol_lims', Limits),
         ('eddies_vel', Vector),
@@ -79,7 +80,7 @@ def compute_sem_trans_data(
 ):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_SEM_trans_data
-    func_c.argtypes = STG_SEMData_Stationary, STG_float, STG_int, ctypes.POINTER(trans_data)
+    func_c.argtypes = STG_SEMData_Stationary, STG_float, STG_int, ctypes.POINTER(STG_SEMData_Transient)
     func_c(stat_data, ts, num_ts, ctypes.byref(trans_data))
 
 

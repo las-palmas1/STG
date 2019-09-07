@@ -86,8 +86,8 @@ class Generator(metaclass=ABCMeta):
         self._i_puls = 0
         self._j_puls = 0
         self._k_puls = 0
-        self._c_mom_field = STG_VelMomField()
-        self._c_node_hist = STG_VelNodeHist()
+        self.c_mom_field = STG_VelMomField()
+        self.c_node_hist = STG_VelNodeHist()
         self._vel_field: Tuple[np.ndarray, np.ndarray, np.ndarray] = ()
         self._vel_puls: Tuple[np.ndarray, np.ndarray, np.ndarray] = (
             np.zeros(time_arr.shape), np.zeros(time_arr.shape), np.zeros(time_arr.shape)

@@ -43,13 +43,13 @@ typedef struct STG_SEMData_Stationary_s
     STG_float * a32;
     STG_float * a33;
 
-    STG_int num_eddies;
-	Vector * eddies_pos_init;
-	Vector * eddies_int_init;
-	Limits vol_lims;
-    Limits * in_planes_lims;
     // Вопрос: что задавать - скорость переноса вихрей или временной масштаб
+    STG_int num_eddies;
+	Limits vol_lims;
     Vector eddies_vel;
+    Vector * eddies_pos_init;
+    Vector * eddies_int_init;
+    Limits * in_planes_lims;
 } STG_SEMData_Stationary;
 
 
