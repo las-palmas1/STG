@@ -17,7 +17,7 @@ contains
     subroutine test_Smirnov( &
         re_uu, re_vv, re_ww, &
         re_uv, re_uw, re_vw, &
-        num_modes &
+        num_modes, ls_i &
     )
         use STG_COMMON
         use STG_SMIRNOV
@@ -28,7 +28,7 @@ contains
         integer(8) :: num_modes
         
         integer :: num_rand_vars, num_mat_vars
-        real :: time, x, y, z, length_scale, time_scale
+        real :: time, x, y, z, length_scale, time_scale, ls_i
         
         real, allocatable :: rand_data(:, :)
         real, allocatable :: mat_data(:)
@@ -44,7 +44,7 @@ contains
         x = 1
         y = 1
         z = 1
-        length_scale = 1
+        length_scale = ls_i
         time_scale = 1
         
         allocate(rand_data(num_modes, num_rand_vars))
@@ -137,15 +137,111 @@ contains
         print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uw, re_vw, re_ww
         print '(1x, a4, f8.3, 2x, a4, f8.3, 2x, a4, f8.3)', 'u = ', u, 'v = ', v, 'w = ', w
         print *, ''
+        
+        deallocate(rand_data)
+        deallocate(k1, k2, k3, zeta1, zeta2, zeta3)
+        deallocate(xi1, xi2, xi3, p1, p2, p3, q1, q2, q3, omega)
     end subroutine test_Smirnov
     
-    subroutine test2(y1)
-        implicit none
-        real :: y1(:)
+    
+    
+    subroutine test_Davidson( &
+        re_uu, re_vv, re_ww, &
+        re_uv, re_uw, re_vw, &
+        num_modes, ls_i &
+    )
+        use STG_COMMON
+        use STG_DAVIDSON
+        real :: re_uu, re_vv, re_ww, re_uv, re_uw, re_vw
+        integer :: num_modes
+        real:: ls_i
         
-        y1(12) = 2
-        print *, y1(12)
-    end subroutine test2
+        real :: dissip_rate, visc, delta_min
+        real :: c1, c2, c3, a11, a12, a13
+        real :: a21, a22, a23, a31, a32, a33
+        real :: ts_i, ts, a, b, x, y, z
+        real :: u, v, w, u_prev, v_prev, w_prev
+        real, allocatable :: energy(:), k_arr(:), u_abs(:)
+        real, allocatable :: phi(:), psi(:), alpha(:), theta(:)
+        real, allocatable :: k1(:), k2(:), k3(:), sigma1(:), sigma2(:), sigma3(:)
+        
+        call STG_compute_Davidson_matrix_data( &
+            re_uu, re_vv, re_ww, &
+	        re_uv, re_uw, re_vw, &
+	        c1, c2, c3, &
+	        a11, a12, a13, &
+	        a21, a22, a23, &
+	        a31, a32, a33  &
+        )
+        
+        visc = 1.5e-5
+        dissip_rate = 0.09**0.75 * (0.5 * (re_uu + re_vv + re_ww))**1.5 / ls_i
+        delta_min = 0.001
+        ts_i = 0.001
+        ts = 0.01
+        
+        allocate(energy(num_modes))
+        allocate(k_arr(num_modes))
+        allocate(u_abs(num_modes))
+        
+        call STG_compute_Davidson_spectrum( &
+            delta_min, num_modes, re_uu, re_vv, re_ww, &
+            ls_i, dissip_rate, visc, energy, k_arr, u_abs &
+        )
+        
+        allocate(phi(num_modes), psi(num_modes), alpha(num_modes), theta(num_modes))
+        allocate(k1(num_modes), k2(num_modes), k3(num_modes))
+        allocate(sigma1(num_modes), sigma2(num_modes), sigma3(num_modes))
+        
+        call STG_compute_Davidson_random_data( &
+            num_modes, k_arr, phi, psi, &
+            alpha, theta, k1, k2, k3, &
+            sigma1, sigma2, sigma3 &
+        )
+            
+        call STG_compute_Davidson_auto_coef(ts, ts_i, a, b)
+        print *, 'a b'
+        print '(1x, f11.8, 2x, f11.8)', a, b
+        a = 0.
+        b = 1.
+        u_prev = 0.
+        v_prev = 0.
+        w_prev = 0.
+        x = 1.
+        y = 1.
+        z = 1.
+        
+        call STG_compute_Davidson_pulsations( &
+            k1, k2, k3, &
+            sigma1, sigma2, sigma3, psi, u_abs, &
+            c1, c2, c3, &
+            a11, a12, a13, &
+            a21, a22, a23, &
+            a31, a32, a33, &
+            x, y, z, &
+            a, b, num_modes, &
+            u_prev, v_prev, w_prev, &
+            u, v, w &
+        )
+            
+        print *, '   Test Davidson'
+        print *, 'Reynolds stresses'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uu, re_uv, re_uw
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uv, re_vv, re_vw
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uw, re_vw, re_ww
+        print *, 'Eig values'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', c1, c2, c3
+        print *, ' U_abs'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2, 2x, f6.2)', u_abs(1: 4)
+        print *, 'Rand data (theta)'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2, 2x, f6.2)', theta(1: 4) 
+        print *, 'Velocities'
+        print '(1x, a4, f8.3, 2x, a4, f8.3, 2x, a4, f8.3)', 'u = ', u, 'v = ', v, 'w = ', w
+        print *, ''
+        deallocate(u_abs, k_arr, energy)
+    end subroutine 
+    
+    
     
     subroutine Read_array(turb_data_dir, dir, fname, arr)
         character(len=100) :: turb_data_dir, full_fname
@@ -158,6 +254,7 @@ contains
         close(21)
     end subroutine 
 
+    
     subroutine Read_re_stresses(turb_data_dir, y, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw)
         character(len=100) :: turb_data_dir
         real :: y(:), re_uu(:), re_vv(:), re_ww(:), re_uv(:), re_uw(:), re_vw(:)
@@ -171,64 +268,69 @@ contains
         call Read_array(turb_data_dir, 're', "y", y)
     end subroutine
 
-    function Interp(y, y_arr, val_arr)
-    real :: y
-    real :: y_arr(:), val_arr(:)
-    real :: Interp
-    integer :: i
-    integer :: num
     
-    num = size(y_arr)
-    do i = 1, num-1
-        if ((y >= y_arr(i)).AND.(y < y_arr(i + 1))) then
-            Interp = val_arr(i) + (y - y_arr(i)) * (val_arr(i + 1) - val_arr(i)) / (y_arr(i + 1) - y_arr(i))
+    function Interp(y, y_arr, val_arr)
+        real :: y
+        real :: y_arr(:), val_arr(:)
+        real :: Interp
+        integer :: i
+        integer :: num
+    
+        num = size(y_arr)
+        do i = 1, num-1
+            if ((y >= y_arr(i)).AND.(y < y_arr(i + 1))) then
+                Interp = val_arr(i) + (y - y_arr(i)) * (val_arr(i + 1) - val_arr(i)) / (y_arr(i + 1) - y_arr(i))
+            end if
+        end do
+        if (y < y_arr(1)) then
+            Interp = val_arr(1) - (val_arr(2) - val_arr(1)) / (y_arr(2) - y_arr(1)) * (y_arr(1) - y)
         end if
-    end do
-    if (y < y_arr(1)) then
-        Interp = val_arr(1) - (val_arr(2) - val_arr(1)) / (y_arr(2) - y_arr(1)) * (y_arr(1) - y)
-    end if
-    if (y >= y_arr(num)) then
-        Interp = val_arr(num) + (val_arr(num) - val_arr(num-1)) / (y_arr(num) - y_arr(num-1)) * (y - y_arr(num))
-    end if
-end function
+        if (y >= y_arr(num)) then
+            Interp = val_arr(num) + (val_arr(num) - val_arr(num-1)) / (y_arr(num) - y_arr(num-1)) * (y - y_arr(num))
+        end if
+    end function
     
 end module Test
+
 
     program STG_fort
     use Test    
     implicit none
 
     ! Variables
-    integer(8) :: num_modes = 50
+    integer(8) :: num_modes = 150
     real :: re_uu = 1
-    real :: re_vv = 1
-    real :: re_ww = 1
-    real :: re_uv = 2
-    real :: re_uw = 1
-    real :: re_vw = -3
+    real :: re_vv = 3
+    real :: re_ww = 4
+    real :: re_uv = -1
+    real :: re_uw = 0
+    real :: re_vw = 0
+    real :: ls_i = 1.
 
-    character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
-    integer(8) :: N = 69
-    real, allocatable :: y_arr(:), re_uu_arr(:), re_vv_arr(:), re_ww_arr(:), re_uv_arr(:), re_uw_arr(:), re_vw_arr(:) 
-    real :: y = 0.001
+    ! character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
+    ! integer(8) :: N = 69
+    ! real, allocatable :: y_arr(:), re_uu_arr(:), re_vv_arr(:), re_ww_arr(:), re_uv_arr(:), re_uw_arr(:), re_vw_arr(:) 
+    ! real :: y = 0.001
     
-    ! Body of STG_fort
-    allocate(y_arr(N))
-    allocate(re_uu_arr(N))
-    allocate(re_vv_arr(N))
-    allocate(re_ww_arr(N))
-    allocate(re_uv_arr(N))
-    allocate(re_uw_arr(N))
-    allocate(re_vw_arr(N))
+    ! ! Body of STG_fort
+    ! allocate(y_arr(N))
+    ! allocate(re_uu_arr(N))
+    ! allocate(re_vv_arr(N))
+    ! allocate(re_ww_arr(N))
+    ! allocate(re_uv_arr(N))
+    ! allocate(re_uw_arr(N))
+    ! allocate(re_vw_arr(N))
     
-    call Read_re_stresses(turb_data_dir, y_arr, re_uu_arr, re_vv_arr, re_ww_arr, re_uv_arr, re_uw_arr, re_vw_arr)
-    print *, Interp(y, y_arr, re_uu_arr)
-    print *, ''
-    print *, y_arr
-    print *, ''
-    print *, re_uu_arr
+    ! call Read_re_stresses(turb_data_dir, y_arr, re_uu_arr, re_vv_arr, re_ww_arr, re_uv_arr, re_uw_arr, re_vw_arr)
+    ! print *, Interp(y, y_arr, re_uu_arr)
+    ! print *, ''
+    ! print *, y_arr
+    ! print *, ''
+    ! print *, re_uu_arr
 
-    call test_Smirnov(re_uu*2, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes)
+    call test_Smirnov(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
+    
+    call test_Davidson(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
     
     end program STG_fort
 

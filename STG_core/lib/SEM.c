@@ -370,7 +370,7 @@ void STG_compute_SEM_pulsations(
 }
 
 
-static void extract_arrays(Vector * vec, STG_int num, STG_float ** x, STG_float ** y, STG_float ** z)
+void arrays_from_vector(Vector * vec, STG_int num, STG_float ** x, STG_float ** y, STG_float ** z)
 {
     *x = (STG_float *)malloc(sizeof (STG_float) * num);
     *y = (STG_float *)malloc(sizeof (STG_float) * num);
@@ -384,6 +384,74 @@ static void extract_arrays(Vector * vec, STG_int num, STG_float ** x, STG_float 
 }
 
 
+void vectors_from_arrays(STG_float * x, STG_float * y, STG_float * z, STG_int num, Vector ** vec)
+{
+	*vec = (Vector *)malloc(sizeof(STG_float) * num);
+	for (STG_int i = 0; i < num; i++)
+	{
+		(*vec)[i].x = x[i];
+		(*vec)[i].y = y[i];
+		(*vec)[i].z = z[i];
+	}
+}
+
+
+void arrays_from_limits(
+	Limits * lims, STG_int num, STG_float ** x_min, STG_float ** x_max,
+	STG_float ** y_min, STG_float ** y_max, STG_float ** z_min, STG_float ** z_max
+)
+{
+	*x_min = (STG_float *)malloc(sizeof(STG_float) * num);
+	*x_max = (STG_float *)malloc(sizeof(STG_float) * num);
+	*y_min = (STG_float *)malloc(sizeof(STG_float) * num);
+	*y_max = (STG_float *)malloc(sizeof(STG_float) * num);
+	*z_min = (STG_float *)malloc(sizeof(STG_float) * num);
+	*z_max = (STG_float *)malloc(sizeof(STG_float) * num);
+	for (STG_int i = 0; i < num; i++)
+	{
+		(*x_min)[i] = lims[i].x_min;
+		(*x_max)[i] = lims[i].x_max;
+		(*y_min)[i] = lims[i].y_min;
+		(*y_max)[i] = lims[i].y_max;
+		(*z_min)[i] = lims[i].z_min;
+		(*z_max)[i] = lims[i].z_max;
+	}
+}
+
+
+void limits_from_arrays(
+	STG_float * x_min, STG_float * x_max, STG_float * y_min, STG_float * y_max,
+	STG_float * z_min, STG_float * z_max, STG_int num, Limits ** lims
+)
+{
+	*lims = (Limits *)malloc(sizeof(Limits) * num);
+	for (STG_int i = 0; i < num; i++)
+	{
+		(*lims)[i].x_min = x_min[i];
+		(*lims)[i].x_max = x_max[i];
+		(*lims)[i].y_min = y_min[i];
+		(*lims)[i].y_max = y_max[i];
+		(*lims)[i].z_min = z_min[i];
+		(*lims)[i].z_max = z_max[i];
+	}
+}
+
+
+void compute_in_planes_lims_fort(
+	STG_float x_min, STG_float x_max, STG_float y_min, STG_float y_max, STG_float z_min, STG_float z_max,
+	STG_float * x_e, STG_float * y_e, STG_float * z_e, STG_int num_eddies,
+	STG_float u_e, STG_float v_e, STG_float w_e,
+	STG_float * x_min_in, STG_float * x_max_in,
+	STG_float * y_min_in, STG_float * y_max_in,
+	STG_float * z_min_in, STG_float * z_max_in
+)
+{
+	Limits vol_lims = { .x_min = x_min,.x_max = x_max,.y_min = y_min,.y_max = y_max,.z_min = z_min,.z_max = z_max };
+	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
+	Vector * eddies_pos;
+	vectors_from_arrays(x_e, y_e, z_e, num_eddies, &(eddies_pos));
+	Limits * in_planes_lims = get_in_planes_lims(vol_lims, eddies_pos, num_eddies, eddies_vel);
+}
 
 void STG_compute_SEM_moment_field(
 		STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data, STG_float ts,
@@ -404,8 +472,8 @@ void STG_compute_SEM_moment_field(
     STG_float * eps_x, * eps_y, * eps_z;
     STG_int i_ts_start = num_ts * stat_data.num_eddies;
 
-    extract_arrays(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, &x_e, &y_e, &z_e);
-    extract_arrays(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, &eps_x, &eps_y, &eps_z);
+    arrays_from_vector(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, &x_e, &y_e, &z_e);
+    arrays_from_vector(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, &eps_x, &eps_y, &eps_z);
 
 	STG_float volume = (stat_data.vol_lims.x_max - stat_data.vol_lims.x_min) * (stat_data.vol_lims.y_max -
 		stat_data.vol_lims.y_min) * (stat_data.vol_lims.z_max - stat_data.vol_lims.z_min);
@@ -457,8 +525,8 @@ void STG_compute_SEM_node_hist(
 	for (STG_int i = 0; i < num_ts_tot + 1; i++)
 	{
 		STG_int i_ts_start = i * stat_data.num_eddies;
-		extract_arrays(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, &x_e, &y_e, &z_e);
-		extract_arrays(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, &eps_x, &eps_y, &eps_z);
+		arrays_from_vector(&(trans_data.eddies_pos[i_ts_start]), stat_data.num_eddies, &x_e, &y_e, &z_e);
+		arrays_from_vector(&(trans_data.eddies_int[i_ts_start]), stat_data.num_eddies, &eps_x, &eps_y, &eps_z);
 		
 		node_hist->time[i] = i * ts;
 		STG_compute_SEM_pulsations(

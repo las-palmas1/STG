@@ -88,7 +88,7 @@ void STG_compute_Davidson_spectrum(
 	{
 		k_arr[i] = k_min + delta_k * i;
 	}
-    STG_float k_eta = powf(dissip_rate, 0.25) / powf(visc, 0.75);
+    STG_float k_eta = pow(dissip_rate, 0.25) / pow(visc, 0.75);
     STG_float u_rms = sqrt(2. / 3. * k_t);
 
 	for (STG_int i = 0; i < num_modes; i++)
