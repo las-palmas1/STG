@@ -209,6 +209,7 @@ class OriginalSEMTest(unittest.TestCase):
             mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
+        STG.common.init_rand()
         self.generator = OriginalSEM(
             block=self.block,
             u_e=(10, 0, 0),
@@ -233,10 +234,10 @@ class OriginalSEMTest(unittest.TestCase):
         self.analyzer.plot_2d_velocity_field(figsize=(7, 7), num_levels=20, vmin=-4, vmax=4, grid=False)
 
     def test_plot_velocity_history(self):
-        self.analyzer.plot_velocity_history(10, 10, 0, 0.01, 1000)
+        self.analyzer.plot_velocity_history(20, 20, 0, 0.01, 1000)
 
     def test_plot_moments(self):
-        self.analyzer.plot_moments(20, 20, 0, 0.005, 9000, ylim=(-0.5, 1.5))
+        self.analyzer.plot_moments(10, 10, 0, 0.01, 1000, ylim=(-0.5, 1.5))
 
     def test_plot_divergence_field_2d(self):
         self.analyzer.plot_divergence_field_2d(vmin=-15, vmax=15, grid=False, num_levels=20)

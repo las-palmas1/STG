@@ -112,7 +112,7 @@ void compute_limits(STG_InitData init_data, Limits * lims)
 
 
 
-Limits * get_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int num_eddies, Vector vel)
+Limits * STG_get_SEM_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int num_eddies, Vector vel)
 {
     Plane volume_faces[FACE_NUM] = {
         {1., 0., 0., -vol_lim.x_min}, {1., 0., 0., -vol_lim.x_max},
@@ -254,7 +254,7 @@ void STG_compute_SEM_stat_data(
 
 	STG_compute_SEM_init_eddies_params(stat_data->eddies_pos_init, stat_data->eddies_int_init, 
 		num_eddies, stat_data->vol_lims);
-    stat_data->in_planes_lims = get_in_planes_lims(stat_data->vol_lims, stat_data->eddies_pos_init, num_eddies, eddies_vel);
+    stat_data->in_planes_lims = STG_get_SEM_in_planes_lims(stat_data->vol_lims, stat_data->eddies_pos_init, num_eddies, eddies_vel);
 }
 
 
@@ -384,9 +384,20 @@ void arrays_from_vector(Vector * vec, STG_int num, STG_float ** x, STG_float ** 
 }
 
 
+void fill_arrays_from_vector(Vector * vec, STG_int num, STG_float * x, STG_float * y, STG_float * z)
+{
+	for (STG_int i = 0; i < num; i++)
+	{
+		x[i] = vec[i].x;
+		y[i] = vec[i].y;
+		z[i] = vec[i].z;
+	}
+}
+
+
 void vectors_from_arrays(STG_float * x, STG_float * y, STG_float * z, STG_int num, Vector ** vec)
 {
-	*vec = (Vector *)malloc(sizeof(STG_float) * num);
+	*vec = (Vector *)malloc(sizeof(Vector) * num);
 	for (STG_int i = 0; i < num; i++)
 	{
 		(*vec)[i].x = x[i];
@@ -396,25 +407,19 @@ void vectors_from_arrays(STG_float * x, STG_float * y, STG_float * z, STG_int nu
 }
 
 
-void arrays_from_limits(
-	Limits * lims, STG_int num, STG_float ** x_min, STG_float ** x_max,
-	STG_float ** y_min, STG_float ** y_max, STG_float ** z_min, STG_float ** z_max
+void fill_arrays_from_limits(
+	Limits * lims, STG_int num, STG_float * x_min, STG_float * x_max,
+	STG_float * y_min, STG_float * y_max, STG_float * z_min, STG_float * z_max
 )
 {
-	*x_min = (STG_float *)malloc(sizeof(STG_float) * num);
-	*x_max = (STG_float *)malloc(sizeof(STG_float) * num);
-	*y_min = (STG_float *)malloc(sizeof(STG_float) * num);
-	*y_max = (STG_float *)malloc(sizeof(STG_float) * num);
-	*z_min = (STG_float *)malloc(sizeof(STG_float) * num);
-	*z_max = (STG_float *)malloc(sizeof(STG_float) * num);
 	for (STG_int i = 0; i < num; i++)
 	{
-		(*x_min)[i] = lims[i].x_min;
-		(*x_max)[i] = lims[i].x_max;
-		(*y_min)[i] = lims[i].y_min;
-		(*y_max)[i] = lims[i].y_max;
-		(*z_min)[i] = lims[i].z_min;
-		(*z_max)[i] = lims[i].z_max;
+		x_min[i] = lims[i].x_min;
+		x_max[i] = lims[i].x_max;
+		y_min[i] = lims[i].y_min;
+		y_max[i] = lims[i].y_max;
+		z_min[i] = lims[i].z_min;
+		z_max[i] = lims[i].z_max;
 	}
 }
 
@@ -437,7 +442,7 @@ void limits_from_arrays(
 }
 
 
-void compute_in_planes_lims_fort(
+void STG_compute_SEM_in_planes_lims_fort(
 	STG_float x_min, STG_float x_max, STG_float y_min, STG_float y_max, STG_float z_min, STG_float z_max,
 	STG_float * x_e, STG_float * y_e, STG_float * z_e, STG_int num_eddies,
 	STG_float u_e, STG_float v_e, STG_float w_e,
@@ -450,8 +455,64 @@ void compute_in_planes_lims_fort(
 	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
 	Vector * eddies_pos;
 	vectors_from_arrays(x_e, y_e, z_e, num_eddies, &(eddies_pos));
-	Limits * in_planes_lims = get_in_planes_lims(vol_lims, eddies_pos, num_eddies, eddies_vel);
+	Limits * in_planes_lims = STG_get_SEM_in_planes_lims(vol_lims, eddies_pos, num_eddies, eddies_vel);
+
+	fill_arrays_from_limits(in_planes_lims, num_eddies, x_min_in, x_max_in, y_min_in, y_max_in, z_min_in, z_max_in);
 }
+
+
+void STG_compute_SEM_init_eddies_params_fort(
+	STG_float * x_e, STG_float * y_e, STG_float * z_e,
+	STG_float * eps_x, STG_float * eps_y, STG_float * eps_z,
+	STG_int num_eddies,
+	STG_float x_min, STG_float x_max,
+	STG_float y_min, STG_float y_max,
+	STG_float z_min, STG_float z_max
+)
+{
+	Limits vol_lims = { .x_min = x_min,.x_max = x_max,.y_min = y_min,.y_max = y_max,.z_min = z_min,.z_max = z_max };
+	Vector * eddies_pos = (Vector *)malloc(sizeof(Vector) * num_eddies);
+	Vector * eddies_int = (Vector *)malloc(sizeof(Vector) * num_eddies);
+	STG_compute_SEM_init_eddies_params(eddies_pos, eddies_int, num_eddies, vol_lims);
+	fill_arrays_from_vector(eddies_pos, num_eddies, x_e, y_e, z_e);
+	fill_arrays_from_vector(eddies_int, num_eddies, eps_x, eps_y, eps_z);
+}
+
+
+void STG_compute_SEM_new_eddies_params_fort(
+	STG_float * x_e_cur, STG_float * y_e_cur, STG_float * z_e_cur,
+	STG_float * eps_x_cur, STG_float * eps_y_cur, STG_float * eps_z_cur,
+	STG_int num_eddies,
+	STG_float x_min, STG_float x_max,
+	STG_float y_min, STG_float y_max,
+	STG_float z_min, STG_float z_max,
+	STG_float u_e, STG_float v_e, STG_float w_e, STG_float ts,
+	STG_float * x_min_in, STG_float * x_max_in,
+	STG_float * y_min_in, STG_float * y_max_in,
+	STG_float * z_min_in, STG_float * z_max_in,
+	STG_float * x_e_new, STG_float * y_e_new, STG_float * z_e_new,
+	STG_float * eps_x_new, STG_float * eps_y_new, STG_float * eps_z_new
+)
+{
+	Limits vol_lims = { .x_min = x_min,.x_max = x_max,.y_min = y_min,.y_max = y_max,.z_min = z_min,.z_max = z_max };
+	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
+	Vector * eddies_pos_cur, *eddies_int_cur;
+	Limits * in_planes_lims;
+
+	vectors_from_arrays(x_e_cur, y_e_cur, z_e_cur, num_eddies, &(eddies_pos_cur));
+	vectors_from_arrays(eps_x_cur, eps_y_cur, eps_z_cur, num_eddies, &(eddies_int_cur));
+	limits_from_arrays(x_min_in, x_max_in, y_min_in, y_max_in, z_min_in, z_max_in, num_eddies, &(in_planes_lims));
+
+	Vector * eddies_pos_new = (Vector *)malloc(sizeof(Vector) * num_eddies);
+	Vector * eddies_int_new = (Vector *)malloc(sizeof(Vector) * num_eddies);
+
+	STG_compute_SEM_new_eddies_params(eddies_pos_cur, eddies_int_cur, num_eddies, vol_lims, eddies_vel, ts, in_planes_lims,
+		eddies_pos_new, eddies_int_new);
+
+	fill_arrays_from_vector(eddies_pos_new, num_eddies, x_e_new, y_e_new, z_e_new);
+	fill_arrays_from_vector(eddies_int_new, num_eddies, eps_x_new, eps_y_new, eps_z_new);
+}
+
 
 void STG_compute_SEM_moment_field(
 		STG_InitData init_data, STG_SEMData_Stationary stat_data, STG_SEMData_Transient trans_data, STG_float ts,

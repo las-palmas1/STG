@@ -165,6 +165,7 @@ contains
         real, allocatable :: phi(:), psi(:), alpha(:), theta(:)
         real, allocatable :: k1(:), k2(:), k3(:), sigma1(:), sigma2(:), sigma3(:)
         
+        call STG_init_rand()
         call STG_compute_Davidson_matrix_data( &
             re_uu, re_vv, re_ww, &
 	        re_uv, re_uw, re_vw, &
@@ -238,9 +239,155 @@ contains
         print *, 'Velocities'
         print '(1x, a4, f8.3, 2x, a4, f8.3, 2x, a4, f8.3)', 'u = ', u, 'v = ', v, 'w = ', w
         print *, ''
+        
         deallocate(u_abs, k_arr, energy)
+        deallocate(phi, psi, alpha, theta)
+        deallocate(k1, k2, k3)
+        deallocate(sigma1, sigma2, sigma3)
     end subroutine 
     
+    
+    subroutine test_SEM( &
+        re_uu, re_vv, re_ww, &
+        re_uv, re_uw, re_vw, &
+        num_eddies, & 
+        u_e, v_e, w_e, &
+        ls_ux, ls_uy, ls_uz, &
+        ls_vx, ls_vy, ls_vz, &
+        ls_wx, ls_wy, ls_wz &
+    )
+        use STG_COMMON
+        use STG_SEM
+        
+        real :: re_uu, re_vv, re_ww, re_uv, re_uw, re_vw
+        integer :: num_eddies
+        real :: u_e, v_e, w_e
+        real:: ls_ux, ls_uy, ls_uz
+        real:: ls_vx, ls_vy, ls_vz
+        real:: ls_wx, ls_wy, ls_wz
+        
+        real :: a11, a12, a13
+        real :: a21, a22, a23
+        real :: a31, a32, a33
+        real :: x_min, x_max, y_min, y_max, z_min, z_max, volume, x, y, z
+        real, allocatable :: x_e(:), y_e(:), z_e(:), eps_x(:), eps_y(:), eps_z(:)
+        real, allocatable :: x_e_new(:), y_e_new(:), z_e_new(:), eps_x_new(:), eps_y_new(:), eps_z_new(:)
+        real, allocatable :: x_min_in(:), x_max_in(:), y_min_in(:), y_max_in(:), z_min_in(:), z_max_in(:)
+        real :: ts
+        real :: u, v, w
+        
+        ts = 0.5
+        x_min = 0.
+        y_min = 0.
+        z_min = 0.
+        x_max = 1.
+        y_max = 1.
+        z_max = 1.
+        volume = (x_max - x_min) * (y_max - y_min) * (z_max - z_min)
+        
+        allocate(x_e(num_eddies), y_e(num_eddies), z_e(num_eddies)) 
+        allocate(eps_x(num_eddies), eps_y(num_eddies), eps_z(num_eddies)) 
+        allocate(x_e_new(num_eddies), y_e_new(num_eddies), z_e_new(num_eddies))
+        allocate(eps_x_new(num_eddies), eps_y_new(num_eddies), eps_z_new(num_eddies))  
+        allocate(x_min_in(num_eddies), x_max_in(num_eddies))
+        allocate(y_min_in(num_eddies), y_max_in(num_eddies))
+        allocate(z_min_in(num_eddies), z_max_in(num_eddies))
+        
+        call STG_init_rand() 
+        
+        call STG_compute_SEM_matrix_data( &
+            re_uu, re_vv, re_ww, &
+            re_uv, re_uw, re_vw, &
+            a11, a12, a13, &
+            a21, a22, a23, &
+            a31, a32, a33 &
+        )
+            
+        call STG_compute_SEM_init_eddies_params( &
+            x_e, y_e, z_e, &
+            eps_x, eps_y, eps_z, num_eddies, &
+            x_min, x_max, &
+            y_min, y_max, &
+            z_min, z_max &
+        )
+            
+        call STG_compute_SEM_in_planes_lims( &
+            x_min, x_max, y_min, y_max, z_min, z_max, &
+            x_e, y_e, z_e, num_eddies, &
+            u_e, v_e, w_e, &
+            x_min_in, x_max_in, &
+            y_min_in, y_max_in, &
+            z_min_in, z_max_in &
+        )
+            
+        call STG_compute_SEM_new_eddies_params( &
+            x_e, y_e, z_e, &
+            eps_x, eps_y, eps_z, num_eddies, &
+            x_min, x_max, &
+            y_min, y_max, &
+            z_min, z_max, &
+            u_e, v_e, w_e, ts, &
+            x_min_in, x_max_in, &
+            y_min_in, y_max_in, &
+            z_min_in, z_max_in, &
+            x_e_new, y_e_new, z_e_new, &
+            eps_x_new, eps_y_new, eps_z_new &
+        )
+            
+        x = 0.5
+        y = 0.5
+        z = 0.5
+            
+        call STG_compute_SEM_pulsations( &
+            x_e, y_e, z_e, eps_x, eps_y, eps_z, &
+            num_eddies, x, y, z, volume, &
+            ls_ux, ls_uy, ls_uz, &
+            ls_vx, ls_vy, ls_vz, &
+            ls_wx, ls_wy, ls_wz, &
+            a11, a12, a13, &
+            a21, a22, a23, &
+            a31, a32, a33, &
+            u, v, w &
+        )
+        
+        print *, '   Test SEM '
+        print *, 'Reynolds stresses'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uu, re_uv, re_uw
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uv, re_vv, re_vw
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uw, re_vw, re_ww
+        print *, 'Matrix data'
+        print '(1x, a4, f6.2, a4, f6.2, a4, f6.2)', ' a11= ', a11, ' a12= ', a12, ' a13= ', a13
+        print '(1x, a4, f6.2, a4, f6.2, a4, f6.2)', ' a21= ', a21, ' a22= ', a22, ' a23= ', a23
+        print '(1x, a4, f6.2, a4, f6.2, a4, f6.2)', ' a31= ', a31, ' a32= ', a32, ' a33= ', a33
+        print *, 'Init eddies params'
+        print '(1x, a8, f6.3, a8, f6.3, a8, f6.3)', ' x_e= ', x_e(1), ' y_e= ', y_e(1), ' z_e= ', z_e(1)
+        print '(1x, a8, f6.3, a8, f6.3, a8, f6.3)', ' eps_x= ', eps_x(1), ' eps_y= ', eps_y(1), ' eps_z= ', eps_z(1)
+        print *, 'In planes lims'
+        print '(1x, a12, f6.2, a12, f6.2, a12, f6.2)', ' x_min_in= ', x_min_in(1), ' y_min_in= ', y_min_in(1), ' z_min_in= ', z_min_in(1)
+        print '(1x, a12, f6.2, a12, f6.2, a12, f6.2)', ' x_max_in= ', x_max_in(1), ' y_max_in= ', y_max_in(1), ' z_max_in= ', z_max_in(1)
+        print *, 'New eddies params'
+        print '(1x, a8, f6.3, a8, f6.3, a8, f6.3)', ' x_e= ', x_e_new(1), ' y_e= ', y_e_new(1), ' z_e= ', z_e_new(1)
+        print '(1x, a8, f6.3, a8, f6.3, a8, f6.3)', ' eps_x= ', eps_x_new(1), ' eps_y= ', eps_y_new(1), ' eps_z= ', eps_z_new(1)
+        print *, 'Velocities'
+        print '(1x, a4, f8.3, 2x, a4, f8.3, 2x, a4, f8.3)', 'u = ', u, 'v = ', v, 'w = ', w
+        print *, ''
+        
+        if (ANY(ISNAN(x_e))) print *, 'x_e NAN'
+        if (ANY(ISNAN(y_e))) print *, 'y_e NAN'
+        if (ANY(ISNAN(z_e))) print *, 'z_e NAN'
+        if (ANY(ISNAN(eps_x))) print *, 'eps_x NAN'
+        if (ANY(ISNAN(eps_y))) print *, 'eps_y NAN'
+        if (ANY(IsNAN(eps_z))) print *, 'eps_z NAN'
+        
+        deallocate(x_e, y_e, z_e)
+        deallocate(eps_x, eps_y, eps_z)
+        deallocate(x_e_new, y_e_new, z_e_new)
+        deallocate(eps_x_new, eps_y_new, eps_z_new)  
+        deallocate(x_min_in, x_max_in)
+        deallocate(y_min_in, y_max_in)
+        deallocate(z_min_in, z_max_in)
+    
+    end subroutine
     
     
     subroutine Read_array(turb_data_dir, dir, fname, arr)
@@ -298,11 +445,11 @@ end module Test
     implicit none
 
     ! Variables
-    integer(8) :: num_modes = 150
-    real :: re_uu = 1
-    real :: re_vv = 3
-    real :: re_ww = 4
-    real :: re_uv = -1
+    integer(8) :: num_modes = 800
+    real :: re_uu = 10
+    real :: re_vv = 1
+    real :: re_ww = 1
+    real :: re_uv = 0
     real :: re_uw = 0
     real :: re_vw = 0
     real :: ls_i = 1.
@@ -331,6 +478,18 @@ end module Test
     call test_Smirnov(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
     
     call test_Davidson(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
+    
+    
+    call test_SEM( &
+            re_uu, re_vv, re_ww, &
+            re_uv, re_uw, re_vw, &
+            1500, & 
+            5., 0., 0., &
+            0.5, 0.5, 0.5, &
+            0.5, 0.5, 0.5, &
+            0.5, 0.5, 0.5 &
+        )
+    
     
     end program STG_fort
 

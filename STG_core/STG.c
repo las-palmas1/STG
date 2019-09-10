@@ -521,7 +521,7 @@ static void test_SEM_in_planes_lims_computing(
 	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
 
 	Limits * in_plane_lims;
-	in_plane_lims = get_in_planes_lims(lims, eddies_pos, 1, eddies_vel);
+	in_plane_lims = STG_get_SEM_in_planes_lims(lims, eddies_pos, 1, eddies_vel);
 	
 	printf("x_min = %.1f  x_max = %.1f \n", in_plane_lims[0].x_min, in_plane_lims[0].x_max);
 	printf("y_min = %.1f  y_max = %.1f \n", in_plane_lims[0].y_min, in_plane_lims[0].y_max);
@@ -570,6 +570,52 @@ static void test_SEM_mom_field(
 	STG_free_VelMomField(&mom_field);
 }
 
+
+static void test_SEM_node_hist(
+	STG_int node_cnt, STG_float length, STG_float re_uu, STG_float re_vv, STG_float re_ww,
+	STG_float re_uv, STG_float re_uw, STG_float re_vw,
+	STG_float ls_i, STG_float ts, STG_int num_ts, STG_int num_eddies, STG_float u_e, STG_float v_e, STG_float w_e
+)
+{
+	printf("Test SEM pulsations.\n");
+	printf("Reynolds stresses:\n");
+	printf("%.2f  %.2f  %.2f \n", re_uu, re_uv, re_uw);
+	printf("%.2f  %.2f  %.2f \n", re_uv, re_vv, re_vw);
+	printf("%.2f  %.2f  %.2f \n", re_uw, re_vw, re_ww);
+	printf("Eddies number: %d \n", num_eddies);
+	STG_InitData init_data;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+
+	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
+	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i,
+		1, 1, 1, 1, &(init_data.scales));
+
+
+	STG_SEMData_Stationary stat_data;
+	STG_SEMData_Transient trans_data;
+	STG_VelNodeHist node_hist;
+	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
+
+	STG_compute_SEM_stat_data(init_data, num_eddies, eddies_vel, &stat_data);
+	STG_compute_SEM_trans_data(stat_data, ts, num_ts, &trans_data);
+	STG_compute_SEM_node_hist(init_data, stat_data, trans_data, ts, num_ts, &node_hist, 2, 2, 2);
+
+	printf("Velosity history\n");
+	for (STG_int i = 0; i < num_ts + 1; i++)
+	{
+		printf("time = %.3f  u = %.3f  v = %.3f  w = %.3f \n", node_hist.time[i], node_hist.u_p[i], node_hist.v_p[i], node_hist.w_p[i]);
+	}
+	printf("\n");
+
+	STG_free_SEM_stat_data(&stat_data);
+	STG_free_SEM_trans_data(&trans_data);
+	STG_free_VelNodeHist(&node_hist);
+}
+
+
 int main(int argc, char * argv[])
 {
 	STG_init_rand();
@@ -597,31 +643,32 @@ int main(int argc, char * argv[])
 	test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
 */
 
-	/*test_SEM_vol_lims_computing(
-		1, 2, 3,
-		3, 5, 2,
-		4, 1, 6,
-		12, 5, 8
-	);
+	//test_SEM_vol_lims_computing(
+	//	1, 2, 3,
+	//	3, 5, 2,
+	//	4, 1, 6,
+	//	12, 5, 8
+	//);
+	//
+
+	//test_SEM_in_planes_lims_computing(5, 5, 5, 1, 0, 0);
+	//test_SEM_in_planes_lims_computing(5, 5, 5, 0, 1, 0);
+	//test_SEM_in_planes_lims_computing(5, 5, 5, 0, 0, 1);
+	//test_SEM_in_planes_lims_computing(5, 5, 5, 1, 1, 0);
+
+	//test_SEM_in_planes_lims_computing(4, 5, 5, 1, 1, 0);
+	//test_SEM_in_planes_lims_computing(6, 5, 5, 1, 1, 0);
+
+	//test_SEM_in_planes_lims_computing(5, 4, 5, 0, 1, 1);
+	//test_SEM_in_planes_lims_computing(5, 6, 5, 0, 1, 1);
+
+	//test_SEM_in_planes_lims_computing(5, 5, 4, 1, 0, 1);
+	//test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
+
+
+	test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
+	test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
 	
-
-	test_SEM_in_planes_lims_computing(5, 5, 5, 1, 0, 0);
-	test_SEM_in_planes_lims_computing(5, 5, 5, 0, 1, 0);
-	test_SEM_in_planes_lims_computing(5, 5, 5, 0, 0, 1);
-	test_SEM_in_planes_lims_computing(5, 5, 5, 1, 1, 0);
-
-	test_SEM_in_planes_lims_computing(4, 5, 5, 1, 1, 0);
-	test_SEM_in_planes_lims_computing(6, 5, 5, 1, 1, 0);
-
-	test_SEM_in_planes_lims_computing(5, 4, 5, 0, 1, 1);
-	test_SEM_in_planes_lims_computing(5, 6, 5, 0, 1, 1);
-
-	test_SEM_in_planes_lims_computing(5, 5, 4, 1, 0, 1);
-	test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
-
-
-	test_SEM_mom_field(10, 3, 1, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 200, 1, 0, 0);*/
-
 	
 	return 0;
 }

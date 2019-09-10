@@ -81,17 +81,21 @@ void STG_compute_SEM_matrix_data(
 STG_float get_scalar_prod(Vector v1, Vector v2);
 
 
-Limits * get_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int num_eddies, Vector vel);
+Limits * STG_get_SEM_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int num_eddies, Vector vel);
 
 
 void arrays_from_vector(Vector * vec, STG_int num, STG_float ** x, STG_float ** y, STG_float ** z);
 
+
+void fill_arrays_from_vector(Vector * vec, STG_int num, STG_float * x, STG_float * y, STG_float * z);
+
+
 void vectors_from_arrays(STG_float * x, STG_float * y, STG_float * z, STG_int num, Vector ** vec);
 
 
-void arrays_from_limits(
-	Limits * lims, STG_int num, STG_float ** x_min, STG_float ** x_max,
-	STG_float ** y_min, STG_float ** y_max, STG_float ** z_min, STG_float ** z_max
+void fill_arrays_from_limits(
+	Limits * lims, STG_int num, STG_float * x_min, STG_float * x_max,
+	STG_float * y_min, STG_float * y_max, STG_float * z_min, STG_float * z_max
 );
 
 void limits_from_arrays(
@@ -100,7 +104,7 @@ void limits_from_arrays(
 );
 
 
-void compute_in_planes_lims_fort(
+void STG_compute_SEM_in_planes_lims_fort(
 	STG_float x_min, STG_float x_max, STG_float y_min, STG_float y_max, STG_float z_min, STG_float z_max,
 	STG_float * x_e, STG_float * y_e, STG_float * z_e, STG_int num_eddies,
 	STG_float u_e, STG_float v_e, STG_float w_e,
@@ -112,7 +116,7 @@ void compute_in_planes_lims_fort(
 
 void STG_compute_SEM_init_eddies_params_fort(
         STG_float * x_e, STG_float * y_e, STG_float * z_e,
-        STG_float * eps1, STG_float * eps2, STG_float * eps3,
+        STG_float * eps_x, STG_float * eps_y, STG_float * eps_z,
         STG_int num_eddies,
         STG_float x_min, STG_float x_max,
         STG_float y_min, STG_float y_max,
