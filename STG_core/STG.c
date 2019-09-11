@@ -610,6 +610,7 @@ static void test_SEM_node_hist(
 	}
 	printf("\n");
 
+
 	STG_free_SEM_stat_data(&stat_data);
 	STG_free_SEM_trans_data(&trans_data);
 	STG_free_VelNodeHist(&node_hist);
@@ -666,7 +667,7 @@ int main(int argc, char * argv[])
 	//test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
 
 
-	test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
+	test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
 	test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
 	
 	

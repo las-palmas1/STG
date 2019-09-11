@@ -237,7 +237,7 @@ class OriginalSEMTest(unittest.TestCase):
         self.analyzer.plot_velocity_history(20, 20, 0, 0.01, 1000)
 
     def test_plot_moments(self):
-        self.analyzer.plot_moments(10, 10, 0, 0.01, 1000, ylim=(-0.5, 1.5))
+        self.analyzer.plot_moments(10, 10, 0, 0.001, 10000, ylim=(-0.5, 1.5))
 
     def test_plot_divergence_field_2d(self):
         self.analyzer.plot_divergence_field_2d(vmin=-15, vmax=15, grid=False, num_levels=20)

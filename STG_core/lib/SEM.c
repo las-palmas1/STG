@@ -344,7 +344,6 @@ void STG_compute_SEM_pulsations(
     STG_float f_u = 0.;
     STG_float f_v = 0.;
     STG_float f_w = 0.;
-
 	for (STG_int i = 0; i < num_eddies; i++)
 	{
         STG_float f_ux = form_func(x, x_e[i], ls_ux);

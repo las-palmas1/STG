@@ -138,9 +138,11 @@ STG_float bisection(STG_float x1, STG_float x2, STG_float (*func)(STG_float), ST
 // Реализация преобразования Бокса-Мюллера для моделирования стандартного нормального распределения
 STG_float box_muller()
 {
+	STG_float start = 0.0001;
+	STG_float end = 0.9999;
 	STG_float pi = 2 * asin(1);
-	STG_float phi = (STG_float)rand() / (STG_float)RAND_MAX;
-	STG_float r = (STG_float)rand() / (STG_float)RAND_MAX;
+	STG_float phi = start + (STG_float)rand() / (STG_float)RAND_MAX * (end - start);
+	STG_float r = start + (STG_float)rand() / (STG_float)RAND_MAX * (end - start);
 	STG_float res = cos(2 * pi * phi) * sqrt(-2 * log(r));
 	return res;
 }
