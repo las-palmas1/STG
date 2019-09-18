@@ -57,6 +57,10 @@ void STG_compute_Davidson_matrix_data(
 		re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
 		eig_vals, eig_vec1, eig_vec2, eig_vec3
 	);
+	if ((re_uu == 0) && (re_vv == 0) && (re_ww == 0))
+	{
+		trace = eig_vals[0] + eig_vals[1] + eig_vals[2];
+	}
 	*c1 = sqrt(eig_vals[0] * 3 / trace);
 	*c2 = sqrt(eig_vals[1] * 3 / trace);
 	*c3 = sqrt(eig_vals[2] * 3 / trace);
@@ -76,6 +80,16 @@ void STG_compute_Davidson_spectrum(
 	STG_float dissip_rate, STG_float visc, STG_float * energy, STG_float * k_arr, STG_float * u_abs
 )
 {
+	if ((re_uu == 0) && (re_vv == 0) && (re_ww == 0))
+	{
+		re_uu = 1e-7;
+		re_vv = 1e-7;
+		re_ww = 1e-7;
+	}
+	if (dissip_rate == 0)
+	{
+		dissip_rate = 1e-7;
+	}
 	STG_float alpha = 1.483;
     STG_float pi = 2 * asin(1);
 	STG_float k_t = 0.5 * (re_uu + re_vv + re_ww);
@@ -204,6 +218,35 @@ void STG_compute_Davidson_stat_data(
     }
 }
 
+
+void STG_compute_Davidson_random_angles_and_phase(
+	STG_int num_modes, STG_float * phi, STG_float * psi, STG_float * alpha, STG_float * theta
+)
+{
+	STG_float pi = 2 * asin(1.);
+	get_uniform_ref(0., 2 * pi, num_modes, phi);
+	get_uniform_ref(0., 2 * pi, num_modes, psi);
+	get_uniform_ref(0., 2 * pi, num_modes, alpha);
+	get_trigon_ref(num_modes, theta);
+}
+
+
+void STG_compute_Davidson_modes_params(
+	STG_int num_modes, STG_float * k_arr, STG_float * phi, STG_float * psi, STG_float * alpha, STG_float * theta,
+	STG_float * k1, STG_float * k2, STG_float * k3,
+	STG_float * sigma1, STG_float * sigma2, STG_float * sigma3)
+{
+	for (STG_int i = 0; i < num_modes; i++)
+	{
+		k1[i] = sin(theta[i]) * cos(phi[i]) * k_arr[i];
+		k2[i] = sin(theta[i]) * sin(phi[i]) * k_arr[i];
+		k3[i] = cos(theta[i]) * k_arr[i];
+		sigma1[i] = cos(phi[i]) * cos(theta[i]) * cos(alpha[i]) - sin(phi[i]) * sin(alpha[i]);
+		sigma2[i] = sin(phi[i]) * cos(theta[i]) * cos(alpha[i]) - cos(phi[i]) * sin(alpha[i]);
+		sigma3[i] = -sin(theta[i]) * cos(alpha[i]);
+	}
+
+}
 
 void STG_compute_Davidson_random_data(
         STG_int num_modes, STG_float * k_arr, STG_float * phi, STG_float * psi, STG_float * alpha, STG_float * theta,

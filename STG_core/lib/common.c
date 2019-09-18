@@ -396,6 +396,12 @@ void compute_eig(
 {
 	if (m12 == 0 && m13 == 0 && m23 == 0)
 	{
+		if (m11 == 0 && m22 == 0 && m33 == 0)
+		{
+			m11 = 1e-7;
+			m22 = 1e-7;
+			m33 = 1e-7;
+		}
 		eig_vals[0] = m11;
 		eig_vals[1] = m22;
 		eig_vals[2] = m33;

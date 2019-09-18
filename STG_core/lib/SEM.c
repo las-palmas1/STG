@@ -25,6 +25,18 @@ void STG_compute_SEM_matrix_data(
         STG_float * a31, STG_float * a32, STG_float * a33
 )
 {
+	if (re_uu == 0) 
+	{
+		re_uu = 1e-7;
+	}
+	if (re_vv == 0)
+	{
+		re_vv = 1e-7;
+	}
+	if (re_ww == 0)
+	{
+		re_ww = 1e-7;
+	}
     *a11 = sqrt(re_uu);
     *a12 = 0.;
     *a13 = 0.;

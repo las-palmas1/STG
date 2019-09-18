@@ -154,7 +154,7 @@ contains
         use STG_DAVIDSON
         real :: re_uu, re_vv, re_ww, re_uv, re_uw, re_vw
         integer :: num_modes
-        real:: ls_i
+        real :: ls_i
         
         real :: dissip_rate, visc, delta_min
         real :: c1, c2, c3, a11, a12, a13
@@ -277,12 +277,12 @@ contains
         real :: u, v, w
         
         ts = 0.5
-        x_min = 0.
-        y_min = 0.
-        z_min = 0.
-        x_max = 1.
-        y_max = 1.
-        z_max = 1.
+        x_min = -0.1127707
+        x_max = 8.7229297E-02
+        y_min = -0.1002323
+        y_max = 1.100232
+        z_min = -0.1128205
+        z_max = 2.112820
         volume = (x_max - x_min) * (y_max - y_min) * (z_max - z_min)
         
         allocate(x_e(num_eddies), y_e(num_eddies), z_e(num_eddies)) 
@@ -390,6 +390,27 @@ contains
     end subroutine
     
     
+    function get_array_size(turb_data_dir, dir, fname)
+        character(len=100) :: turb_data_dir, full_fname, string
+        character(*) :: fname, dir
+        logical :: file_end
+        integer :: fl, get_array_size
+        
+        fl = 452
+        full_fname = TRIM(turb_data_dir) // "\" // TRIM(dir) // "\" // TRIM(fname)
+        
+        file_end = .False.
+        get_array_size = 1
+        open(fl, file = full_fname, action='READ')
+        do while (.NOT. file_end)
+            read(fl, *) string
+            file_end = EOF(fl)
+            if (.NOT. file_end) get_array_size = get_array_size + 1
+        end do
+        
+        close(fl)
+    end function
+    
     subroutine Read_array(turb_data_dir, dir, fname, arr)
         character(len=100) :: turb_data_dir, full_fname
         character(*) :: fname, dir
@@ -446,7 +467,7 @@ end module Test
 
     ! Variables
     integer(8) :: num_modes = 800
-    real :: re_uu = 10
+    real :: re_uu = 1
     real :: re_vv = 1
     real :: re_ww = 1
     real :: re_uv = 0
@@ -454,7 +475,12 @@ end module Test
     real :: re_vw = 0
     real :: ls_i = 1.
 
-    ! character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
+    character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
+    integer :: arr_size
+    
+    
+    arr_size = get_array_size(turb_data_dir, 're', 'uu_av')
+    print *, 'arr_size = ', arr_size
     ! integer(8) :: N = 69
     ! real, allocatable :: y_arr(:), re_uu_arr(:), re_vv_arr(:), re_ww_arr(:), re_uv_arr(:), re_uw_arr(:), re_vw_arr(:) 
     ! real :: y = 0.001
@@ -475,20 +501,20 @@ end module Test
     ! print *, ''
     ! print *, re_uu_arr
 
-    call test_Smirnov(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
-    
-    call test_Davidson(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
-    
-    
-    call test_SEM( &
-            re_uu, re_vv, re_ww, &
-            re_uv, re_uw, re_vw, &
-            1500, & 
-            5., 0., 0., &
-            0.5, 0.5, 0.5, &
-            0.5, 0.5, 0.5, &
-            0.5, 0.5, 0.5 &
-        )
+    !call test_Smirnov(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
+    !
+    !call test_Davidson(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
+    !
+    !
+    !call test_SEM( &
+    !        re_uu, re_vv, re_ww, &
+    !        re_uv, re_uw, re_vw, &
+    !        500, & 
+    !        0.32, 0., 0., &
+    !        0.5, 0.5, 0.5, &
+    !        0.5, 0.5, 0.5, &
+    !        0.5, 0.5, 0.5 &
+    !    )
     
     
     end program STG_fort

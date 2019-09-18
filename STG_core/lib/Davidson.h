@@ -70,9 +70,11 @@ STG_SHARED_LIB_API void STG_free_Davidson_stat_data(STG_DavidsonData_Stationary 
 STG_SHARED_LIB_API void STG_alloc_Davidson_trans_data(STG_InitData init_data, STG_int num_modes, STG_int num_ts_tot,
 	STG_DavidsonData_Transient * data);
 
+
 STG_SHARED_LIB_API void STG_compute_Davidson_trans_data(
 	STG_DavidsonData_Stationary stat_data, STG_int num_ts_tot, STG_DavidsonData_Transient * data
 );
+
 
 STG_SHARED_LIB_API void STG_free_Davidson_trans_data(STG_DavidsonData_Transient * data);
 
@@ -81,10 +83,12 @@ STG_SHARED_LIB_API void STG_compute_Davidson_moment_field(STG_InitData init_data
 	STG_DavidsonData_Stationary stat_data, STG_DavidsonData_Transient * trans_data, STG_float ts, STG_int num_ts,
 	STG_VelMomField * mom_field);
 
+
 // num_ts_tot - total number of time steps
 STG_SHARED_LIB_API void STG_compute_Davidson_node_hist(STG_InitData init_data,
 	STG_DavidsonData_Stationary stat_data, STG_float ts, STG_int num_ts_tot,
 	STG_DavidsonData_Transient * trans_data, STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k);
+
 
 STG_SHARED_LIB_API void STG_compute_Davidson_pulsations(
 	STG_float * k1, STG_float * k2, STG_float * k3,
@@ -101,6 +105,7 @@ STG_SHARED_LIB_API void STG_compute_Davidson_pulsations(
 
 STG_SHARED_LIB_API void STG_compute_Davidson_auto_coef(STG_float ts, STG_float ts_i, STG_float *a, STG_float *b);
 
+
 STG_SHARED_LIB_API void STG_compute_Davidson_matrix_data(
 	STG_float re_uu, STG_float re_vv, STG_float re_ww,
 	STG_float re_uv, STG_float re_uw, STG_float re_vw,
@@ -110,9 +115,22 @@ STG_SHARED_LIB_API void STG_compute_Davidson_matrix_data(
 	STG_float * a31, STG_float * a32, STG_float * a33
 );
 
+
 STG_SHARED_LIB_API void STG_compute_Davidson_spectrum(
 	STG_float delta_min, STG_int num_modes, STG_float re_uu, STG_float re_vv, STG_float re_ww, STG_float ls_i,
     STG_float dissip_rate, STG_float visc, STG_float * energy, STG_float * k_arr, STG_float * u_abs
+);
+
+
+void STG_compute_Davidson_random_angles_and_phase(
+	STG_int num_modes, STG_float * phi, STG_float * psi, STG_float * alpha, STG_float * theta
+);
+
+
+void STG_compute_Davidson_modes_params(
+	STG_int num_modes, STG_float * k_arr, STG_float * phi, STG_float * psi, STG_float * alpha, STG_float * theta,
+	STG_float * k1, STG_float * k2, STG_float * k3,
+	STG_float * sigma1, STG_float * sigma2, STG_float * sigma3
 );
 
 STG_SHARED_LIB_API void STG_compute_Davidson_random_data(
