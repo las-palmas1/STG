@@ -475,12 +475,12 @@ end module Test
     real :: re_vw = 0
     real :: ls_i = 1.
 
-    character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
-    integer :: arr_size
-    
-    
-    arr_size = get_array_size(turb_data_dir, 're', 'uu_av')
-    print *, 'arr_size = ', arr_size
+    !character(len=100) :: turb_data_dir = 'E:\Documents\tasks\others\test_sec_data\turb_data'
+    !integer :: arr_size
+    !
+    !
+    !arr_size = get_array_size(turb_data_dir, 're', 'uu_av')
+    !print *, 'arr_size = ', arr_size
     ! integer(8) :: N = 69
     ! real, allocatable :: y_arr(:), re_uu_arr(:), re_vv_arr(:), re_ww_arr(:), re_uv_arr(:), re_uw_arr(:), re_vw_arr(:) 
     ! real :: y = 0.001
@@ -506,15 +506,15 @@ end module Test
     !call test_Davidson(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
     !
     !
-    !call test_SEM( &
-    !        re_uu, re_vv, re_ww, &
-    !        re_uv, re_uw, re_vw, &
-    !        500, & 
-    !        0.32, 0., 0., &
-    !        0.5, 0.5, 0.5, &
-    !        0.5, 0.5, 0.5, &
-    !        0.5, 0.5, 0.5 &
-    !    )
+    call test_SEM( &
+            re_uu, re_vv, re_ww, &
+            re_uv, re_uw, re_vw, &
+            500, & 
+            0.32, 0., 0., &
+            0.5, 0.5, 0.5, &
+            0.5, 0.5, 0.5, &
+            0.5, 0.5, 0.5 &
+        )
     
     
     end program STG_fort

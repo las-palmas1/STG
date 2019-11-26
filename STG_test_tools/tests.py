@@ -203,29 +203,32 @@ class DavidsonTest(unittest.TestCase):
 class OriginalSEMTest(unittest.TestCase):
     def setUp(self):
         n = 100
-        size = 1
+        size = 0.3
         # mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
         mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.array([0, size / (n - 1)]))
         self.block = Block(
             shape=(n, n, 2),
+            # shape=(n, n, n),
             mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
         STG.common.init_rand()
+        ls = 1
+        uu_av = 115
         self.generator = OriginalSEM(
             block=self.block,
-            u_e=(0.95, 0, 0),
-            re_uu=1.,
-            re_vv=1.,
-            re_ww=1.,
+            u_e=(530, 0, 0),
+            re_uu=uu_av,
+            re_vv=uu_av,
+            re_ww=uu_av,
             re_uv=0.,
             re_uw=0.,
             re_vw=0.,
-            time_arr=np.array([0, 0.01]),
-            ls_ux=0.1, ls_uy=0.1, ls_uz=0.1,
-            ls_vx=0.1, ls_vy=0.1, ls_vz=0.1,
-            ls_wx=0.1, ls_wy=0.1, ls_wz=0.1,
-            eddies_num=500
+            time_arr=np.array([0, 0.00001]),
+            ls_ux=ls, ls_uy=ls, ls_uz=ls,
+            ls_vx=ls, ls_vy=ls, ls_vz=ls,
+            ls_wx=ls, ls_wy=ls, ls_wz=ls,
+            eddies_num=5000
         )
         self.analyzer = Analyzer(self.generator)
 
@@ -233,13 +236,13 @@ class OriginalSEMTest(unittest.TestCase):
         self.generator.free_data()
 
     def test_plot_2d_velocity_field(self):
-        self.analyzer.plot_2d_velocity_field(figsize=(7, 7), num_levels=20, vmin=-4, vmax=4, grid=False)
+        self.analyzer.plot_2d_velocity_field(figsize=(7, 7), num_levels=20, vmin=-40, vmax=40, grid=False)
 
     def test_plot_velocity_history(self):
-        self.analyzer.plot_velocity_history(20, 20, 0, 0.01, 1000)
+        self.analyzer.plot_velocity_history(20, 20, 0, 1e-5, 4000, ylim=(-30, 30))
 
     def test_plot_moments(self):
-        self.analyzer.plot_moments(10, 10, 0, 0.001, 10000, ylim=(-0.5, 1.5))
+        self.analyzer.plot_moments(10, 10, 0, 1e-5, 4000, ylim=(-20, 140))
 
     def test_plot_divergence_field_2d(self):
         self.analyzer.plot_divergence_field_2d(vmin=-15, vmax=15, grid=False, num_levels=20)

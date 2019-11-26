@@ -469,6 +469,8 @@ void STG_compute_SEM_in_planes_lims_fort(
 	Limits * in_planes_lims = STG_get_SEM_in_planes_lims(vol_lims, eddies_pos, num_eddies, eddies_vel);
 
 	fill_arrays_from_limits(in_planes_lims, num_eddies, x_min_in, x_max_in, y_min_in, y_max_in, z_min_in, z_max_in);
+
+	free(in_planes_lims);
 }
 
 
@@ -484,9 +486,15 @@ void STG_compute_SEM_init_eddies_params_fort(
 	Limits vol_lims = { .x_min = x_min,.x_max = x_max,.y_min = y_min,.y_max = y_max,.z_min = z_min,.z_max = z_max };
 	Vector * eddies_pos = (Vector *)malloc(sizeof(Vector) * num_eddies);
 	Vector * eddies_int = (Vector *)malloc(sizeof(Vector) * num_eddies);
+	
 	STG_compute_SEM_init_eddies_params(eddies_pos, eddies_int, num_eddies, vol_lims);
+	
 	fill_arrays_from_vector(eddies_pos, num_eddies, x_e, y_e, z_e);
 	fill_arrays_from_vector(eddies_int, num_eddies, eps_x, eps_y, eps_z);
+
+	free(eddies_int);
+	free(eddies_pos);
+
 }
 
 
@@ -522,6 +530,12 @@ void STG_compute_SEM_new_eddies_params_fort(
 
 	fill_arrays_from_vector(eddies_pos_new, num_eddies, x_e_new, y_e_new, z_e_new);
 	fill_arrays_from_vector(eddies_int_new, num_eddies, eps_x_new, eps_y_new, eps_z_new);
+
+	free(eddies_pos_cur);
+	free(eddies_pos_new);
+	free(eddies_int_cur);
+	free(eddies_int_new);
+	free(in_planes_lims);
 }
 
 

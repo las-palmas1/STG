@@ -48,7 +48,7 @@ class TestSEM(unittest.TestCase):
         init_rand()
         self.sem = OriginalSEM(
             block=self.block,
-            u_e=(0.5, 0.5, 0.5),
+            u_e=(1, 0, 0),
             re_uu=1.,
             re_vv=1.,
             re_ww=1.,
@@ -58,8 +58,8 @@ class TestSEM(unittest.TestCase):
             ls_ux=l_i, ls_uy=l_i, ls_uz=l_i,
             ls_vx=l_i, ls_vy=l_i, ls_vz=l_i,
             ls_wx=l_i, ls_wy=l_i, ls_wz=l_i,
-            eddies_num=50,
-            time_arr=np.linspace(0, 5, 200)
+            eddies_num=100,
+            time_arr=np.linspace(0, 1, 4)
         )
         limits = get_limits(self.sem.c_stat_data)
         self.x_min = limits[0]
@@ -110,6 +110,6 @@ class TestSEM(unittest.TestCase):
             line.set_3d_properties(self.z_e[frame, :])
 
         ani = anim.FuncAnimation(fig, func=update, frames=self.num_time_levels,
-                                 interval=40)
+                                 interval=400)
         plt.show()
 

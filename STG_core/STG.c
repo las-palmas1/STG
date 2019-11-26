@@ -628,7 +628,7 @@ int main(int argc, char * argv[])
 	test_normal(20, 0, 1);
 	test_trigon(20);
 
-	test_eig_values_and_vectors_computing(0, 0, 0, 0, 0, 0);
+	//test_eig_values_and_vectors_computing(0, 0, 0, 0, 0, 0);
 	/*test_eig_values_and_vectors_computing(1, 1, 1, 2, 1, 1);
 	test_eig_values_and_vectors_computing(1, 1, 3, 3, 1, 4);
 	test_eig_values_and_vectors_computing(2, 3, 9, 0, 0, 4);
@@ -643,7 +643,7 @@ int main(int argc, char * argv[])
 	test_Smirnov_node_hist(0.01, 5, 0.1, 1, 1, 1, 0, 0, 0, 1000);
 */
 	//test_Davidson_mom_field(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
-	test_Davidson_mom_field(10, 10, 0, 0, 0, 0, 0, 0, 1, 100);
+	//test_Davidson_mom_field(10, 10, 0, 0, 0, 0, 0, 0, 1, 100);
 	//test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
 
 
@@ -670,7 +670,7 @@ int main(int argc, char * argv[])
 	//test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
 
 
-	//test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
+	test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
 	//test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
 	return 0;
 }
