@@ -31,12 +31,7 @@ void STG_free_Davidson_trans_data(STG_DavidsonData_Transient * data)
 	free(data->psi);
 	free(data->alpha);
 	free(data->theta);
-	free(data->k1);
-	free(data->k2);
-	free(data->k3);
-	free(data->sigma1);
-	free(data->sigma2);
-	free(data->sigma3);
+
 	free(data->u_p_prev);
 	free(data->v_p_prev);
 	free(data->w_p_prev);
@@ -120,12 +115,6 @@ void STG_alloc_Davidson_trans_data(STG_InitData init_data, STG_int num_modes, ST
 	data->psi = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
 	data->alpha = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
 	data->theta = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
-	data->k1 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
-	data->k2 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
-	data->k3 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
-	data->sigma1 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
-	data->sigma2 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
-	data->sigma3 = (STG_float *)malloc(sizeof(STG_float) * num_modes * (num_ts_tot + 1));
 
 	STG_int mesh_size = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
 	data->u_p_prev = (STG_float *)malloc(sizeof(STG_float) * mesh_size);
@@ -139,20 +128,6 @@ void STG_alloc_Davidson_trans_data(STG_InitData init_data, STG_int num_modes, ST
 		data->w_p_prev[i] = 0.;
 	}
 
-}
-
-static void STG_compute_delta_min(STG_InitData init_data, STG_float * delta_min)
-{
-	// Считаем, что сетка равномерная по всем трем координатным направлениям
-	STG_int i0 = GET_INDEX(0, 0, 0, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	STG_int ii_next = GET_INDEX(1, 0, 0, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	STG_int ij_next = GET_INDEX(0, 1, 0, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	STG_int ik_next = GET_INDEX(0, 0, 1, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
-	
-    STG_float dx = fabs(init_data.mesh.x[ii_next] - init_data.mesh.x[i0]);
-	STG_float dy = fabs(init_data.mesh.y[ij_next] - init_data.mesh.y[i0]);
-	STG_float dz = fabs(init_data.mesh.z[ik_next] - init_data.mesh.z[i0]);
-	*delta_min = min(dx, min(dy, dz));
 }
 
 
@@ -200,20 +175,20 @@ void STG_compute_Davidson_stat_data(
     for (STG_int i = 0; i < mesh_size; i++)
     {
         STG_compute_Davidson_matrix_data(
-                    init_data.re.re_uu[i], init_data.re.re_vv[i], init_data.re.re_ww[i],
-                    init_data.re.re_uv[i], init_data.re.re_uw[i], init_data.re.re_vw[i],
-                    &(data->c1[i]), &(data->c2[i]), &(data->c3[i]),
-                    &(data->a11[i]), &(data->a12[i]), &(data->a13[i]),
-                    &(data->a21[i]), &(data->a22[i]), &(data->a23[i]),
-                    &(data->a31[i]), &(data->a32[i]), &(data->a33[i])
-                    );
+            init_data.re.re_uu[i], init_data.re.re_vv[i], init_data.re.re_ww[i],
+            init_data.re.re_uv[i], init_data.re.re_uw[i], init_data.re.re_vw[i],
+            &(data->c1[i]), &(data->c2[i]), &(data->c3[i]),
+            &(data->a11[i]), &(data->a12[i]), &(data->a13[i]),
+            &(data->a21[i]), &(data->a22[i]), &(data->a23[i]),
+            &(data->a31[i]), &(data->a32[i]), &(data->a33[i])
+        );
         STG_compute_Davidson_auto_coef((STG_float)ts, (STG_float)init_data.scales.ts_i[i], &(data->a[i]), &(data->b[i]));
         STG_int i_spec = i * num_modes;
         STG_compute_Davidson_spectrum(
-                    delta_min, num_modes, init_data.re.re_uu[i], init_data.re.re_vv[i], init_data.re.re_ww[i],
-                    (STG_float)init_data.scales.ls_i[i], dissip_rate, visc,
-                    &(data->energy[i_spec]), &(data->k_arr[i_spec]), &(data->u_abs[i_spec])
-                    );
+            delta_min, num_modes, init_data.re.re_uu[i], init_data.re.re_vv[i], init_data.re.re_ww[i],
+            (STG_float)init_data.scales.ls_i[i], dissip_rate, visc,
+            &(data->energy[i_spec]), &(data->k_arr[i_spec]), &(data->u_abs[i_spec])
+        );
 
     }
 }
@@ -275,14 +250,13 @@ void STG_compute_Davidson_trans_data(
 {
 	data->num_modes = stat_data.num_modes;
 	data->num_ts = num_ts_tot;
-	for (STG_int i = 0; i < num_ts_tot + 1; i++)
+    for (STG_int it = 0; it < num_ts_tot + 1; it++)
 	{
-		STG_int i_mode = i * stat_data.num_modes;
-		STG_compute_Davidson_random_data(
-			stat_data.num_modes, stat_data.k_arr, &(data->phi[i_mode]), &(data->psi[i_mode]), 
-			&(data->alpha[i_mode]), &(data->theta[i_mode]),
-			&(data->k1[i_mode]), &(data->k2[i_mode]), &(data->k3[i_mode]), 
-			&(data->sigma1[i_mode]), &(data->sigma2[i_mode]), &(data->sigma3[i_mode]));
+        STG_int i_mode = it * stat_data.num_modes;
+        STG_compute_Davidson_random_angles_and_phase(
+            stat_data.num_modes, &(data->phi[i_mode]), &(data->psi[i_mode]),
+            &(data->alpha[i_mode]), &(data->theta[i_mode])
+        );
 	}
 }
 
@@ -334,9 +308,16 @@ void STG_compute_Davidson_moment_field(STG_InitData init_data,
 	mom_field->v_p = (STG_float*)malloc(sizeof(STG_float) * mesh_size);
 	mom_field->w_p = (STG_float*)malloc(sizeof(STG_float) * mesh_size);
 
+    STG_float * k1 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * k2 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * k3 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * sigma1 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * sigma2 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * sigma3 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+
 	STG_float a;
 	STG_float b;
-	for (STG_int i = 0; i < mesh_size; i++)
+    for (STG_int i_node = 0; i_node < mesh_size; i_node++)
 	{
 		if (num_ts == 0)
 		{
@@ -345,31 +326,46 @@ void STG_compute_Davidson_moment_field(STG_InitData init_data,
 		}
 		else
 		{
-			a = stat_data.a[i];
-			b = stat_data.b[i];
+            a = stat_data.a[i_node];
+            b = stat_data.b[i_node];
 		}
-		trans_data->u_p_prev[i] = 0.;
-		trans_data->v_p_prev[i] = 0.;
-		trans_data->w_p_prev[i] = 0.;
+        trans_data->u_p_prev[i_node] = 0.;
+        trans_data->v_p_prev[i_node] = 0.;
+        trans_data->w_p_prev[i_node] = 0.;
+
 		STG_int i_mode = num_ts * stat_data.num_modes;
-		STG_int i_spec = i * stat_data.num_modes;
-		STG_compute_Davidson_pulsations(
-			&(trans_data->k1[i_mode]), &(trans_data->k2[i_mode]), &(trans_data->k3[i_mode]),
-			&(trans_data->sigma1[i_mode]), &(trans_data->sigma2[i_mode]), &(trans_data->sigma3[i_mode]), 
+        STG_int i_spec = i_node * stat_data.num_modes;
+
+        STG_compute_Davidson_modes_params(
+            stat_data.num_modes, &(stat_data.k_arr[i_spec]), &(trans_data->phi[i_mode]),
+            &(trans_data->psi[i_mode]), &(trans_data->alpha[i_mode]), &(trans_data->theta[i_mode]),
+            k1, k2, k3, sigma1, sigma2, sigma3
+        );
+
+        STG_compute_Davidson_pulsations(
+            k1, k2, k3, sigma1, sigma2, sigma3,
 			&(trans_data->psi[i_mode]), &(stat_data.u_abs[i_spec]),
-			stat_data.c1[i], stat_data.c2[i], stat_data.c3[i],
-			stat_data.a11[i], stat_data.a12[i], stat_data.a13[i],
-			stat_data.a21[i], stat_data.a22[i], stat_data.a23[i],
-			stat_data.a31[i], stat_data.a32[i], stat_data.a33[i],
-			init_data.mesh.x[i], init_data.mesh.y[i], init_data.mesh.z[i],
+            stat_data.c1[i_node], stat_data.c2[i_node], stat_data.c3[i_node],
+            stat_data.a11[i_node], stat_data.a12[i_node], stat_data.a13[i_node],
+            stat_data.a21[i_node], stat_data.a22[i_node], stat_data.a23[i_node],
+            stat_data.a31[i_node], stat_data.a32[i_node], stat_data.a33[i_node],
+            init_data.mesh.x[i_node], init_data.mesh.y[i_node], init_data.mesh.z[i_node],
 			a, b, stat_data.num_modes,
-			trans_data->u_p_prev[i], trans_data->v_p_prev[i], trans_data->w_p_prev[i],
-			&(mom_field->u_p[i]), &(mom_field->v_p[i]), &(mom_field->w_p[i])
+            trans_data->u_p_prev[i_node], trans_data->v_p_prev[i_node], trans_data->w_p_prev[i_node],
+            &(mom_field->u_p[i_node]), &(mom_field->v_p[i_node]), &(mom_field->w_p[i_node])
 		);
-		trans_data->u_p_prev[i] = mom_field->u_p[i];
-		trans_data->v_p_prev[i] = mom_field->v_p[i];
-		trans_data->w_p_prev[i] = mom_field->w_p[i];
+
+        trans_data->u_p_prev[i_node] = mom_field->u_p[i_node];
+        trans_data->v_p_prev[i_node] = mom_field->v_p[i_node];
+        trans_data->w_p_prev[i_node] = mom_field->w_p[i_node];
 	}
+
+    free(k1);
+    free(k2);
+    free(k3);
+    free(sigma1);
+    free(sigma2);
+    free(sigma3);
 }
 
 
@@ -380,12 +376,21 @@ void STG_compute_Davidson_node_hist(STG_InitData init_data,
 	node_hist->i = i;
 	node_hist->j = j;
 	node_hist->k = k;
-	STG_int num = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+    STG_int i_node = GET_INDEX(i, j, k, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+    STG_int i_spec = i_node * stat_data.num_modes;
+
 	node_hist->num_ts = num_ts_tot;
 	node_hist->time = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
 	node_hist->u_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
 	node_hist->v_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
 	node_hist->w_p = (STG_float *)malloc(sizeof(STG_float) * (num_ts_tot + 1));
+
+    STG_float * k1 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * k2 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * k3 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * sigma1 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * sigma2 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
+    STG_float * sigma3 = (STG_float *)malloc(sizeof(STG_float) * stat_data.num_modes);
 
 	STG_float time;
 	STG_float a, b;
@@ -393,36 +398,48 @@ void STG_compute_Davidson_node_hist(STG_InitData init_data,
 	{
 		if (it == 0) 
 		{
-			trans_data->u_p_prev[num] = 0.;
-			trans_data->v_p_prev[num] = 0.;
-			trans_data->w_p_prev[num] = 0.;
+            trans_data->u_p_prev[i_node] = 0.;
+            trans_data->v_p_prev[i_node] = 0.;
+            trans_data->w_p_prev[i_node] = 0.;
 			a = 0.;
 			b = 1.;
 		}
 		else
 		{
-			trans_data->u_p_prev[num] = node_hist->u_p[it - 1];
-			trans_data->v_p_prev[num] = node_hist->v_p[it - 1];
-			trans_data->w_p_prev[num] = node_hist->w_p[it - 1];
-			a = stat_data.a[num];
-			b = stat_data.b[num];
+            trans_data->u_p_prev[i_node] = node_hist->u_p[it - 1];
+            trans_data->v_p_prev[i_node] = node_hist->v_p[it - 1];
+            trans_data->w_p_prev[i_node] = node_hist->w_p[it - 1];
+            a = stat_data.a[i_node];
+            b = stat_data.b[i_node];
 		}
 		time = ts * it;
 		node_hist->time[it] = time;
 		STG_int i_mode = it * stat_data.num_modes;
-		STG_int num_spec = num * stat_data.num_modes;
-		STG_compute_Davidson_pulsations(
-			&(trans_data->k1[i_mode]), &(trans_data->k2[i_mode]), &(trans_data->k3[i_mode]),
-			&(trans_data->sigma1[i_mode]), &(trans_data->sigma2[i_mode]), &(trans_data->sigma3[i_mode]), 
-			&(trans_data->psi[i_mode]), &(stat_data.u_abs[num_spec]), 
-			stat_data.c1[num], stat_data.c2[num], stat_data.c3[num],
-			stat_data.a11[num], stat_data.a12[num], stat_data.a13[num],
-			stat_data.a21[num], stat_data.a22[num], stat_data.a23[num],
-			stat_data.a31[num], stat_data.a32[num], stat_data.a33[num],
-			init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num],
-			stat_data.a[num], stat_data.b[num], stat_data.num_modes,
-			trans_data->u_p_prev[num], trans_data->v_p_prev[num], trans_data->w_p_prev[num],
+
+        STG_compute_Davidson_modes_params(
+            stat_data.num_modes, &(stat_data.k_arr[i_spec]), &(trans_data->phi[i_mode]),
+            &(trans_data->psi[i_mode]), &(trans_data->alpha[i_mode]), &(trans_data->theta[i_mode]),
+            k1, k2, k3, sigma1, sigma2, sigma3
+        );
+
+        STG_compute_Davidson_pulsations(
+            k1, k2, k3, sigma1, sigma2, sigma3,
+            &(trans_data->psi[i_mode]), &(stat_data.u_abs[i_spec]),
+            stat_data.c1[i_node], stat_data.c2[i_node], stat_data.c3[i_node],
+            stat_data.a11[i_node], stat_data.a12[i_node], stat_data.a13[i_node],
+            stat_data.a21[i_node], stat_data.a22[i_node], stat_data.a23[i_node],
+            stat_data.a31[i_node], stat_data.a32[i_node], stat_data.a33[i_node],
+            init_data.mesh.x[i_node], init_data.mesh.y[i_node], init_data.mesh.z[i_node],
+            stat_data.a[i_node], stat_data.b[i_node], stat_data.num_modes,
+            trans_data->u_p_prev[i_node], trans_data->v_p_prev[i_node], trans_data->w_p_prev[i_node],
 			&(node_hist->u_p[it]), &(node_hist->v_p[it]), &(node_hist->w_p[it])
 		);
 	}
+
+    free(k1);
+    free(k2);
+    free(k3);
+    free(sigma1);
+    free(sigma2);
+    free(sigma3);
 }

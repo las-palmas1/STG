@@ -46,12 +46,6 @@ typedef struct STG_DavidsonData_Transient_s
 	STG_float * psi;
 	STG_float * alpha;
 	STG_float * theta;
-	STG_float * k1;
-	STG_float * k2;
-	STG_float * k3;
-	STG_float * sigma1;
-	STG_float * sigma2;
-	STG_float * sigma3;
 
 	STG_float * u_p_prev;
 	STG_float * v_p_prev;
@@ -61,14 +55,17 @@ typedef struct STG_DavidsonData_Transient_s
 
 
 STG_SHARED_LIB_API void STG_compute_Davidson_stat_data(
-    STG_InitData init_data, STG_int num_modes, STG_float dissip_rate, STG_float visc, STG_float ts, STG_DavidsonData_Stationary * data
+        STG_InitData init_data, STG_int num_modes, STG_float dissip_rate,
+        STG_float visc, STG_float ts, STG_DavidsonData_Stationary * data
 );
 
 STG_SHARED_LIB_API void STG_free_Davidson_stat_data(STG_DavidsonData_Stationary * data);
 
 // num_ts_tot - total number of time steps
-STG_SHARED_LIB_API void STG_alloc_Davidson_trans_data(STG_InitData init_data, STG_int num_modes, STG_int num_ts_tot,
-	STG_DavidsonData_Transient * data);
+STG_SHARED_LIB_API void STG_alloc_Davidson_trans_data(
+        STG_InitData init_data, STG_int num_modes, STG_int num_ts_tot,
+        STG_DavidsonData_Transient * data
+);
 
 
 STG_SHARED_LIB_API void STG_compute_Davidson_trans_data(
@@ -79,15 +76,18 @@ STG_SHARED_LIB_API void STG_compute_Davidson_trans_data(
 STG_SHARED_LIB_API void STG_free_Davidson_trans_data(STG_DavidsonData_Transient * data);
 
 // num_ts - number of current time step (start with 0)
-STG_SHARED_LIB_API void STG_compute_Davidson_moment_field(STG_InitData init_data,
-	STG_DavidsonData_Stationary stat_data, STG_DavidsonData_Transient * trans_data, STG_float ts, STG_int num_ts,
-	STG_VelMomField * mom_field);
+STG_SHARED_LIB_API void STG_compute_Davidson_moment_field(
+    STG_InitData init_data, STG_DavidsonData_Stationary stat_data, STG_DavidsonData_Transient * trans_data,
+    STG_float ts, STG_int num_ts, STG_VelMomField * mom_field
+);
 
 
 // num_ts_tot - total number of time steps
-STG_SHARED_LIB_API void STG_compute_Davidson_node_hist(STG_InitData init_data,
-	STG_DavidsonData_Stationary stat_data, STG_float ts, STG_int num_ts_tot,
-	STG_DavidsonData_Transient * trans_data, STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k);
+STG_SHARED_LIB_API void STG_compute_Davidson_node_hist(
+    STG_InitData init_data, STG_DavidsonData_Stationary stat_data,
+    STG_float ts, STG_int num_ts_tot, STG_DavidsonData_Transient * trans_data,
+    STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k
+);
 
 
 STG_SHARED_LIB_API void STG_compute_Davidson_pulsations(

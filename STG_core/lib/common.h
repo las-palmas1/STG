@@ -67,6 +67,17 @@ typedef struct STG_Scales_s
 
 } STG_Scales;
 
+
+typedef struct STG_Spectrum_s
+{
+    // Energy spectrum may vary in space like reynolds stresses and scales.
+    STG_float *k_arr;
+    STG_float *energy;
+    STG_int num;
+
+} STG_Spectrum;
+
+
 // ?????????, ??????? ?????? ????????? ?????? ??? ?????? ???????????? ??????????????
 typedef struct STG_InitData_s
 {
@@ -76,6 +87,7 @@ typedef struct STG_InitData_s
     STG_Mesh mesh;
     STG_ReStress re;
     STG_Scales scales;
+    STG_Spectrum spectrum;
 
 } STG_InitData;
 
@@ -135,28 +147,37 @@ STG_SHARED_LIB_API STG_float * get_trigon(STG_int num);
 
 void get_trigon_ref(STG_int num, STG_float * res);
 
+
 void eig_3x3_sym(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23, STG_float * eig_vals);
+
 
 void compute_eig_vector1(
     STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
     STG_float eig_val1, STG_float * eig_vec1
 );
 
+
 void compute_ort_component(STG_float W[3], STG_float * U, STG_float * V);
+
 
 void compute_eig_vector2(
     STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
     STG_float eig_vec1[3], STG_float eig_val2, STG_float U[3], STG_float V[3], STG_float * eig_vec2
 );
 
+
 void cross(STG_float v1[3], STG_float v2[3], STG_float *cross);
 
+
 STG_float dot(STG_float v1[3], STG_float v2[3]);
+
 
 void compute_eig(
     STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23,
     STG_float * eig_vals, STG_float * eig_vec1, STG_float * eig_vec2, STG_float * eig_vec3
 );
 
+
+void STG_compute_delta_min(STG_InitData init_data, STG_float * delta_min);
 
 #endif // !COMMON_H

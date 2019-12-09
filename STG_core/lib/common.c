@@ -31,6 +31,13 @@ void STG_free_InitData(STG_InitData * init_data)
     free(init_data->scales.ts_u);
     free(init_data->scales.ts_v);
     free(init_data->scales.ts_w);
+
+	if (init_data->spectrum.energy) {
+		free(init_data->spectrum.energy);
+	}
+	if (init_data->spectrum.k_arr) {
+		free(init_data->spectrum.k_arr);
+	}
 }
 
 
@@ -421,3 +428,16 @@ void compute_eig(
 }
 
 
+void STG_compute_delta_min(STG_InitData init_data, STG_float * delta_min)
+{
+	// Считаем, что сетка равномерная по всем трем координатным направлениям
+	STG_int i0 = GET_INDEX(0, 0, 0, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+	STG_int ii_next = GET_INDEX(1, 0, 0, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+	STG_int ij_next = GET_INDEX(0, 1, 0, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+	STG_int ik_next = GET_INDEX(0, 0, 1, init_data.i_cnt, init_data.j_cnt, init_data.k_cnt);
+
+	STG_float dx = fabs(init_data.mesh.x[ii_next] - init_data.mesh.x[i0]);
+	STG_float dy = fabs(init_data.mesh.y[ij_next] - init_data.mesh.y[i0]);
+	STG_float dz = fabs(init_data.mesh.z[ik_next] - init_data.mesh.z[i0]);
+	*delta_min = min(dx, min(dy, dz));
+}

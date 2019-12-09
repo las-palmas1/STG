@@ -5,11 +5,13 @@
     #include "lib/common.h"
 	#include "lib/Davidson.h"
 	#include "lib/SEM.h"
+	#include "lib/Spectral.h"
 #else
     #include "lib\common.h"
     #include "lib\Smirnov.h"
 	#include "lib\Davidson.h"
 	#include "lib\SEM.h"
+	#include "lib\Spectral.h"
 #endif
 
 
@@ -31,6 +33,7 @@ static STG_float test_func_pow3(STG_float x)
     return (x - 1) * (x - 8) * (x + 6);
 }
 
+
 static void bisection_wrap(
         STG_float x1, STG_float x2, STG_float (*func)(STG_float), STG_float a,
         STG_float eps, STG_int max_iter, char * func_name, STG_float expect_res
@@ -46,6 +49,7 @@ static void bisection_wrap(
     printf("Expected:   %.4f\n", expect_res);
     printf("\n");
 }
+
 
 static void test_eig_values_and_vectors_computing(STG_float m11, STG_float m22, STG_float m33, STG_float m12, STG_float m13, STG_float m23)
 {
@@ -118,6 +122,7 @@ static void test_eig_values_and_vectors_computing(STG_float m11, STG_float m22, 
 
 }
 
+
 static void test_bisection()
 {
     STG_float eps = 0.0001;
@@ -133,6 +138,7 @@ static void test_bisection()
     bisection_wrap(5, 12, test_func_pow3, 0, eps, max_iter, "f(x) = (x - 1) * (x - 8) * (x + 6)", 8);
 }
 
+
 static void test_uniform(STG_int num, STG_float min, STG_float max)
 {
 	printf("Test uniform distribution. Samples number = %d \n", num);
@@ -146,6 +152,7 @@ static void test_uniform(STG_int num, STG_float min, STG_float max)
 	printf("\n");
 }
 
+
 static void test_normal(STG_int num, STG_float mu, STG_float sigma)
 {
 	printf("Test normal distribution. Samples number = %d \n", num);
@@ -158,6 +165,7 @@ static void test_normal(STG_int num, STG_float mu, STG_float sigma)
 	free(samp);
 	printf("\n");
 }
+
 
 static void test_trigon(STG_int num)
 {
@@ -199,6 +207,7 @@ static void compute_mesh(
 	}
 }
 
+
 static void fill_re(
 	STG_float i_cnt, STG_float j_cnt, STG_float k_cnt,
 	STG_float re_uu, STG_float re_vv, STG_float re_ww, 
@@ -224,6 +233,7 @@ static void fill_re(
 		re->re_vw[i] = re_vw;
 	}
 }
+
 
 static void fill_scales(
 	STG_float i_cnt, STG_float j_cnt, STG_float k_cnt, STG_float ls_i,
@@ -265,8 +275,35 @@ static void fill_scales(
 		scales->ts_v[i] = ts_v;
 		scales->ts_w[i] = ts_w;
 	}
-	
 }
+
+
+
+void fill_spectrum(
+	STG_float i_cnt, STG_float j_cnt, STG_float k_cnt, 
+	STG_int num_modes, STG_float * k_arr, STG_float * energy,
+	STG_Spectrum * spectrum
+)
+{
+	STG_int mesh_size = i_cnt * j_cnt * k_cnt;
+	spectrum->num = num_modes;
+	spectrum->k_arr = (STG_float *)malloc(sizeof(STG_float) * mesh_size * num_modes);
+	spectrum->energy = (STG_float *)malloc(sizeof(STG_float) * mesh_size * num_modes);
+	
+	for (STG_int i_node = 0; i_node < mesh_size; i_node++)
+	{
+		for (STG_int i_mode = 0; i_mode < num_modes; i_mode++)
+		{
+			STG_int i = i_node * num_modes + i_mode;
+			spectrum->k_arr[i] = k_arr[i_mode];
+			spectrum->energy[i] = energy[i_mode];
+		}
+	}
+
+}
+
+
+
 
 static void test_Davidson_mom_field(
 	STG_int node_cnt, STG_float length, STG_float re_uu, STG_float re_vv, STG_float re_ww,
@@ -289,6 +326,9 @@ static void test_Davidson_mom_field(
 	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
 	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
+
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
 	
 
 	STG_int num_ts = 1;
@@ -323,6 +363,7 @@ static void test_Davidson_mom_field(
 }
 
 
+
 static void test_Davidson_node_hist(
 	STG_float ts, STG_int num_ts, STG_float ts_i, STG_float re_uu, STG_float re_vv, STG_float re_ww,
 	STG_float re_uv, STG_float re_uw, STG_float re_vw, STG_int num_modes
@@ -346,6 +387,8 @@ static void test_Davidson_node_hist(
 	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
 
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
 
 	STG_float visc = 1.8e-5;
 	STG_float dissip = pow(0.09, 0.75) * pow((re_uu + re_vv + re_ww) / 2, 1.5) / ls_i;
@@ -371,6 +414,75 @@ static void test_Davidson_node_hist(
 	STG_free_VelNodeHist(&node_hist);
 }
 
+
+
+static void test_Spectral_mom_field(
+	STG_int node_cnt, STG_float length, STG_float re_uu, STG_float re_vv, STG_float re_ww,
+	STG_float ls_i, STG_int num_modes
+)
+{
+	printf("Test Spectral moment field.\n");
+	printf("Normal reynolds stresses:\n");
+	printf("%.2f  %.2f  %.2f \n", re_uu, re_vv, re_ww);
+	printf("Modes number: %d \n", num_modes);
+
+	STG_int num_ts = 1;
+	STG_float ts = 0.1;
+	STG_float ts_i = 0.01;
+	STG_float visc = 1.8e-5;
+	STG_float dissip = pow(0.09, 0.75) * pow((re_uu + re_vv + re_ww) / 2, 1.5) / ls_i;
+	
+	STG_InitData init_data;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+
+	STG_int mesh_size = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, 0, 0, 0, &(init_data.re));
+	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
+
+	STG_float delta_min;
+	STG_compute_delta_min(init_data, &delta_min);
+	
+	STG_float * k_arr = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	STG_float * energy = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	STG_float * u_abs = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	STG_compute_Davidson_spectrum(
+		delta_min, num_modes, re_uu, re_vv, re_ww, ls_i, dissip, visc, energy, k_arr, u_abs
+	);
+	fill_spectrum(node_cnt, node_cnt, node_cnt, num_modes, k_arr, energy, &(init_data.spectrum));
+	
+	free(k_arr);
+	free(energy);
+	free(u_abs);
+
+	STG_SpectralData data;
+	STG_VelMomField mom_field;
+
+	STG_compute_Spectral_data(init_data, num_modes, &data);
+	STG_compute_Spectral_moment_field(init_data, data, ts, num_ts, &mom_field);
+
+	printf("Matrix data \n");
+	printf("c1 = %.4f c2 = %.4f c3 = %.4f \n", data.c1[0], data.c2[0], data.c3[0]);
+	
+	printf("First 5 u_abs: \n");
+	for (STG_int i = 0; i < 5; i++)
+	{
+		printf("i_mode = %d  u_abs = %f \n", i, data.u_abs[i]);
+	}
+	printf("\n");
+	printf("u = %.3f   v = %.3f  w = %.3f \n", mom_field.u_p[0], mom_field.v_p[0], mom_field.w_p[0]);
+	printf("\n");
+
+	STG_free_Spectral_data(&data);
+	STG_free_InitData(&init_data);
+	STG_free_VelMomField(&mom_field);
+}
+
+
+
+
 static void test_Smirnov_mom_field(
 	STG_int node_cnt, STG_float length, STG_float re_uu, STG_float re_vv, STG_float re_ww,
 	STG_float re_uv, STG_float re_uw, STG_float re_vw,
@@ -393,6 +505,8 @@ static void test_Smirnov_mom_field(
 	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
 
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
 
     STG_SmirnovData data;
     STG_VelMomField mom_field;
@@ -434,6 +548,9 @@ static void test_Smirnov_node_hist(
 	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
 	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, &(init_data.re));
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
+
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
 
     STG_SmirnovData data;
     STG_VelNodeHist node_hist;
@@ -517,6 +634,9 @@ static void test_SEM_in_planes_lims_computing(
 		ls, ls, ls, ls, 1, 1, 1, 1, &(init_data.scales)
 	);
 
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
+
 	Limits lims;
 	compute_limits(init_data, &lims);
 
@@ -530,6 +650,8 @@ static void test_SEM_in_planes_lims_computing(
 	printf("y_min = %.1f  y_max = %.1f \n", in_plane_lims[0].y_min, in_plane_lims[0].y_max);
 	printf("z_min = %.1f  z_max = %.1f \n", in_plane_lims[0].z_min, in_plane_lims[0].z_max);
 	printf("\n");
+
+	STG_free_InitData(&init_data);
 }
 
 
@@ -555,6 +677,8 @@ static void test_SEM_mom_field(
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, 
 		1, 1, 1, 1, &(init_data.scales));
 
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
 
 	STG_SEMData_Stationary stat_data;
 	STG_SEMData_Transient trans_data;
@@ -571,6 +695,7 @@ static void test_SEM_mom_field(
 	STG_free_SEM_stat_data(&stat_data);
 	STG_free_SEM_trans_data(&trans_data);
 	STG_free_VelMomField(&mom_field);
+	STG_free_InitData(&init_data);
 }
 
 
@@ -596,6 +721,8 @@ static void test_SEM_node_hist(
 	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i, ls_i,
 		1, 1, 1, 1, &(init_data.scales));
 
+	init_data.spectrum.energy = NULL;
+	init_data.spectrum.k_arr = NULL;
 
 	STG_SEMData_Stationary stat_data;
 	STG_SEMData_Transient trans_data;
@@ -617,6 +744,7 @@ static void test_SEM_node_hist(
 	STG_free_SEM_stat_data(&stat_data);
 	STG_free_SEM_trans_data(&trans_data);
 	STG_free_VelNodeHist(&node_hist);
+	STG_free_InitData(&init_data);
 }
 
 
@@ -642,7 +770,7 @@ int main(int argc, char * argv[])
 	test_Smirnov_mom_field(5, 0.1, 0.000001, 0.000001, 0.0000, 1.19e-8, -3.08e-7, 0.000000, 0.01, 100);
 	test_Smirnov_node_hist(0.01, 5, 0.1, 1, 1, 1, 0, 0, 0, 1000);
 */
-	//test_Davidson_mom_field(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
+    //test_Davidson_mom_field(10, 0.1, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 0.05, 100);
 	//test_Davidson_mom_field(10, 10, 0, 0, 0, 0, 0, 0, 1, 100);
 	//test_Davidson_node_hist(0.01, 5, 0.03, 32.346, 0.052, 0.747, -0.415, 0.351, -0.02, 300);
 
@@ -670,7 +798,9 @@ int main(int argc, char * argv[])
 	//test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
 
 
-	test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
+    //test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
 	//test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
+
+	test_Spectral_mom_field(10, 1, 8, 8, 8, 0.6, 10);
 	return 0;
 }
