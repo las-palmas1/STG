@@ -5,6 +5,9 @@ from generators.abstract import Block, BCType
 import numpy as np
 import STG.common
 
+# TODO: переделать тесты таким образом, чтобы параметры области,
+#  на которой производится генерация турбулетности были общими для всех методов
+
 
 class LundTest(unittest.TestCase):
     def setUp(self):
@@ -25,7 +28,7 @@ class LundTest(unittest.TestCase):
             re_uv=0.,
             re_uw=0.,
             re_vw=0.,
-            time_arr=np.array([0])
+            time_arr=np.array([0, 1])
         )
         self.analyzer = Analyzer(self.generator)
 
@@ -131,7 +134,7 @@ class DavidsonTest(unittest.TestCase):
         self.analyzer.generator.free_data()
 
     def setUp(self):
-        n = 200
+        n = 70
         size = 0.005 * n
         # mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
         mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.array([0, size / (n - 1)]))
@@ -140,8 +143,8 @@ class DavidsonTest(unittest.TestCase):
             mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
-        # self.visc = 1.5e-5
-        self.visc = 1.0713325E-09
+        self.visc = 1.5e-5
+        # self.visc = 1.0713325E-09
         self.re_uu = 1.
         self.re_vv = 1.
         self.re_ww = 1.
@@ -150,8 +153,8 @@ class DavidsonTest(unittest.TestCase):
         self.re_vw = 0.
         self.ls_i = 0.1
         self.ts_i = 0.01
-        # self.dissip_rate = 0.09 ** 0.75 * (0.5 * (self.re_uu + self.re_vv + self.re_ww)) ** 1.5 / self.ls_i
-        self.dissip_rate = 29.15055
+        self.dissip_rate = 0.09 ** 0.75 * (0.5 * (self.re_uu + self.re_vv + self.re_ww)) ** 1.5 / self.ls_i
+        # self.dissip_rate = 29.15055
         STG.common.init_rand()
         self.generator = Davidson(
             block=self.block,
@@ -202,7 +205,7 @@ class DavidsonTest(unittest.TestCase):
 
 class OriginalSEMTest(unittest.TestCase):
     def setUp(self):
-        n = 100
+        n = 80
         size = 0.3
         # mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
         mesh = STG.common.get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.array([0, size / (n - 1)]))
@@ -213,8 +216,8 @@ class OriginalSEMTest(unittest.TestCase):
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
         STG.common.init_rand()
-        ls = 1
-        uu_av = 115
+        ls = 0.03
+        uu_av = 200
         self.generator = OriginalSEM(
             block=self.block,
             u_e=(530, 0, 0),

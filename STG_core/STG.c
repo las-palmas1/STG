@@ -440,7 +440,11 @@ static void test_Spectral_mom_field(
 	STG_int mesh_size = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
 	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
 	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, 0, 0, 0, &(init_data.re));
-	fill_scales(node_cnt, node_cnt, node_cnt, ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, ts_i, 0, 0, 0, &(init_data.scales));
+	fill_scales(
+		node_cnt, node_cnt, node_cnt, 
+		ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+		ts_i, 0, 0, 0, &(init_data.scales)
+	);
 
 	STG_float delta_min;
 	STG_compute_delta_min(init_data, &delta_min);
@@ -479,6 +483,78 @@ static void test_Spectral_mom_field(
 	STG_free_InitData(&init_data);
 	STG_free_VelMomField(&mom_field);
 }
+
+
+
+static void test_Spectral_node_hist(
+	STG_int node_cnt, STG_float re_uu, STG_float re_vv, STG_float re_ww,
+	STG_float ts, STG_float ts_i, STG_int num_ts, STG_int num_modes
+)
+{
+	printf("Test Spectral node hist.\n");
+	printf("Normal reynolds stresses:\n");
+	printf("%.2f  %.2f  %.2f \n", re_uu, re_vv, re_ww);
+	printf("Modes number: %d \n", num_modes);
+
+	STG_float length = 1;
+	STG_float ls_i = 0.6;
+	STG_float visc = 1.8e-5;
+	STG_float dissip = pow(0.09, 0.75) * pow((re_uu + re_vv + re_ww) / 2, 1.5) / ls_i;
+
+	STG_InitData init_data;
+	init_data.i_cnt = node_cnt;
+	init_data.j_cnt = node_cnt;
+	init_data.k_cnt = node_cnt;
+
+	STG_int mesh_size = init_data.i_cnt * init_data.j_cnt * init_data.k_cnt;
+	compute_mesh(length, length, length, node_cnt, node_cnt, node_cnt, &(init_data.mesh));
+	fill_re(node_cnt, node_cnt, node_cnt, re_uu, re_vv, re_ww, 0, 0, 0, &(init_data.re));
+	fill_scales(
+		node_cnt, node_cnt, node_cnt, 
+		ls_i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+		ts_i, 0, 0, 0, 
+		&(init_data.scales)
+	);
+
+	STG_float delta_min;
+	STG_compute_delta_min(init_data, &delta_min);
+
+	STG_float * k_arr = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	STG_float * energy = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	STG_float * u_abs = (STG_float *)malloc(sizeof(STG_float) * num_modes);
+	STG_compute_Davidson_spectrum(
+		delta_min, num_modes, re_uu, re_vv, re_ww, ls_i, dissip, visc, energy, k_arr, u_abs
+	);
+	fill_spectrum(node_cnt, node_cnt, node_cnt, num_modes, k_arr, energy, &(init_data.spectrum));
+
+	free(k_arr);
+	free(energy);
+	free(u_abs);
+
+	STG_SpectralData data;
+	STG_VelNodeHist node_hist;
+
+	STG_compute_Spectral_data(init_data, num_modes, &data);
+	STG_compute_Spectral_node_hist(init_data, data, ts, num_ts, &node_hist, 1, 1, 1);
+
+	printf("First 5 u_abs: \n");
+	for (STG_int i = 0; i < 5; i++)
+	{
+		printf("i_mode = %d  u_abs = %f \n", i, data.u_abs[i]);
+	}
+	printf("Velosity history\n");
+	for (STG_int i = 0; i < num_ts + 1; i++)
+	{
+		printf("time = %.3f  u = %.3f  v = %.3f  w = %.3f \n", node_hist.time[i], 
+			node_hist.u_p[i], node_hist.v_p[i], node_hist.w_p[i]);
+	}
+	printf("\n");
+
+	STG_free_Spectral_data(&data);
+	STG_free_InitData(&init_data);
+	STG_free_VelNodeHist(&node_hist);
+}
+
 
 
 
@@ -801,6 +877,7 @@ int main(int argc, char * argv[])
     //test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
 	//test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
 
-	test_Spectral_mom_field(10, 1, 8, 8, 8, 0.6, 10);
+	test_Spectral_mom_field(10, 1, 8, 8, 8, 0.6, 100);
+	test_Spectral_node_hist(10, 1, 1, 1, 0.01, 0.03, 10, 150);
 	return 0;
 }

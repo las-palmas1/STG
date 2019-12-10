@@ -88,7 +88,7 @@ def free_sem_trans_data(trans_data: STG_SEMData_Transient):
     stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_SEM_trans_data
     func_c.argtypes = ctypes.POINTER(STG_SEMData_Transient),
-    func_c(trans_data)
+    func_c(ctypes.byref(trans_data))
 
 
 def compute_sem_moment_field(

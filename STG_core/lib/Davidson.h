@@ -3,9 +3,6 @@
 
 #include "common.h"
 
-#define MODE(iaxe, imode)  p##iaxe[imode] * cos((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale) + \
-                           q##iaxe[imode] * sin((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale)
-
 
 typedef struct STG_DavidsonData_Stationary_s
 {

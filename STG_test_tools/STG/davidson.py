@@ -38,12 +38,6 @@ class STG_DavidsonData_Transient(ctypes.Structure):
         ('psi', ctypes.POINTER(STG_float)),
         ('alpha', ctypes.POINTER(STG_float)),
         ('theta', ctypes.POINTER(STG_float)),
-        ('k1', ctypes.POINTER(STG_float)),
-        ('k2', ctypes.POINTER(STG_float)),
-        ('k3', ctypes.POINTER(STG_float)),
-        ('sigma1', ctypes.POINTER(STG_float)),
-        ('sigma2', ctypes.POINTER(STG_float)),
-        ('sigma3', ctypes.POINTER(STG_float)),
 
         ('u_p_prev', ctypes.POINTER(STG_float)),
         ('v_p_prev', ctypes.POINTER(STG_float)),

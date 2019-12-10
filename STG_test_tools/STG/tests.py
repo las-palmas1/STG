@@ -52,7 +52,8 @@ class TestSmirnov(unittest.TestCase):
             ls_i=1, ls_ux=0., ls_uy=0., ls_uz=0.,
             ls_vx=0., ls_vy=0., ls_vz=0.,
             ls_wx=0., ls_wy=0., ls_wz=0.,
-            ts_i=1, ts_u=0., ts_v=0., ts_w=0.
+            ts_i=1, ts_u=0., ts_v=0., ts_w=0.,
+            k_arr=np.zeros(5), energy=np.zeros(5)
         )
         self.num_modes = 1000
         self.time_arr = np.linspace(0, 1, 5000)
@@ -101,7 +102,8 @@ class TestDavidson(unittest.TestCase):
             ls_i=self.ls_i, ls_ux=0., ls_uy=0., ls_uz=0.,
             ls_vx=0., ls_vy=0., ls_vz=0.,
             ls_wx=0., ls_wy=0., ls_wz=0.,
-            ts_i=self.ts_i, ts_u=0., ts_v=0., ts_w=0.
+            ts_i=self.ts_i, ts_u=0., ts_v=0., ts_w=0.,
+            k_arr=np.zeros(5), energy=np.zeros(5)
         )
         self.num_modes = 100
         self.time_arr = np.linspace(1, 5, 5)

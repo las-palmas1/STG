@@ -16,6 +16,9 @@ from STG.davidson import STG_DavidsonData_Transient, STG_DavidsonData_Stationary
 from STG.sem import STG_SEMData_Transient, STG_SEMData_Stationary, free_sem_stat_data, free_sem_trans_data, \
     compute_sem_stat_data, compute_sem_trans_data, compute_sem_moment_field, compute_sem_node_hist
 
+from STG.spectral import STG_SpectralData, compute_spectral_data, compute_spectral_moment_field, \
+    compute_spectral_node_hist, free_spectral_data
+
 
 class Lund(Generator):
     def __init__(
@@ -24,7 +27,16 @@ class Lund(Generator):
             re_uv: float, re_uw: float, re_vw: float,
             time_arr: np.ndarray
     ):
-        Generator.__init__(self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, 0., 0., time_arr)
+        Generator.__init__(
+            self, block=block, u_av=u_av, re_uu=re_uu, re_vv=re_vv, re_ww=re_ww,
+            re_uv=re_uv, re_uw=re_uw, re_vw=re_vw,
+            ls_i=0., ls_ux=0., ls_uy=0, ls_uz=0,
+            ls_vx=0., ls_vy=0, ls_vz=0,
+            ls_wx=0., ls_wy=0, ls_wz=0,
+            ts_i=0, ts_u=0, ts_v=0, ts_w=0,
+            k_arr=np.zeros(5), energy=np.zeros(5),
+            time_arr=time_arr
+        )
 
     def _compute_cholesky(self):
         """Вычисление разложения тензора рейнольдсовых напряжений по Холецкому в каждой точке."""
@@ -87,6 +99,7 @@ class Smirnov(Generator):
             ls_i=ls_i, ls_ux=0, ls_uy=0, ls_uz=0, ls_vx=0, ls_vy=0, ls_vz=0,
             ls_wx=0, ls_wy=0, ls_wz=0,
             ts_i=ts_i, ts_u=0, ts_v=0, ts_w=0,
+            k_arr=np.zeros(5), energy=np.zeros(5),
             time_arr=time_arr
         )
 
@@ -141,7 +154,8 @@ class Davidson(Generator):
             ls_ux=0, ls_uy=0, ls_uz=0,
             ls_vx=0, ls_vy=0, ls_vz=0,
             ls_wx=0, ls_wy=0, ls_wz=0,
-            ts_i=ts_i, ts_u=0, ts_v=0, ts_w=0, time_arr=time_arr
+            ts_i=ts_i, ts_u=0, ts_v=0, ts_w=0, time_arr=time_arr,
+            k_arr=np.zeros(5), energy=np.zeros(5),
         )
 
     def _alloc_aux_data_transient(self):
@@ -191,7 +205,7 @@ class OriginalSEM(Generator):
             ls_wx: float, ls_wy: float, ls_wz: float,
             re_uu: float, re_vv: float, re_ww: float,
             re_uv: float, re_uw: float, re_vw: float,
-            time_arr: np.ndarray,
+            time_arr: np.ndarray
     ):
         self.eddies_num = eddies_num
         self.u_e = u_e
@@ -204,7 +218,8 @@ class OriginalSEM(Generator):
             ls_vx=ls_vx, ls_vy=ls_vy, ls_vz=ls_vz,
             ls_wx=ls_wx, ls_wy=ls_wy, ls_wz=ls_wz,
             ts_i=0., ts_u=0., ts_v=0., ts_w=0.,
-            time_arr=time_arr
+            k_arr=np.zeros(5), energy=np.zeros(5),
+            time_arr=time_arr,
         )
 
     def _alloc_aux_data_transient(self):
@@ -235,9 +250,51 @@ class OriginalSEM(Generator):
         free_sem_trans_data(self.c_trans_data)
 
 
+class Spectral(Generator):
+    def __init__(
+            self, block: Block, u_av: Tuple[float, float, float], num_modes,
+            re_uu: float, re_vv: float, re_ww: float,
+            re_uv: float, re_uw: float, re_vw: float,
+            k_arr: np.ndarray, energy: np.ndarray, time_arr: np.ndarray
+    ):
+        self.num_modes = num_modes
+        assert num_modes == k_arr.shape[0] == energy.shape[0]
+        self.c_data = STG_SpectralData()
+        Generator.__init__(
+            self, block=block, u_av=u_av,
+            re_uu=re_uu, re_vv=re_vv, re_ww=re_ww,
+            re_uv=re_uv, re_uw=re_uw, re_vw=re_vw,
+            ls_i=0, ls_ux=0, ls_uy=0, ls_uz=0,
+            ls_vx=0, ls_vy=0, ls_vz=0,
+            ls_wx=0, ls_wy=0, ls_wz=0,
+            ts_i=0, ts_u=0, ts_v=0, ts_w=0,
+            k_arr=k_arr, energy=energy, time_arr=time_arr
+        )
 
+    def _alloc_aux_data_transient(self):
+        pass
 
+    def _compute_aux_data_transient(self):
+        pass
 
+    def _compute_aux_data_stationary(self):
+        compute_spectral_data(self._c_init_data, self.num_modes, self.c_data)
+
+    def compute_velocity_field(self, num_ts):
+        compute_spectral_moment_field(self._c_init_data, self.c_data, self._ts, num_ts, self.c_mom_field)
+        self._vel_field = extract_pulsations_from_mom_field(self.c_mom_field)
+        free_mom_field(self.c_mom_field)
+
+    def compute_pulsation_at_node(self):
+        i, j, k = self.get_puls_node()
+        compute_spectral_node_hist(
+            self._c_init_data, self.c_data, self._ts, self._num_ts_tot, self.c_node_hist, i, j, k
+        )
+        self._vel_puls = extract_pulsations_from_node_hist(self.c_node_hist)
+        free_node_hist(self.c_node_hist)
+
+    def free_data(self):
+        free_spectral_data(self.c_data)
 
 
 

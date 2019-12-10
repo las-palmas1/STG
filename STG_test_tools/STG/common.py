@@ -117,6 +117,14 @@ class STG_ReStress(ctypes.Structure):
     ]
 
 
+class STG_Spectrum(ctypes.Structure):
+    _fields_ = [
+        ('k_arr', ctypes.POINTER(STG_float)),
+        ('energy', ctypes.POINTER(STG_float)),
+        ('num', STG_int)
+    ]
+
+
 class STG_InitData(ctypes.Structure):
     _fields_ = [
         ('i_cnt', STG_int),
@@ -124,7 +132,8 @@ class STG_InitData(ctypes.Structure):
         ('k_cnt', STG_int),
         ('mesh', STG_Mesh),
         ('re', STG_ReStress),
-        ('scales', STG_Scales)
+        ('scales', STG_Scales),
+        ('spectrum', STG_Spectrum)
     ]
 
 
@@ -162,9 +171,9 @@ def extract_pulsations_from_mom_field(mom_field: STG_VelMomField):
         u[i] = mom_field.u_p[i]
         v[i] = mom_field.v_p[i]
         w[i] = mom_field.w_p[i]
-    u = u.reshape(mom_field.i_cnt, mom_field.j_cnt, mom_field.k_cnt)
-    v = v.reshape(mom_field.i_cnt, mom_field.j_cnt, mom_field.k_cnt)
-    w = w.reshape(mom_field.i_cnt, mom_field.j_cnt, mom_field.k_cnt)
+    u = u.reshape([mom_field.i_cnt, mom_field.j_cnt, mom_field.k_cnt])
+    v = v.reshape([mom_field.i_cnt, mom_field.j_cnt, mom_field.k_cnt])
+    w = w.reshape([mom_field.i_cnt, mom_field.j_cnt, mom_field.k_cnt])
     return u, v, w
 
 
@@ -183,7 +192,8 @@ def get_init_data(
         mesh: Tuple[np.ndarray, np.ndarray, np.ndarray],
         re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
         ls_i, ls_ux, ls_uy, ls_uz, ls_vx, ls_vy, ls_vz, ls_wx, ls_wy, ls_wz,
-        ts_i, ts_u, ts_v, ts_w
+        ts_i, ts_u, ts_v, ts_w,
+        k_arr: np.ndarray, energy: np.ndarray
 ):
     i_cnt = mesh[0].shape[0]
     j_cnt = mesh[0].shape[1]
@@ -247,7 +257,16 @@ def get_init_data(
         ts_i=ts_i_c, ts_u=ts_u_c, ts_v=ts_v_c, ts_w=ts_w_c
     )
 
-    init_data = STG_InitData(i_cnt=i_cnt, j_cnt=j_cnt, k_cnt=k_cnt, mesh=mesh_c, re=re_stress_c, scales=scales_c)
+    assert k_arr.shape[0] == energy.shape[0]
+    num_modes = k_arr.shape[0]
+    k_arr_c = (STG_float * (num_modes * num))(*[k_arr[i] for _ in range(num) for i in range(num_modes)])
+    energy_c = (STG_float * (num_modes * num))(*[energy[i] for _ in range(num) for i in range(num_modes)])
+    spectrum_c = STG_Spectrum(k_arr=k_arr_c, energy=energy_c, num=num_modes)
+
+    init_data = STG_InitData(
+        i_cnt=i_cnt, j_cnt=j_cnt, k_cnt=k_cnt,
+        mesh=mesh_c, re=re_stress_c, scales=scales_c, spectrum=spectrum_c
+    )
     # free_init_data в данном случае не работает
     return init_data
 

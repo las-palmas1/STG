@@ -48,7 +48,8 @@ class Generator(metaclass=ABCMeta):
             ls_vx: float, ls_vy: float, ls_vz: float,
             ls_wx: float, ls_wy: float, ls_wz: float,
             ts_i: float, ts_u: float, ts_v: float, ts_w: float,
-            time_arr: np.ndarray,
+            k_arr: np.ndarray, energy: np.ndarray,
+            time_arr: np.ndarray
             ):
         """
         :param block: Блок сетки, на которой нужно генерировать пульсации.
@@ -83,6 +84,8 @@ class Generator(metaclass=ABCMeta):
         self.ls_wz = ls_wz
         self.ts_i = ts_i
         self._time_arr = time_arr
+        self.k_arr = k_arr
+        self.energy = energy
         self._i_puls = 0
         self._j_puls = 0
         self._k_puls = 0
@@ -95,7 +98,8 @@ class Generator(metaclass=ABCMeta):
         self._c_init_data = get_init_data(
             self.block.mesh, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
             ls_i=ls_i, ls_ux=ls_ux, ls_uy=ls_uy, ls_uz=ls_uz, ls_vx=ls_vx, ls_vy=ls_vy, ls_vz=ls_vz,
-            ls_wx=ls_wx, ls_wy=ls_wy, ls_wz=ls_wz, ts_i=ts_i, ts_u=ts_u, ts_v=ts_v, ts_w=ts_w
+            ls_wx=ls_wx, ls_wy=ls_wy, ls_wz=ls_wz, ts_i=ts_i, ts_u=ts_u, ts_v=ts_v, ts_w=ts_w,
+            k_arr=k_arr, energy=energy
         )
         self._ts = time_arr[1] - time_arr[0]
         self._num_ts_tot = time_arr.shape[0] - 1

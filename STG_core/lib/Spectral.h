@@ -3,9 +3,6 @@
 
 #include "common.h"
 
-#define MODE(iaxe, imode)  p##iaxe[imode] * cos((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale) + \
-                           q##iaxe[imode] * sin((k1_p * x + k2_p * y + k3_p * z) / length_scale + omega[imode] * time / time_scale)
-
 
 typedef struct STG_SpectralData_s
 {
@@ -48,14 +45,13 @@ STG_SHARED_LIB_API void STG_free_Spectral_data(STG_SpectralData * data);
 
 // num_ts - number of current time step (start with 0)
 STG_SHARED_LIB_API void STG_compute_Spectral_moment_field(
-        STG_InitData init_data,
-        STG_SpectralData data, STG_float ts, STG_int num_ts, STG_VelMomField * mom_field
+        STG_InitData init_data, STG_SpectralData data, STG_float ts, STG_int num_ts, STG_VelMomField * mom_field
 );
 
 
 // num_ts_tot - total number of time steps
-STG_SHARED_LIB_API void STG_compute_Spectral_node_hist(STG_InitData init_data,
-    STG_SpectralData data, STG_float ts, STG_int num_ts_tot,
+STG_SHARED_LIB_API void STG_compute_Spectral_node_hist(
+	STG_InitData init_data, STG_SpectralData data, STG_float ts, STG_int num_ts_tot,
     STG_VelNodeHist * node_hist, STG_int i, STG_int j, STG_int k
 );
 
