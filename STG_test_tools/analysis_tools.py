@@ -11,7 +11,7 @@ class Analyzer:
 
     def plot_2d_velocity_field(
             self, figsize=(7, 7), num_levels=20, vmin=-3.5, vmax=3.5, grid=True, title_fsize=18, title=True,
-            axes=(0.05, 0.05, 0.9, 0.9), fname=None
+            axes=(0.05, 0.05, 0.9, 0.9), fname=None, show=False
     ):
         x = self.generator.block.mesh[0][:, :, 0]
         y = self.generator.block.mesh[1][:, :, 0]
@@ -31,8 +31,9 @@ class Analyzer:
         plt.yticks(y[0, :], [])
         plt.grid(grid)
         if fname:
-            plt.savefig(fname + '_U')
-        plt.show()
+            plt.savefig(fname + '-U')
+        if show:
+            plt.show()
 
         plt.figure(figsize=figsize)
         if axes:
@@ -45,8 +46,9 @@ class Analyzer:
         plt.yticks(y[0, :], [])
         plt.grid(grid)
         if fname:
-            plt.savefig(fname + '_V')
-        plt.show()
+            plt.savefig(fname + '-V')
+        if show:
+            plt.show()
 
         plt.figure(figsize=figsize)
         if axes:
@@ -59,17 +61,19 @@ class Analyzer:
         plt.yticks(y[0, :], [])
         plt.grid(grid)
         if fname:
-            plt.savefig(fname + '_W')
-        plt.show()
+            plt.savefig(fname + '-W')
+        if show:
+            plt.show()
 
     def save_velocity_field_tec(self, fname):
         pass
 
     def plot_velocity_history(
-            self, i: int, j: int, k: int, ts, num_ts: int, figsize=(7, 7), ylim=(-3, 3),
-            label_fsize=16, ticks_fsize=12, title_fsize=18, title=True, axes=(0.07, 0.07, 0.9, 0.87), fname=None
+            self, i: int, j: int, k: int, ts, num_tlvl: int, figsize=(7, 7), ylim=(-3, 3),
+            label_fsize=16, ticks_fsize=12, title_fsize=18, title=True, axes=(0.07, 0.07, 0.9, 0.87), fname=None,
+            show=False
     ):
-        t_arr = np.arange(0, ts*num_ts, ts)
+        t_arr = np.arange(0, ts * num_tlvl, ts)
         self.generator.set_puls_node(i, j, k)
         self.generator.time_arr = t_arr
         self.generator.compute_pulsation_at_node()
@@ -83,15 +87,16 @@ class Analyzer:
 
         if ylim:
             plt.ylim(*ylim)
-        plt.xlim(xmin=0, xmax=ts*num_ts)
+        plt.xlim(xmin=0, xmax=ts * num_tlvl)
         if title:
             plt.title('U', fontsize=title_fsize, fontweight='bold')
         plt.xticks(fontsize=ticks_fsize, fontweight='bold')
         plt.xlabel('t, с', fontsize=label_fsize, fontweight='bold')
         plt.yticks(fontsize=ticks_fsize, fontweight='bold')
         if fname:
-            plt.savefig(fname + '_U')
-        plt.show()
+            plt.savefig(fname + '-U')
+        if show:
+            plt.show()
 
         plt.figure(figsize=figsize)
         if axes:
@@ -101,15 +106,16 @@ class Analyzer:
 
         if ylim:
             plt.ylim(*ylim)
-        plt.xlim(xmin=0, xmax=ts * num_ts)
+        plt.xlim(xmin=0, xmax=ts * num_tlvl)
         if title:
             plt.title('V', fontsize=title_fsize, fontweight='bold')
         plt.xticks(fontsize=ticks_fsize, fontweight='bold')
         plt.xlabel('t, с', fontsize=label_fsize, fontweight='bold')
         plt.yticks(fontsize=ticks_fsize, fontweight='bold')
         if fname:
-            plt.savefig(fname + '_V')
-        plt.show()
+            plt.savefig(fname + '-V')
+        if show:
+            plt.show()
 
         plt.figure(figsize=figsize)
         if axes:
@@ -119,15 +125,16 @@ class Analyzer:
 
         if ylim:
             plt.ylim(*ylim)
-        plt.xlim(xmin=0, xmax=ts * num_ts)
+        plt.xlim(xmin=0, xmax=ts * num_tlvl)
         if title:
             plt.title('W', fontsize=title_fsize, fontweight='bold')
         plt.xticks(fontsize=ticks_fsize, fontweight='bold')
         plt.xlabel('t, с', fontsize=label_fsize, fontweight='bold')
         plt.yticks(fontsize=ticks_fsize, fontweight='bold')
         if fname:
-            plt.savefig(fname + '_W')
-        plt.show()
+            plt.savefig(fname + '-W')
+        if show:
+            plt.show()
 
     @classmethod
     def _get_average_arr(cls, value: np.ndarray):
@@ -143,10 +150,10 @@ class Analyzer:
         return value.sum() / len(value)
 
     def plot_moments(
-            self, i: int, j: int, k: int, ts: float, num_ts: int, figsize=(7, 7), ylim=(-0.5, 1),
-            legend_fsize=14, ticks_fsize=12, label_fsize=14, axes=(0.07, 0.07, 0.9, 0.87), fname=None
+            self, i: int, j: int, k: int, ts: float, num_tlvl: int, figsize=(7, 7), ylim=(-0.5, 1),
+            legend_fsize=14, ticks_fsize=12, label_fsize=14, axes=(0.07, 0.07, 0.9, 0.87), fname=None, show=False
     ):
-        t_arr = np.arange(0, ts * num_ts, ts)
+        t_arr = np.arange(0, ts * num_tlvl, ts)
         self.generator.set_puls_node(i, j, k)
         self.generator.time_arr = t_arr
         self.generator.compute_pulsation_at_node()
@@ -172,17 +179,18 @@ class Analyzer:
         plt.xticks(fontsize=ticks_fsize, fontweight='bold')
         plt.yticks(fontsize=ticks_fsize, fontweight='bold')
         plt.xlabel('t, с', fontsize=label_fsize, fontweight='bold')
-        plt.xlim(0, num_ts*ts)
+        plt.xlim(0, num_tlvl * ts)
         if ylim:
             plt.ylim(*ylim)
         plt.grid()
         if fname:
             plt.savefig(fname)
-        plt.show()
+        if show:
+            plt.show()
 
     def plot_divergence_field_2d(
             self, figzie=(7, 7), num_levels=20, vmin=-300, vmax=300, grid=True, title_fsize=18,
-            fname=None
+            fname=None, show=False
     ):
         x = self.generator.block.mesh[0][:, :, 0]
         y = self.generator.block.mesh[1][:, :, 0]
@@ -200,18 +208,19 @@ class Analyzer:
         plt.grid(grid)
         if fname:
             plt.savefig(fname)
-        plt.show()
+        if show:
+            plt.show()
 
     def save_divergence_field_tec(self, fname):
         pass
 
     def plot_two_point_space_correlation(
-            self, i0: int, j0: int, k0: int, ts: float, num_ts: int,
+            self, i0: int, j0: int, k0: int, ts: float, num_tlvl: int,
             di: int = 1, dj: int = 1, dk: int = 1, num: int = 20,
             figsize=(7, 7), label_fsize=14, ticks_fsize=12, legend_fsize=14, ylim=(-1.1, 1.1),
-            axes=(0.07, 0.07, 0.9, 0.87), fname=None
+            axes=(0.07, 0.07, 0.9, 0.87), fname=None, show=False
     ):
-        t_arr = np.arange(0, ts * num_ts, ts)
+        t_arr = np.arange(0, ts * num_tlvl, ts)
         r = np.zeros(num)
         cor_uu = np.zeros(num)
         cor_vv = np.zeros(num)
@@ -261,13 +270,14 @@ class Analyzer:
         plt.legend(fontsize=legend_fsize)
         if fname:
             plt.savefig(fname)
-        plt.show()
+        if show:
+            plt.show()
 
     def plot_two_point_time_correlation(
             self, i: int, j: int, k: int, t1: float, t0: float=0.,
             num_dt_av: int=200, num_dt: int=100, figsize=(6.5, 4.5),
             label_fsize=14, ticks_fsize=12, legend_fsize=14, ylim=(-1.1, 1.1),
-            axes=(0.07, 0.07, 0.9, 0.87), fname=None
+            axes=(0.07, 0.07, 0.9, 0.87), fname=None, show=False
     ):
         """
         :param num_dt - число отрезков между моментами t1 и t2.
@@ -324,7 +334,8 @@ class Analyzer:
         plt.legend(fontsize=legend_fsize)
         if fname:
             plt.savefig(fname)
-        plt.show()
+        if show:
+            plt.show()
 
     @classmethod
     def _get_energy(cls, m_grid: np.ndarray, energy_arr: np.ndarray, m_mag):
@@ -380,7 +391,7 @@ class Analyzer:
     def plot_spectrum_2d(
             self, figsize=(7, 7), num_pnt=100, ylim=(1e-3, 1e1), xlim=None,
             label_fsize=14, ticks_fsize=12, legend_fsize=14,
-            axes=(0.07, 0.07, 0.9, 0.87), fname=None
+            axes=(0.07, 0.07, 0.9, 0.87), fname=None, show=False
     ):
         if self.generator.block.shape[0] != self.generator.block.shape[1]:
             raise Exception('Для построения спектра блок должен быть квадратным')
@@ -401,7 +412,10 @@ class Analyzer:
         plt.plot(k_w, e_w, color='green', label=r'$E_w$', lw=1.5)
         plt.plot(k_w, e_u + e_v + e_w, color='black', label=r'$E_\Sigma$', lw=2.5)
 
-        k = np.logspace(-2, 1, 500)
+        if xlim:
+            k = np.logspace(int(np.log10(xlim[0])), int(np.log10(xlim[1])), 500)
+        else:
+            k = np.logspace(-2, 3, 500)
         if (self.generator.get_desired_spectrum(k) == 0).all():
             pass
         else:
@@ -421,12 +435,13 @@ class Analyzer:
         plt.ylabel('E, м^3/с^2', fontsize=label_fsize, fontweight='bold')
         if fname:
             plt.savefig(fname)
-        plt.show()
+        if show:
+            plt.show()
 
     def plot_spectrum_3d(
             self, figsize=(7, 7), num_pnt=100, ylim=(1e-3, 1e1), xlim=None,
             label_fsize=14, ticks_fsize=12, legend_fsize=14,
-            axes=(0.07, 0.07, 0.9, 0.87), fname=None
+            axes=(0.07, 0.07, 0.9, 0.87), fname=None, show=False
     ):
         if self.generator.block.shape[0] != self.generator.block.shape[1] or \
                 self.generator.block.shape[0] != self.generator.block.shape[2]:
@@ -439,13 +454,18 @@ class Analyzer:
             plt.axes(axes)
         plt.plot(k, e, color='red', lw=2.5, label=r'$E_\Sigma$', )
 
-        k = np.logspace(-2, 3, 100)
+        if xlim:
+            k = np.logspace(int(np.log10(xlim[0])), int(np.log10(xlim[1])), 500)
+        else:
+            k = np.logspace(-2, 3, 500)
         if (self.generator.get_desired_spectrum(k) == 0).all():
             pass
         else:
             plt.plot(k, self.generator.get_desired_spectrum(k), color='black', ls='--', lw=1.5, label='Заданный')
+
         k_53 = np.logspace(-2, 2, 100)
         plt.plot(0.5 * k_53**(-5 / 3), k_53, color='black', ls=':', lw=1.5, label=r'$\sim k^{-\frac{5}{3}}$')
+
         if ylim:
             plt.ylim(*ylim)
         if xlim:
@@ -460,7 +480,8 @@ class Analyzer:
         plt.ylabel('E, м^3/с^2', fontsize=label_fsize, fontweight='bold')
         if fname:
             plt.savefig(fname)
-        plt.show()
+        if show:
+            plt.show()
 
 
 

@@ -50,7 +50,7 @@ class Generator(metaclass=ABCMeta):
             ts_i: float, ts_u: float, ts_v: float, ts_w: float,
             k_arr: np.ndarray, energy: np.ndarray,
             time_arr: np.ndarray
-            ):
+    ):
         """
         :param block: Блок сетки, на которой нужно генерировать пульсации.
         :param u_av: Кортеж из трех значений составляющих осредненной скорости.

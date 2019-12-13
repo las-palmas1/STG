@@ -878,6 +878,6 @@ int main(int argc, char * argv[])
 	//test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
 
 	test_Spectral_mom_field(10, 1, 8, 8, 8, 0.6, 100);
-	test_Spectral_node_hist(10, 1, 1, 1, 0.01, 0.03, 10, 150);
+	test_Spectral_node_hist(30, 100, 100, 100, 0.01, 0.03, 10, 500);
 	return 0;
 }

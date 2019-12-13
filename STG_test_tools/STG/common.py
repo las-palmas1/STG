@@ -292,6 +292,20 @@ def get_y_hetero_mesh(y: np.ndarray, num):
     mesh = get_mesh(np.array(np.linspace(0, size, num)), y, np.array([0, size / (num - 1)]))
     return mesh
 
+
+def get_min_mesh_step(x: np.ndarray, y: np.ndarray, z: np.ndarray):
+    i_cnt = x.shape[0]
+    j_cnt = y.shape[0]
+    k_cnt = z.shape[0]
+    dx = x[1: i_cnt] - x[0: i_cnt - 1]
+    dy = y[1: j_cnt] - y[0: j_cnt - 1]
+    dz = z[1: k_cnt] - z[0: k_cnt - 1]
+    min_dx = np.abs(dx).min()
+    min_dy = np.abs(dy).min()
+    min_dz = np.abs(dz).min()
+    res = min(min_dx, min_dy, min_dz)
+    return res
+
 # NOTE: в методе СЕМ временной масштаб масштаб определяется линейным масштабом и
 # скоростью переноса вихрей. Полагаю, что в случае однородного распределения параметров
 # турбулентности на границе следует задавать линейный и временной масштабы, а также направление переноса вихрей.

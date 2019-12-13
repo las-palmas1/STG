@@ -2,31 +2,47 @@
 conf = 'Release'
 STG_lib_name = 'STG_shared_lib'
 
-# путь к папке с картинками
-pic_dir = 'pictures'
-# настроки осей для всех графиков, кроме профиля сокрости и спектра
-axes_plot = (0.11, 0.14, 0.86, 0.84)
-# настройки осей для профиля сокрости
-axes_contour = (0.05, 0.05, 0.9, 0.9)
-# настройки осей для спектра
-axes_spectrum = (0.15, 0.11, 0.82, 0.86)
+# TODO: сделать возможность генерировать неоднородную сетку, задавая распределения вдоль каждой из осей
+#  добавить возможность задавать гетерогенность параметров вдоль заданной оси (например, ввести в качестве
+#  параметра ось (x или y) и задавать в нормализованном виде распределения или считывать их из файлов)
 
-# размеры шрифтов
-legend_fsize = 14
-ticks_fsize = 14
-label_fsize = 16
+# Число узлов
+num_nodes = 70
+# Размер области
+length = 1.0
+u_av = (100, 0, 0)
 
-# пределы по вертикальной оси для различных графиков
-ylim_vel = (-3, 3)
-ylim_sec_mom = (-0.5, 2)
-ylim_space_cor = (-0.4, 1.1)
-ylim_auto_cor = (-0.4, 1.1)
-ylim_spectrum = (1e-4, 1e1)
+# Шаг по времени
+t_step = 1e-3
+# Интервал для проб скорости
+t_end_vel = 0.2
+# Интервал осреднения для расчета статистики
+t_av = 3
+# Число шагов между концами интервала, на котором расчитывается автокорреляции
+num_dt_acor = 50
 
-# пределы по горизонтальной оси
-xlim_spectrum = (1e-1, 1e3)
 
-# размеры картинок
-figsize_contour = (6, 6)
-figsize_plot = (6, 4)
-figsize_spectrum = (6, 6)
+re_uu = 100
+re_vv = 100
+re_ww = 100
+re_uv = 0
+re_uw = 0
+re_vw = 0
+
+k_ls = 0.3
+ls_ux = k_ls * length
+ls_uy = k_ls * length
+ls_uz = k_ls * length
+ls_vx = k_ls * length
+ls_vy = k_ls * length
+ls_vz = k_ls * length
+ls_wx = k_ls * length
+ls_wy = k_ls * length
+ls_wz = k_ls * length
+ls_i = (ls_ux + ls_uy + ls_vx + ls_vy + ls_wx + ls_wy) / 9
+
+k_ts = 0.2
+ts_u = k_ts * t_step
+ts_v = k_ts * t_step
+ts_w = k_ts * t_step
+ts_i = (ts_u + ts_v + ts_w) / 3

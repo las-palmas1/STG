@@ -89,10 +89,10 @@ class Smirnov(Generator):
                  re_uu: float, re_vv: float, re_ww: float,
                  re_uv: float, re_uw: float, re_vw: float,
                  time_arr: np.ndarray,
-                 mode_num: int = 100, ):
+                 num_modes: int = 100, ):
         self.ts_i = ts_i
         self.ls_i = ls_i
-        self.mode_num = mode_num
+        self.mode_num = num_modes
         self.c_data = STG_SmirnovData()
         Generator.__init__(
             self, block, u_av, re_uu, re_vv, re_ww, re_uv, re_uw, re_vw,
@@ -255,7 +255,7 @@ class Spectral(Generator):
             self, block: Block, u_av: Tuple[float, float, float], num_modes,
             re_uu: float, re_vv: float, re_ww: float,
             re_uv: float, re_uw: float, re_vw: float,
-            k_arr: np.ndarray, energy: np.ndarray, time_arr: np.ndarray
+            ts_i: float, k_arr: np.ndarray, energy: np.ndarray, time_arr: np.ndarray
     ):
         self.num_modes = num_modes
         assert num_modes == k_arr.shape[0] == energy.shape[0]
@@ -267,7 +267,7 @@ class Spectral(Generator):
             ls_i=0, ls_ux=0, ls_uy=0, ls_uz=0,
             ls_vx=0, ls_vy=0, ls_vz=0,
             ls_wx=0, ls_wy=0, ls_wz=0,
-            ts_i=0, ts_u=0, ts_v=0, ts_w=0,
+            ts_i=ts_i, ts_u=0, ts_v=0, ts_w=0,
             k_arr=k_arr, energy=energy, time_arr=time_arr
         )
 
@@ -295,6 +295,9 @@ class Spectral(Generator):
 
     def free_data(self):
         free_spectral_data(self.c_data)
+
+    def _get_energy_desired(self, k) -> float:
+        return float(interp1d(self.k_arr, self.energy, fill_value=0, bounds_error=False)(k))
 
 
 

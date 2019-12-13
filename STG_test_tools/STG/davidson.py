@@ -110,3 +110,20 @@ def compute_davidson_node_hist(
                        ctypes.POINTER(STG_DavidsonData_Transient), ctypes.POINTER(STG_VelNodeHist),
                        STG_int, STG_int, STG_int)
     func_c(init_data, stat_data, ts, num_ts_tot, ctypes.byref(trans_data), ctypes.byref(node_hist), i, j, k)
+
+
+def get_davidson_spectrum(
+        delta_min, num_modes, re_uu, re_vv, re_ww, ls_i, dissip_rate, visc
+):
+    alpha = 1.483
+    k_t = 0.5 * (re_uu + re_vv + re_ww)
+    k_e = alpha * 9 * np.pi / (55 * ls_i)
+    k_min = k_e / 2
+    k_max = 2 * np.pi / (2 * delta_min)
+
+    k_arr = np.linspace(k_min, k_max, num_modes)
+    k_eta = dissip_rate**0.25 / visc**0.75
+    u_rms = (2 / 3 * k_t)**0.5
+    energy = alpha * u_rms**2 / k_e * (k_arr / k_e)**4 * \
+             np.exp(-2 * (k_arr / k_eta)**2) / (1 + (k_arr / k_e)**2)**(17/6)
+    return k_arr, energy
