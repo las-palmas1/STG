@@ -34,7 +34,7 @@ ylim_vel = (-25, 25)
 ylim_sec_mom = (-10, 140)
 ylim_space_cor = (-0.4, 1.1)
 ylim_auto_cor = (-0.4, 1.1)
-ylim_spectrum = (1e-4, 1e1)
+ylim_spectrum = (1e-2, 1e1)
 
 # пределы по горизонтальной оси
 xlim_spectrum = (1e-1, 1e3)
@@ -42,4 +42,4 @@ xlim_spectrum = (1e-1, 1e3)
 # размеры картинок
 figsize_contour = (6, 6)
 figsize_plot = (6, 4)
-figsize_spectrum = (6, 6)
+figsize_spectrum = (6, 5)
