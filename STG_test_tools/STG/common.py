@@ -10,30 +10,29 @@ STG_int = ctypes.c_ulong
 STG_float = ctypes.c_float
 
 
-def search_sgt_lib(SGT_lib_name, conf):
+def search_sgt_lib(SGT_lib_name):
     if platform.system() == 'Windows':
         ext = '.dll'
     else:
         ext = '.so'
     res = ''
     for root, dirs, files in os.walk(
-            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'projects')
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
     ):
         for file in files:
-            if os.path.splitext(file)[0] == SGT_lib_name and os.path.splitext(file)[1] == ext and \
-                    root.count(conf) != 0:
+            if os.path.splitext(file)[0] == SGT_lib_name and os.path.splitext(file)[1] == ext:
                 res = os.path.join(root, file)
     return res
 
 
 def init_rand():
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     init_rand_ctypes = ctypes.CDLL(stg_lib_fname).STG_init_rand
     init_rand_ctypes()
 
 
 def get_uniform(x1, x2, num):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     get_uniform_ctypes = ctypes.CDLL(stg_lib_fname).get_uniform
     get_uniform_ctypes.restype = ctypes.POINTER(STG_float)
     get_uniform_ctypes.argtypes = STG_float, STG_float, STG_int
@@ -46,7 +45,7 @@ def get_uniform(x1, x2, num):
 
 
 def get_normal(mu, sigma, num):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     get_normal_ctypes = ctypes.CDLL(stg_lib_fname).get_normal
     get_normal_ctypes.restype = ctypes.POINTER(STG_float)
     get_normal_ctypes.argtypes = STG_float, STG_float, STG_int
@@ -59,7 +58,7 @@ def get_normal(mu, sigma, num):
 
 
 def get_trigon(num):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     get_trigon_ctypes = ctypes.CDLL(stg_lib_fname).get_trigon
     get_trigon_ctypes.restype = ctypes.POINTER(STG_float)
     get_trigon_ctypes.argtypes = STG_int,
@@ -72,7 +71,7 @@ def get_trigon(num):
 
 
 def func(arr: list):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     test_func_ctypes = ctypes.CDLL(stg_lib_fname).test_func
     test_func_ctypes.argtypes = ctypes.POINTER(STG_float), ctypes.c_uint
     carr = (STG_float * len(arr))(*arr)
@@ -409,21 +408,21 @@ def get_init_data_y_hetero(
 
 
 def free_node_hist(data: STG_VelNodeHist):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_VelNodeHist
     func_c.argtypes = ctypes.POINTER(STG_VelNodeHist),
     func_c(ctypes.byref(data))
 
 
 def free_mom_field(data: STG_VelMomField):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_VelMomField
     func_c.argtypes = ctypes.POINTER(STG_VelMomField),
     func_c(ctypes.byref(data))
 
 
 def free_init_data(data: STG_InitData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_InitData
     func_c.argtypes = ctypes.POINTER(STG_InitData),
     func_c(ctypes.byref(data))

@@ -61,7 +61,7 @@ def compute_sem_stat_data(
         init_data: STG_InitData, num_eddies: int, u_e: float, v_e: float, w_e: float,
         stat_data: STG_SEMData_Stationary
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_SEM_stat_data
     func_c.argtypes = STG_InitData, STG_int, Vector, ctypes.POINTER(STG_SEMData_Stationary)
     vel = Vector(x=u_e, y=v_e, z=w_e)
@@ -69,7 +69,7 @@ def compute_sem_stat_data(
 
 
 def free_sem_stat_data(stat_data: STG_SEMData_Stationary):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_SEM_stat_data
     func_c.argtypes = ctypes.POINTER(STG_SEMData_Stationary),
     func_c(stat_data)
@@ -78,14 +78,14 @@ def free_sem_stat_data(stat_data: STG_SEMData_Stationary):
 def compute_sem_trans_data(
         stat_data: STG_SEMData_Stationary, ts: float, num_ts: int, trans_data: STG_SEMData_Transient
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_SEM_trans_data
     func_c.argtypes = STG_SEMData_Stationary, STG_float, STG_int, ctypes.POINTER(STG_SEMData_Transient)
     func_c(stat_data, ts, num_ts, ctypes.byref(trans_data))
 
 
 def free_sem_trans_data(trans_data: STG_SEMData_Transient):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_SEM_trans_data
     func_c.argtypes = ctypes.POINTER(STG_SEMData_Transient),
     func_c(ctypes.byref(trans_data))
@@ -95,7 +95,7 @@ def compute_sem_moment_field(
         init_data: STG_InitData, stat_data: STG_SEMData_Stationary, trans_data: STG_SEMData_Transient,
         ts: float, num_ts: int, mom_field: STG_VelMomField
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_SEM_moment_field
     func_c.argtypes = (STG_InitData, STG_SEMData_Stationary, STG_SEMData_Transient,
                        STG_float, STG_int, ctypes.POINTER(STG_VelMomField))
@@ -107,7 +107,7 @@ def compute_sem_node_hist(
         trans_data: STG_SEMData_Transient, ts: float, num_ts: int, node_hist: STG_VelNodeHist,
         i: int, j: int, k: int
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_SEM_node_hist
     func_c.argtypes = (STG_InitData, STG_SEMData_Stationary, STG_SEMData_Transient, STG_float,
                        STG_int, ctypes.POINTER(STG_VelNodeHist), STG_int, STG_int, STG_int)

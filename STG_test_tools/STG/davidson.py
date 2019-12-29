@@ -49,7 +49,7 @@ def compute_davidson_stat_data(
         init_data: STG_InitData, num_modes: int, dissip_rate: float, visc: float, ts: float,
         stat_data: STG_DavidsonData_Stationary
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Davidson_stat_data
     func_c.argtypes = (STG_InitData, STG_int, STG_float, STG_float, STG_float,
                        ctypes.POINTER(STG_DavidsonData_Stationary))
@@ -57,7 +57,7 @@ def compute_davidson_stat_data(
 
 
 def free_davidson_stat_data(stat_data: STG_DavidsonData_Stationary):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_Davidson_stat_data
     func_c.argtypes = ctypes.POINTER(STG_DavidsonData_Stationary),
     func_c(ctypes.byref(stat_data))
@@ -66,7 +66,7 @@ def free_davidson_stat_data(stat_data: STG_DavidsonData_Stationary):
 def alloc_davidson_trans_data(
         init_data: STG_InitData, num_modes: int, num_ts_tot: int, trans_data: STG_DavidsonData_Transient
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_alloc_Davidson_trans_data
     func_c.argtypes = STG_InitData, STG_int, STG_int, ctypes.POINTER(STG_DavidsonData_Transient)
     func_c(init_data, num_modes, num_ts_tot, ctypes.byref(trans_data))
@@ -76,14 +76,14 @@ def compute_davidson_trans_data(
         stat_data: STG_DavidsonData_Stationary, num_ts_tot: int,
         trans_data: STG_DavidsonData_Transient
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Davidson_trans_data
     func_c.argtypes = STG_DavidsonData_Stationary, STG_int, ctypes.POINTER(STG_DavidsonData_Transient)
     func_c(stat_data, num_ts_tot, ctypes.byref(trans_data))
 
 
 def free_davidson_trans_data(trans_data: STG_DavidsonData_Transient):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_Davidson_trans_data
     func_c.argtypes = ctypes.POINTER(STG_DavidsonData_Transient),
     func_c(ctypes.byref(trans_data))
@@ -93,7 +93,7 @@ def compute_davidson_moment_field(
         init_data: STG_InitData, stat_data: STG_DavidsonData_Stationary, trans_data: STG_DavidsonData_Transient,
         ts: float, num_ts: int, mom_field: STG_VelMomField
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Davidson_moment_field
     func_c.argtypes = (STG_InitData, STG_DavidsonData_Stationary, ctypes.POINTER(STG_DavidsonData_Transient),
                        STG_float, STG_int, ctypes.POINTER(STG_VelMomField))
@@ -104,7 +104,7 @@ def compute_davidson_node_hist(
         init_data: STG_InitData, stat_data: STG_DavidsonData_Stationary, ts: float, num_ts_tot: int,
         trans_data: STG_DavidsonData_Transient, node_hist: STG_VelNodeHist, i: int, j: int, k: int
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Davidson_node_hist
     func_c.argtypes = (STG_InitData, STG_DavidsonData_Stationary, STG_float, STG_int,
                        ctypes.POINTER(STG_DavidsonData_Transient), ctypes.POINTER(STG_VelNodeHist),

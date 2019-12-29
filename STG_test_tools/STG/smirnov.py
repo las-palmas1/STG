@@ -44,14 +44,14 @@ class STG_SmirnovData(ctypes.Structure):
 
 
 def compute_smirnov_data(init_data: STG_InitData, num_modes: int, data: STG_SmirnovData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Smirnov_data
     func_c.argtypes = STG_InitData, STG_int, ctypes.POINTER(STG_SmirnovData)
     func_c(init_data, num_modes, ctypes.byref(data))
 
 
 def free_smirnov_data(data: STG_SmirnovData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_Smirnov_data
     func_c.argtypes = ctypes.POINTER(STG_SmirnovData),
     func_c(ctypes.byref(data))
@@ -61,7 +61,7 @@ def compute_smirnov_moment_field(
         init_data: STG_InitData, data: STG_SmirnovData, time: float,
         mom_field: STG_VelMomField
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Smirnov_moment_field
     func_c.argtypes = STG_InitData, STG_SmirnovData, STG_float, ctypes.POINTER(STG_VelMomField)
     func_c(init_data, data, time, ctypes.byref(mom_field))
@@ -71,7 +71,7 @@ def compute_smirnov_node_hist(
         init_data: STG_InitData, data: STG_SmirnovData, ts: float, num_ts: int,
         node_hist: STG_VelNodeHist, i: int, j: int, k: int
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Smirnov_node_hist
     func_c.argtypes = STG_InitData, STG_SmirnovData, STG_float, STG_int, ctypes.POINTER(STG_VelNodeHist), \
                       STG_int, STG_int, STG_int

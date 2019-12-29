@@ -33,14 +33,14 @@ class STG_SpectralData(ctypes.Structure):
 
 
 def compute_spectral_data(init_data: STG_InitData, num_modes: int, data: STG_SpectralData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Spectral_data
     func_c.argtypes = STG_InitData, STG_int, ctypes.POINTER(STG_SpectralData)
     func_c(init_data, num_modes, ctypes.byref(data))
 
 
 def free_spectral_data(data: STG_SpectralData):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_free_Spectral_data
     func_c.argtypes = ctypes.POINTER(STG_SpectralData),
     func_c(ctypes.byref(data))
@@ -49,7 +49,7 @@ def free_spectral_data(data: STG_SpectralData):
 def compute_spectral_moment_field(
         init_data: STG_InitData, data: STG_SpectralData, ts: float, num_ts, mom_field: STG_VelMomField
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Spectral_moment_field
     func_c.argtypes = STG_InitData, STG_SpectralData, STG_float, STG_int, ctypes.POINTER(STG_VelMomField)
     func_c(init_data, data, ts, num_ts, ctypes.byref(mom_field))
@@ -59,7 +59,7 @@ def compute_spectral_node_hist(
         init_data: STG_InitData, data: STG_SpectralData, ts: float, num_ts_tot: int, node_hist: STG_VelNodeHist,
         i: int, j: int, k: int
 ):
-    stg_lib_fname = search_sgt_lib(config.STG_lib_name, config.conf)
+    stg_lib_fname = search_sgt_lib(config.STG_lib_name)
     func_c = ctypes.CDLL(stg_lib_fname).STG_compute_Spectral_node_hist
     func_c.argtypes = STG_InitData, STG_SpectralData, STG_float, STG_int, ctypes.POINTER(STG_VelNodeHist), \
                       STG_int, STG_int, STG_int
