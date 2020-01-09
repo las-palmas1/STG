@@ -390,6 +390,106 @@ contains
     end subroutine
     
     
+    subroutine test_Spectral( &
+        re_uu, re_vv, re_ww, &
+        re_uv, re_uw, re_vw, &
+        num_modes, ls_i &
+    )
+        use STG_COMMON
+        use STG_DAVIDSON
+        use STG_SPECTRAL
+        
+        real :: re_uu, re_vv, re_ww, re_uv, re_uw, re_vw
+        integer :: num_modes
+        real :: ls_i
+        
+        real :: dissip_rate, visc, delta_min
+        real :: c1, c2, c3, a11, a12, a13
+        real :: a21, a22, a23, a31, a32, a33
+        real :: ts_i, time, x, y, z
+        real :: u, v, w
+        real, allocatable :: energy(:), k_arr(:), u_abs(:), omega(:)
+        real, allocatable :: phi(:), psi(:), alpha(:), theta(:)
+        real, allocatable :: k1(:), k2(:), k3(:), sigma1(:), sigma2(:), sigma3(:)
+        
+        call STG_init_rand()
+        call STG_compute_Spectral_matrix_data( &
+            re_uu, re_vv, re_ww, &
+	        re_uv, re_uw, re_vw, &
+	        c1, c2, c3, &
+	        a11, a12, a13, &
+	        a21, a22, a23, &
+	        a31, a32, a33  &
+        )
+        
+        visc = 1.5e-5
+        dissip_rate = 0.09**0.75 * (0.5 * (re_uu + re_vv + re_ww))**1.5 / ls_i
+        delta_min = 0.001
+        ts_i = 0.001
+        time = 0.01
+        
+        allocate(energy(num_modes))
+        allocate(k_arr(num_modes))
+        allocate(u_abs(num_modes))
+        
+        call STG_compute_Davidson_spectrum( &
+            delta_min, num_modes, re_uu, re_vv, re_ww, &
+            ls_i, dissip_rate, visc, energy, k_arr, u_abs &
+        )
+        
+        allocate(phi(num_modes), psi(num_modes), alpha(num_modes), theta(num_modes), omega(num_modes))
+        allocate(k1(num_modes), k2(num_modes), k3(num_modes))
+        allocate(sigma1(num_modes), sigma2(num_modes), sigma3(num_modes))
+        
+        
+        call STG_compute_Spectral_random_angles_and_phase( &
+            num_modes, phi, psi, &
+            alpha, theta, omega &
+        )
+            
+        call STG_compute_Spectral_modes_params( &
+            num_modes, k_arr, phi, &
+            alpha, theta, k1, k2, k3, &
+            sigma1, sigma2, sigma3 &
+        )
+            
+        call STG_compute_Spectral_pulsations( &
+            k1, k2, k3, &
+            sigma1, sigma2, sigma3, psi, omega, u_abs, &
+            c1, c2, c3, &
+            a11, a12, a13, &
+            a21, a22, a23, &
+            a31, a32, a33, &
+            x, y, z, &
+            num_modes, ts_i, time, &
+            u, v, w &
+        )
+            
+        
+        print *, '   Test Spectral'
+        print *, 'Reynolds stresses'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uu, re_uv, re_uw
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uv, re_vv, re_vw
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uw, re_vw, re_ww
+        print *, 'Eig values'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', c1, c2, c3
+        print *, ' U_abs'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2, 2x, f6.2)', u_abs(1: 4)
+        print *, 'Rand data (theta)'
+        print '(1x, f6.2, 2x, f6.2, 2x, f6.2, 2x, f6.2)', theta(1: 4) 
+        print *, 'Velocities'
+        print '(1x, a4, f8.3, 2x, a4, f8.3, 2x, a4, f8.3)', 'u = ', u, 'v = ', v, 'w = ', w
+        print *, ''
+        
+        deallocate(u_abs, k_arr, energy, omega)
+        deallocate(phi, psi, alpha, theta)
+        deallocate(k1, k2, k3)
+        deallocate(sigma1, sigma2, sigma3)
+    
+    end subroutine
+    
+    
+    
     function get_array_size(turb_data_dir, dir, fname)
         character(len=100) :: turb_data_dir, full_fname, string
         character(*) :: fname, dir
@@ -506,15 +606,17 @@ end module Test
     !call test_Davidson(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
     !
     !
-    call test_SEM( &
-            re_uu, re_vv, re_ww, &
-            re_uv, re_uw, re_vw, &
-            500, & 
-            0.32, 0., 0., &
-            0.5, 0.5, 0.5, &
-            0.5, 0.5, 0.5, &
-            0.5, 0.5, 0.5 &
-        )
+    !call test_SEM( &
+    !    re_uu, re_vv, re_ww, &
+    !    re_uv, re_uw, re_vw, &
+    !    500, & 
+    !    0.32, 0., 0., &
+    !    0.5, 0.5, 0.5, &
+    !    0.5, 0.5, 0.5, &
+    !    0.5, 0.5, 0.5 &
+    !)
+    
+    call test_Spectral(re_uu, re_vv, re_ww, re_uv, re_uw, re_vw, num_modes, ls_i)
     
     
     end program STG_fort

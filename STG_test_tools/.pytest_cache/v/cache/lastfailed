@@ -1,0 +1,7 @@
+{
+  "SGT.py::test_func": true,
+  "tests.py::TestDavidson2D": true,
+  "tests.py::TestOriginalSEM2D": true,
+  "tests.py::TestSpectral2D": true,
+  "tests.py::Tester2D": true
+}
