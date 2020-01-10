@@ -404,8 +404,6 @@ contains
         real :: ls_i
         
         real :: dissip_rate, visc, delta_min
-        real :: c1, c2, c3, a11, a12, a13
-        real :: a21, a22, a23, a31, a32, a33
         real :: ts_i, time, x, y, z
         real :: u, v, w
         real, allocatable :: energy(:), k_arr(:), u_abs(:), omega(:)
@@ -413,14 +411,6 @@ contains
         real, allocatable :: k1(:), k2(:), k3(:), sigma1(:), sigma2(:), sigma3(:)
         
         call STG_init_rand()
-        call STG_compute_Spectral_matrix_data( &
-            re_uu, re_vv, re_ww, &
-	        re_uv, re_uw, re_vw, &
-	        c1, c2, c3, &
-	        a11, a12, a13, &
-	        a21, a22, a23, &
-	        a31, a32, a33  &
-        )
         
         visc = 1.5e-5
         dissip_rate = 0.09**0.75 * (0.5 * (re_uu + re_vv + re_ww))**1.5 / ls_i
@@ -456,10 +446,6 @@ contains
         call STG_compute_Spectral_pulsations( &
             k1, k2, k3, &
             sigma1, sigma2, sigma3, psi, omega, u_abs, &
-            c1, c2, c3, &
-            a11, a12, a13, &
-            a21, a22, a23, &
-            a31, a32, a33, &
             x, y, z, &
             num_modes, ts_i, time, &
             u, v, w &
@@ -471,8 +457,6 @@ contains
         print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uu, re_uv, re_uw
         print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uv, re_vv, re_vw
         print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', re_uw, re_vw, re_ww
-        print *, 'Eig values'
-        print '(1x, f6.2, 2x, f6.2, 2x, f6.2)', c1, c2, c3
         print *, ' U_abs'
         print '(1x, f6.2, 2x, f6.2, 2x, f6.2, 2x, f6.2)', u_abs(1: 4)
         print *, 'Rand data (theta)'
@@ -567,9 +551,9 @@ end module Test
 
     ! Variables
     integer(8) :: num_modes = 800
-    real :: re_uu = 1
-    real :: re_vv = 1
-    real :: re_ww = 1
+    real :: re_uu = 10
+    real :: re_vv = 10
+    real :: re_ww = 10
     real :: re_uv = 0
     real :: re_uw = 0
     real :: re_vw = 0

@@ -466,9 +466,6 @@ static void test_Spectral_mom_field(
 
 	STG_compute_Spectral_data(init_data, num_modes, &data);
 	STG_compute_Spectral_moment_field(init_data, data, ts, num_ts, &mom_field);
-
-	printf("Matrix data \n");
-	printf("c1 = %.4f c2 = %.4f c3 = %.4f \n", data.c1[0], data.c2[0], data.c3[0]);
 	
 	printf("First 5 u_abs: \n");
 	for (STG_int i = 0; i < 5; i++)

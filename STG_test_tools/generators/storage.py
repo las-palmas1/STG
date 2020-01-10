@@ -254,7 +254,6 @@ class Spectral(Generator):
     def __init__(
             self, block: Block, u_av: Tuple[float, float, float], num_modes,
             re_uu: float, re_vv: float, re_ww: float,
-            re_uv: float, re_uw: float, re_vw: float,
             ts_i: float, k_arr: np.ndarray, energy: np.ndarray, time_arr: np.ndarray
     ):
         self.num_modes = num_modes
@@ -263,7 +262,7 @@ class Spectral(Generator):
         Generator.__init__(
             self, block=block, u_av=u_av,
             re_uu=re_uu, re_vv=re_vv, re_ww=re_ww,
-            re_uv=re_uv, re_uw=re_uw, re_vw=re_vw,
+            re_uv=0, re_uw=0, re_vw=0,
             ls_i=0, ls_ux=0, ls_uy=0, ls_uz=0,
             ls_vx=0, ls_vy=0, ls_vz=0,
             ls_wx=0, ls_wy=0, ls_wz=0,

@@ -10,19 +10,6 @@ typedef struct STG_SpectralData_s
     STG_int j_cnt;
     STG_int k_cnt;
 
-    STG_float * c1;
-    STG_float * c2;
-    STG_float * c3;
-    STG_float * a11;
-    STG_float * a12;
-    STG_float * a13;
-    STG_float * a21;
-    STG_float * a22;
-    STG_float * a23;
-    STG_float * a31;
-    STG_float * a32;
-    STG_float * a33;
-
     STG_int num_modes;
     STG_float * u_abs;
 
@@ -60,23 +47,9 @@ STG_SHARED_LIB_API void STG_compute_Spectral_pulsations(
 	STG_float * k1, STG_float * k2, STG_float * k3,
     STG_float * sigma1, STG_float * sigma2, STG_float * sigma3,
     STG_float * psi, STG_float * omega, STG_float * u_abs,
-	STG_float c1, STG_float c2, STG_float c3,
-	STG_float a11, STG_float a12, STG_float a13,
-	STG_float a21, STG_float a22, STG_float a23,
-	STG_float a31, STG_float a32, STG_float a33,
 	STG_float x, STG_float y, STG_float z,
     STG_int num_modes, STG_float time_scale, STG_float time,
 	STG_float * u_p, STG_float * v_p, STG_float * w_p
-);
-
-
-STG_SHARED_LIB_API void STG_compute_Spectral_matrix_data(
-	STG_float re_uu, STG_float re_vv, STG_float re_ww,
-	STG_float re_uv, STG_float re_uw, STG_float re_vw,
-	STG_float * c1, STG_float * c2, STG_float * c3,
-	STG_float * a11, STG_float * a12, STG_float * a13,
-	STG_float * a21, STG_float * a22, STG_float * a23,
-	STG_float * a31, STG_float * a32, STG_float * a33
 );
 
 

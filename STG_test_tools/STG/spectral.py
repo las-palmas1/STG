@@ -8,19 +8,6 @@ class STG_SpectralData(ctypes.Structure):
         ('j_cnt', STG_int),
         ('k_cnt', STG_int),
 
-        ('c1', ctypes.POINTER(STG_float)),
-        ('c2', ctypes.POINTER(STG_float)),
-        ('c3', ctypes.POINTER(STG_float)),
-        ('a11', ctypes.POINTER(STG_float)),
-        ('a12', ctypes.POINTER(STG_float)),
-        ('a13', ctypes.POINTER(STG_float)),
-        ('a21', ctypes.POINTER(STG_float)),
-        ('a22', ctypes.POINTER(STG_float)),
-        ('a23', ctypes.POINTER(STG_float)),
-        ('a31', ctypes.POINTER(STG_float)),
-        ('a32', ctypes.POINTER(STG_float)),
-        ('a33', ctypes.POINTER(STG_float)),
-
         ('num_modes', STG_int),
         ('u_abs', ctypes.POINTER(STG_float)),
 
