@@ -617,7 +617,7 @@ void STG_compute_SEM_node_hist(
 		node_hist->time[i] = i * ts;
 		STG_compute_SEM_pulsations(
 			x_e, y_e, z_e, eps_x, eps_y, eps_z, stat_data.num_eddies, 
-			init_data.mesh.x[num], init_data.mesh.y[i], init_data.mesh.z[i], volume,
+            init_data.mesh.x[num], init_data.mesh.y[num], init_data.mesh.z[num], volume,
 			init_data.scales.ls_ux[num], init_data.scales.ls_uy[num], init_data.scales.ls_uz[num],
 			init_data.scales.ls_vx[num], init_data.scales.ls_vy[num], init_data.scales.ls_vz[num],
 			init_data.scales.ls_wx[num], init_data.scales.ls_wy[num], init_data.scales.ls_wz[num],

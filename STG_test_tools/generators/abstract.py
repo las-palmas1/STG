@@ -197,6 +197,7 @@ class Generator(metaclass=ABCMeta):
         self._ts = value[1] - value[0]
         self._num_ts_tot = value.shape[0] - 1
         self._time_arr = value
+        self.free_data()
         self._compute_aux_data_stationary()
         self._alloc_aux_data_transient()
         self._compute_aux_data_transient()
