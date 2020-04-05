@@ -35,31 +35,35 @@ def get_eddies_pos(trans_data: STG_SEMData_Transient):
 
 class TestSEM(unittest.TestCase):
     def setUp(self):
-        n = 150
-        size = 1
+        n = 50
+        size = 0.25
         mesh = get_mesh(np.linspace(0, size, n), np.linspace(0, size, n), np.linspace(0, size, n))
         self.block = Block(
             shape=(n, n, n),
             mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
-        l_i = 0.05
+        l_i = 0.07
+        u_e = (480, 0, 0)
+        u_abs = (u_e[0]**2 + u_e[1]**2 + u_e[2]**2)**0.5
+        ts = l_i / u_abs * 0.1
+        t_max = 500 * ts
 
         init_rand()
         self.sem = OriginalSEM(
             block=self.block,
-            u_e=(1, 0, 0),
-            re_uu=1.,
-            re_vv=1.,
-            re_ww=1.,
-            re_uv=0.,
-            re_uw=0.,
-            re_vw=0.,
+            u_e=(480, 0, 0),
+            re_uu=24**2,
+            re_vv=24**2,
+            re_ww=24**2,
+            re_uv=0,
+            re_uw=0,
+            re_vw=0,
             ls_ux=l_i, ls_uy=l_i, ls_uz=l_i,
             ls_vx=l_i, ls_vy=l_i, ls_vz=l_i,
             ls_wx=l_i, ls_wy=l_i, ls_wz=l_i,
-            eddies_num=100,
-            time_arr=np.linspace(0, 1, 4)
+            eddies_num=2000,
+            time_arr=np.arange(0, t_max, ts)
         )
         limits = get_limits(self.sem.c_stat_data)
         self.x_min = limits[0]
@@ -103,13 +107,13 @@ class TestSEM(unittest.TestCase):
                 zs=[self.z_max, self.z_max], c='red', lw=2)
         ax.plot(xs=[self.x_min, self.x_max], ys=[self.y_max, self.y_max],
                 zs=[self.z_max, self.z_max], c='red', lw=2)
-        line = ax.plot(self.x_e[0, :], self.y_e[0, :], self.z_e[0, :], ls='', marker='o')[0]
+        line = ax.plot(self.x_e[0, :], self.y_e[0, :], self.z_e[0, :], ls='', marker='o', ms=3)[0]
 
         def update(frame):
             line.set_data([self.x_e[frame, :], self.y_e[frame, :]])
             line.set_3d_properties(self.z_e[frame, :])
 
         ani = anim.FuncAnimation(fig, func=update, frames=self.num_time_levels,
-                                 interval=400)
+                                 interval=20)
         plt.show()
 
