@@ -131,6 +131,7 @@ Limits * STG_get_SEM_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int 
         {0., 1., 0., -vol_lim.y_min}, {0., 1., 0., -vol_lim.y_max},
         {0., 0., 1., -vol_lim.z_min}, {0., 0., 1., -vol_lim.z_max},
     };
+
     Limits face_limits[FACE_NUM] = {
         {.x_min = vol_lim.x_min, .x_max = vol_lim.x_min, .y_min = vol_lim.y_min, .y_max = vol_lim.y_max,
         .z_min = vol_lim.z_min, .z_max = vol_lim.z_max},
@@ -160,9 +161,33 @@ Limits * STG_get_SEM_in_planes_lims(Limits vol_lim, Vector *eddies_pos, STG_int 
             compute_line_plane_intersection(eddies_pos[i], vel, volume_faces[j], &intersec);
             if (isfinite(intersec.x) && isfinite(intersec.y) && isfinite(intersec.z))
             {
-                if ((intersec.x >= vol_lim.x_min) && (intersec.x <= vol_lim.x_max) &&
-                        (intersec.y >= vol_lim.y_min) && (intersec.y <= vol_lim.y_max) &&
-                        (intersec.z >= vol_lim.z_min) && (intersec.z <= vol_lim.z_max))
+                int in_box = 0;
+                if ((j == 0) || (j == 1))
+                {
+                    if ((intersec.y >= vol_lim.y_min) && (intersec.y <= vol_lim.y_max) &&
+                            (intersec.z >= vol_lim.z_min) && (intersec.z <= vol_lim.z_max))
+                    {
+                        in_box = 1;
+                    }
+                }
+                if ((j == 2) || (j == 3))
+                {
+                    if ((intersec.x >= vol_lim.x_min) && (intersec.x <= vol_lim.x_max) &&
+                            (intersec.z >= vol_lim.z_min) && (intersec.z <= vol_lim.z_max))
+                    {
+                        in_box = 1;
+                    }
+                }
+                if ((j == 4) || (j == 5))
+                {
+                    if ((intersec.y >= vol_lim.y_min) && (intersec.y <= vol_lim.y_max) &&
+                            (intersec.x >= vol_lim.x_min) && (intersec.x <= vol_lim.x_max))
+                    {
+                        in_box = 1;
+                    }
+                }
+
+                if (in_box)
                 {
                     Vector inters_vec = {
                         .x = intersec.x - eddies_pos[i].x, .y = intersec.y - eddies_pos[i].y, .z = intersec.z - eddies_pos[i].z
@@ -465,12 +490,14 @@ void STG_compute_SEM_in_planes_lims_fort(
 	Limits vol_lims = { .x_min = x_min,.x_max = x_max,.y_min = y_min,.y_max = y_max,.z_min = z_min,.z_max = z_max };
 	Vector eddies_vel = { .x = u_e,.y = v_e,.z = w_e };
 	Vector * eddies_pos;
+
 	vectors_from_arrays(x_e, y_e, z_e, num_eddies, &(eddies_pos));
 	Limits * in_planes_lims = STG_get_SEM_in_planes_lims(vol_lims, eddies_pos, num_eddies, eddies_vel);
 
 	fill_arrays_from_limits(in_planes_lims, num_eddies, x_min_in, x_max_in, y_min_in, y_max_in, z_min_in, z_max_in);
 
 	free(in_planes_lims);
+    free(eddies_pos);
 }
 
 

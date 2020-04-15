@@ -861,7 +861,7 @@ int main(int argc, char * argv[])
 	//test_SEM_in_planes_lims_computing(5, 5, 5, 0, 0, 1);
 	//test_SEM_in_planes_lims_computing(5, 5, 5, 1, 1, 0);
 
-	//test_SEM_in_planes_lims_computing(4, 5, 5, 1, 1, 0);
+    //test_SEM_in_planes_lims_computing(4, 5, 5, 1, 1, 0);
 	//test_SEM_in_planes_lims_computing(6, 5, 5, 1, 1, 0);
 
 	//test_SEM_in_planes_lims_computing(5, 4, 5, 0, 1, 1);
@@ -871,10 +871,10 @@ int main(int argc, char * argv[])
 	//test_SEM_in_planes_lims_computing(5, 5, 6, 1, 0, 1);
 
 
-    //test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 1200, 1, 0, 0);
+    test_SEM_mom_field(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 2, 100, 1, 0, 0);
 	//test_SEM_node_hist(10, 3, 5, 1, 1, 0, 0, 0, 0.5, 0.02, 10, 1200, 1, 0, 0);
 
-	test_Spectral_mom_field(10, 1, 8, 8, 8, 0.6, 100);
-	test_Spectral_node_hist(30, 100, 100, 100, 0.01, 0.03, 10, 500);
+//	test_Spectral_mom_field(10, 1, 8, 8, 8, 0.6, 100);
+//	test_Spectral_node_hist(30, 100, 100, 100, 0.01, 0.03, 10, 500);
 	return 0;
 }
