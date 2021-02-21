@@ -12,8 +12,8 @@ spec_3d_fname_base = 'spec_3d'
 
 fname_templ = '{base:s}-{method:s}{params:s}'
 
-vmin_vel_2d = -100
-vmax_vel_2d = 100
+vmin_vel_2d = -2
+vmax_vel_2d = 2
 num_levels_vel_2d = 30
 
 # настроки осей для всех графиков, кроме профиля сокрости и спектра
@@ -30,8 +30,8 @@ label_fsize = 16
 title_fsize = 18
 
 # пределы по вертикальной оси для различных графиков
-ylim_vel = (-100, 100)
-ylim_sec_mom = (-50, 800)
+ylim_vel = (-2, 2)
+ylim_sec_mom = (-1, 2)
 ylim_space_cor = (-0.4, 1.1)
 ylim_auto_cor = (-0.4, 1.1)
 ylim_spectrum = (1e-2, 1e1)

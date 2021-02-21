@@ -187,7 +187,7 @@ class Tester2D:
             di = 1
             dj = 1
         self.analyzer.plot_two_point_space_correlation(
-            i0=20, j0=0, k0=0, ts=config.t_step, num_tlvl=num_tlvl, di=di, dj=dj, dk=0, num=config.num_nodes-1,
+            i0=0, j0=0, k0=0, ts=config.t_step, num_tlvl=num_tlvl, di=di, dj=dj, dk=0, num=config.num_nodes-1,
             figsize=config_plots.figsize_plot,
             ylim=config_plots.ylim_space_cor, label_fsize=config_plots.label_fsize,
             ticks_fsize=config_plots.ticks_fsize, legend_fsize=config_plots.legend_fsize,
@@ -300,7 +300,7 @@ class TestDavidson2D:
         self.tester.analyzer.generator.free_data()
 
     def setup(self):
-        self.tester = Tester2D(Davidson, num_modes=500)
+        self.tester = Tester2D(Davidson, num_modes=200)
 
     def test_plot_2d_velocity_field(self):
         self.tester.plot_2d_velocity_field()
@@ -327,7 +327,7 @@ class TestOriginalSEM2D:
         self.tester.analyzer.generator.free_data()
 
     def setup(self):
-        self.tester = Tester2D(OriginalSEM, eddies_num=5000)
+        self.tester = Tester2D(OriginalSEM, eddies_num=300)
 
     def test_plot_2d_velocity_field(self):
         self.tester.plot_2d_velocity_field()

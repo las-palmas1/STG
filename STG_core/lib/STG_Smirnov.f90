@@ -1,5 +1,5 @@
     
-module STG_SMIRNOV
+module MSTG_Smirnov_Lib
     
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -165,4 +165,4 @@ module STG_SMIRNOV
     end subroutine STG_compute_Smirnov_pulsations
         
     
-end module STG_SMIRNOV
+end module MSTG_Smirnov_Lib

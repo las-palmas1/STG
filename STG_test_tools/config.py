@@ -6,13 +6,13 @@ STG_lib_name = 'libstg'
 #  параметра ось (x или y) и задавать в нормализованном виде распределения или считывать их из файлов)
 
 # Число узлов
-num_nodes = 50
+num_nodes = 51
 # Размер области
-length = 0.25
-u_av = (480, 0, 0)
+length = 1
+u_av = (0.3, 0, 0)
 
 # Масштабы
-k_ls = 1.5 / length
+k_ls = 0.05 / length
 ls_ux = k_ls * length
 ls_uy = k_ls * length
 ls_uz = k_ls * length
@@ -33,7 +33,7 @@ ts_i = (ts_u + ts_v + ts_w) / 3
 
 
 # Шаг по времени
-t_step = 0.3 * ts_i
+t_step = 0.2 * ts_i
 # Интервал для проб скорости
 t_end_vel = 500 * t_step
 # Интервал осреднения для расчета статистики
@@ -42,9 +42,9 @@ t_av = 500 * t_step
 num_dt_acor = 50
 
 # Рейнольдсовы напряжения
-re_uu = 24**2
-re_vv = 24**2
-re_ww = 24**2
+re_uu = 1**2
+re_vv = 1**2
+re_ww = 1**2
 re_uv = 0
 re_uw = 0
 re_vw = 0

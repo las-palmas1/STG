@@ -1,4 +1,4 @@
-module STG_COMMON
+module MSTG_Common
     use, intrinsic :: ISO_C_BINDING
     implicit none
     
@@ -9,4 +9,4 @@ module STG_COMMON
     end interface
     
 
-end module STG_COMMON
+end module MSTG_Common

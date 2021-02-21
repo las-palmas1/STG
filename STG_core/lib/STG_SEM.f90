@@ -1,5 +1,5 @@
     
-module STG_SEM
+module MSTG_SEM_Lib
     
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -260,4 +260,4 @@ module STG_SEM
         )
     end subroutine
     
-end module STG_SEM
+end module MSTG_SEM_Lib

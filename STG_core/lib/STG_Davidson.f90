@@ -1,5 +1,5 @@
     
-module STG_DAVIDSON
+module MSTG_Davidson_Lib
     
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -269,4 +269,4 @@ module STG_DAVIDSON
         )
     end subroutine
     
-end module STG_DAVIDSON
+end module MSTG_Davidson_Lib

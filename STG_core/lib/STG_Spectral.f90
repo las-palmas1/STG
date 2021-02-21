@@ -1,5 +1,5 @@
     
-module STG_SPECTRAL
+module MSTG_Spectral_Lib
     
     use, intrinsic :: ISO_C_BINDING
     implicit none
@@ -117,4 +117,4 @@ module STG_SPECTRAL
     end subroutine
     
    
-end module STG_SPECTRAL
+end module MSTG_Spectral_Lib
