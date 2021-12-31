@@ -1,3 +1,9 @@
 [
-  "tests.py::TestOriginalSEM2D::test_plot_2d_velocity_field"
+  "tests.py::TestOriginalSEM2D::test_plot_2d_velocity_field",
+  "tests.py::TestOriginalSEM2D::test_plot_velocity_history",
+  "tests.py::TestOriginalSEM2D::test_plot_moments",
+  "tests.py::TestOriginalSEM2D::test_plot_two_point_space_correlation[x]",
+  "tests.py::TestOriginalSEM2D::test_plot_two_point_space_correlation[y]",
+  "tests.py::TestOriginalSEM2D::test_plot_two_point_time_correlation",
+  "tests.py::TestOriginalSEM2D::test_plot_spectrum_2d"
 ]

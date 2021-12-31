@@ -1,9 +1,6 @@
 from STG.common import *
 import ctypes
 
-# TODO: необходимо разделить вспомогательные данные на стационарные и нестационарные. При этом нестационарные
-#  данные должны хранится только для одного шага по времени.
-
 
 class STG_SmirnovData(ctypes.Structure):
     _fields_ = [

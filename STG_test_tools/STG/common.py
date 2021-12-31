@@ -176,7 +176,7 @@ def extract_pulsations_from_mom_field(mom_field: STG_VelMomField):
     return u, v, w
 
 
-def extract_pulsations_from_node_hist(node_hist: STG_VelNodeHist):
+def extract_pulsations_from_node_hist(node_hist: STG_VelNodeHist) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     u = np.zeros(node_hist.num_ts + 1)
     v = np.zeros(node_hist.num_ts + 1)
     w = np.zeros(node_hist.num_ts + 1)

@@ -7,6 +7,7 @@ vel_hist_fname_base = 'vel_hist'
 moments_fname_base = 'moments'
 space_cor_fname_base = 'space_cor'
 autocor_fname_base = 'autocor'
+spec_1d_fname_base = 'spec_1d'
 spec_2d_fname_base = 'spec_2d'
 spec_3d_fname_base = 'spec_3d'
 

@@ -41,7 +41,7 @@ class TestProdDistSamples(unittest.TestCase):
 
 class TestSmirnov(unittest.TestCase):
     def setUp(self):
-        mesh = np.meshgrid(np.linspace(1, 5, 2), np.linspace(6, 10, 7), np.linspace(11, 15, 1))
+        mesh = np.meshgrid(np.linspace(1, 5, 2), np.linspace(6, 10, 7), np.linspace(11, 15, 1), indexing='ij')
         self.re_uu = 1.
         self.re_vv = 1.
         self.re_ww = 1.
@@ -89,7 +89,9 @@ class TestSmirnov(unittest.TestCase):
 
 class TestDavidson(unittest.TestCase):
     def setUp(self):
-        mesh = np.meshgrid(np.linspace(0.1, 0.5, 2), np.linspace(0.6, 0.10, 7), np.linspace(0.11, 0.15, 2))
+        mesh = np.meshgrid(
+            np.linspace(0.1, 0.5, 2), np.linspace(0.6, 0.10, 7), np.linspace(0.11, 0.15, 2), indexing='ij'
+        )
         self.re_uu = 1.
         self.re_vv = 2.
         self.re_ww = 3.

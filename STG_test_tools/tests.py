@@ -1,5 +1,5 @@
 import pytest
-from analysis_tools import Analyzer
+from analysis_tools import Analyzer, Spec1DMode
 from generators.storage import Lund, Smirnov, OriginalSEM, Davidson, Spectral
 from generators.abstract import Block, BCType
 import numpy as np
@@ -217,6 +217,24 @@ class Tester2D:
             show=False
         )
 
+    def plot_spectrum_1d(self):
+        num_tlvl = int(config.t_av / config.t_step + 1)
+        u_spec, v_spec, w_spec = self.analyzer.compute_spectrum_1d(
+            i=2, j=2, k=0, ts=config.t_step, num_tlvl=num_tlvl, band_width=10, band_growth='exp', exp=0.5
+        )
+        self.analyzer.plot_spectrum_1d(
+            u_spec, v_spec, w_spec, Spec1DMode.F_MODE, plot_all=False,
+            axes_rect=config_plots.axes_spectrum, tick_fontsize=config_plots.ticks_fsize,
+            label_fontsize=config_plots.label_fsize, legend_fontsize=config_plots.legend_fsize,
+            ax_extend=0.08,
+            fname=os.path.join(
+                config_plots.plots_dir,
+                config_plots.fname_templ.format(
+                    base=config_plots.spec_1d_fname_base, method=self.method, params=self.dict_to_str(self.params)
+                )
+            )
+        )
+
     def plot_spectrum_2d(self):
         self.analyzer.plot_spectrum_2d(
             num_pnt=200, figsize=config_plots.figsize_spectrum, ylim=config_plots.ylim_spectrum,
@@ -327,7 +345,7 @@ class TestOriginalSEM2D:
         self.tester.analyzer.generator.free_data()
 
     def setup(self):
-        self.tester = Tester2D(OriginalSEM, eddies_num=300)
+        self.tester = Tester2D(OriginalSEM, eddies_num=1000)
 
     def test_plot_2d_velocity_field(self):
         self.tester.plot_2d_velocity_field()
@@ -347,6 +365,9 @@ class TestOriginalSEM2D:
 
     def test_plot_spectrum_2d(self):
         self.tester.plot_spectrum_2d()
+
+    def test_plot_spectrum_1d(self):
+        self.tester.plot_spectrum_1d()
 
 
 class TestSpectral2D:
