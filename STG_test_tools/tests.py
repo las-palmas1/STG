@@ -220,13 +220,17 @@ class Tester2D:
     def plot_spectrum_1d(self):
         num_tlvl = int(config.t_av / config.t_step + 1)
         u_spec, v_spec, w_spec = self.analyzer.compute_spectrum_1d(
-            i=2, j=2, k=0, ts=config.t_step, num_tlvl=num_tlvl, band_width=3, band_growth='exp', exp=0.6
+            i=2, j=2, k=0, ts=config.t_step, num_tlvl=num_tlvl,
+            band_width=config_plots.spec_1d_band_width, band_growth=config_plots.spec_1d_band_growth,
+            exp=config_plots.spec_1d_exp
         )
         self.analyzer.plot_spectrum_1d(
             u_spec, v_spec, w_spec, Spec1DMode.F_MODE, plot_all=False,
             axes_rect=config_plots.axes_spectrum, tick_fontsize=config_plots.ticks_fsize,
             label_fontsize=config_plots.label_fsize, legend_fontsize=config_plots.legend_fsize,
             ax_extend=0.08,
+            xlims=config_plots.xlim_spectrum_1d,
+            ylims=config_plots.ylim_spectrum_1d,
             fname=os.path.join(
                 config_plots.plots_dir,
                 config_plots.fname_templ.format(
@@ -237,8 +241,8 @@ class Tester2D:
 
     def plot_spectrum_2d(self):
         self.analyzer.plot_spectrum_2d(
-            num_pnt=200, figsize=config_plots.figsize_spectrum, ylim=config_plots.ylim_spectrum,
-            xlim=config_plots.xlim_spectrum, label_fsize=config_plots.label_fsize,
+            num_pnt=200, figsize=config_plots.figsize_spectrum, ylim=config_plots.ylim_spectrum_23d,
+            xlim=config_plots.xlim_spectrum_23d, label_fsize=config_plots.label_fsize,
             ticks_fsize=config_plots.ticks_fsize, legend_fsize=config_plots.legend_fsize,
             axes=config_plots.axes_spectrum,
             fname=os.path.join(
@@ -345,7 +349,7 @@ class TestOriginalSEM2D:
         self.tester.analyzer.generator.free_data()
 
     def setup(self):
-        self.tester = Tester2D(OriginalSEM, eddies_num=1000)
+        self.tester = Tester2D(OriginalSEM, eddies_num=5000)
 
     def test_plot_2d_velocity_field(self):
         self.tester.plot_2d_velocity_field()

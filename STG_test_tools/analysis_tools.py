@@ -386,6 +386,8 @@ class Analyzer:
             label_fontsize=16,
             legend_fontsize=18,
             ax_extend=0.08,
+            xlims=(None, None),
+            ylims=(None, None),
             fname=''
     ):
         figsize = (8, 6)
@@ -461,8 +463,25 @@ class Analyzer:
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.grid()
-        ax.set_xlim(x_min_ax, x_max_ax)
-        ax.set_ylim(y_min_ax, y_max_ax)
+
+        if xlims[0] is not None:
+            ax.set_xlim(left=xlims[0])
+        else:
+            ax.set_xlim(left=x_min_ax)
+        if xlims[1] is not None:
+            ax.set_xlim(right=xlims[1])
+        else:
+            ax.set_xlim(right=x_max_ax)
+
+        if ylims[0] is not None:
+            ax.set_ylim(bottom=ylims[0])
+        else:
+            ax.set_ylim(bottom=y_min_ax)
+        if ylims[1] is not None:
+            ax.set_ylim(top=ylims[1])
+        else:
+            ax.set_ylim(top=y_max_ax)
+
         ax.set_xlabel(xlabel, fontsize=label_fontsize)
         ax.set_ylabel(r'$E,\ м^2/с$', fontsize=label_fontsize)
         plt.xticks(fontsize=tick_fontsize)
