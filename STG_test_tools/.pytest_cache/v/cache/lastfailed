@@ -1,3 +1,4 @@
 {
-  "SGT.py::test_func": true
+  "SGT.py::test_func": true,
+  "tests.py": true
 }

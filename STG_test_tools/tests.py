@@ -19,12 +19,12 @@ class Tester2D:
     def __init__(self, generator_type, **params):
         self.params = params
         mesh = STG.common.get_mesh(
-            np.linspace(0, config.length, config.num_nodes),
-            np.linspace(0, config.length, config.num_nodes),
-            np.array([0, config.length / (config.num_nodes - 1)])
+            np.linspace(0, config.length_x, config.num_nodes_x),
+            np.linspace(0, config.length_y, config.num_nodes_y),
+            np.array([0, config.length_x / (config.num_nodes_x - 1)])
         )
         self.block = Block(
-            shape=(config.num_nodes, config.num_nodes, 2),
+            shape=(config.num_nodes_x, config.num_nodes_y, 2),
             mesh=(mesh[0], mesh[1], mesh[2]),
             bc=[(BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall), (BCType.NotWall, BCType.NotWall)]
         )
@@ -39,7 +39,7 @@ class Tester2D:
                 re_uv=config.re_uv,
                 re_uw=config.re_uw,
                 re_vw=config.re_vw,
-                time_arr=np.array([0, 0.01 * config.length / max(config.u_av)])
+                time_arr=np.array([0, 0.01 * config.length_x / max(config.u_av)])
             )
         elif generator_type == Smirnov:
             self.method = 'Smirnov'
@@ -52,7 +52,7 @@ class Tester2D:
                 re_uv=config.re_uv,
                 re_uw=config.re_uw,
                 re_vw=config.re_vw,
-                time_arr=np.array([0, 0.01 * config.length / max(config.u_av)]),
+                time_arr=np.array([0, 0.01 * config.length_x / max(config.u_av)]),
                 ls_i=config.ls_i,
                 ts_i=config.ts_i,
                 num_modes=params['num_modes']
@@ -70,7 +70,7 @@ class Tester2D:
                 re_uv=config.re_uv,
                 re_uw=config.re_uw,
                 re_vw=config.re_vw,
-                time_arr=np.array([0, 0.01 * config.length / max(config.u_av)]),
+                time_arr=np.array([0, 0.01 * config.length_x / max(config.u_av)]),
                 ls_i=config.ls_i,
                 ts_i=config.ts_i,
                 num_modes=params['num_modes'],
@@ -88,7 +88,7 @@ class Tester2D:
                 re_uv=config.re_uv,
                 re_uw=config.re_uw,
                 re_vw=config.re_vw,
-                time_arr=np.array([0, 0.01 * config.length / max(config.u_av)]),
+                time_arr=np.array([0, 0.01 * config.length_x / max(config.u_av)]),
                 ls_ux=config.ls_ux, ls_uy=config.ls_uy, ls_uz=config.ls_uz,
                 ls_vx=config.ls_vx, ls_vy=config.ls_vy, ls_vz=config.ls_vz,
                 ls_wx=config.ls_wx, ls_wy=config.ls_wy, ls_wz=config.ls_wz,
@@ -98,9 +98,9 @@ class Tester2D:
             dissip_rate = 0.09 ** 0.75 * (0.5 * (config.re_uu + config.re_vv + config.re_ww)) ** 1.5 / config.ls_i
             visc = 1.5e-5
             delta_min = STG.common.get_min_mesh_step(
-                np.linspace(0, config.length, config.num_nodes),
-                np.linspace(0, config.length, config.num_nodes),
-                np.array([0, config.length / (config.num_nodes - 1)])
+                np.linspace(0, config.length_x, config.num_nodes_x),
+                np.linspace(0, config.length_y, config.num_nodes_y),
+                np.array([0, config.length_x / (config.num_nodes_x - 1)])
             )
             k_arr, energy = get_davidson_spectrum(
                 delta_min, params['num_modes'], config.re_uu, config.re_vv, config.re_ww,
@@ -115,7 +115,7 @@ class Tester2D:
                 re_ww=config.re_ww,
                 ts_i=config.ts_i,
                 num_modes=params['num_modes'],
-                time_arr=np.array([0, 0.01 * config.length / max(config.u_av)]),
+                time_arr=np.array([0, 0.01 * config.length_x / max(config.u_av)]),
                 k_arr=k_arr,
                 energy=energy
             )
@@ -187,7 +187,7 @@ class Tester2D:
             di = 1
             dj = 1
         self.analyzer.plot_two_point_space_correlation(
-            i0=0, j0=0, k0=0, ts=config.t_step, num_tlvl=num_tlvl, di=di, dj=dj, dk=0, num=config.num_nodes-1,
+            i0=0, j0=0, k0=0, ts=config.t_step, num_tlvl=num_tlvl, di=di, dj=dj, dk=0, num=config.num_nodes_x - 1,
             figsize=config_plots.figsize_plot,
             ylim=config_plots.ylim_space_cor, label_fsize=config_plots.label_fsize,
             ticks_fsize=config_plots.ticks_fsize, legend_fsize=config_plots.legend_fsize,
@@ -220,7 +220,7 @@ class Tester2D:
     def plot_spectrum_1d(self):
         num_tlvl = int(config.t_av / config.t_step + 1)
         u_spec, v_spec, w_spec = self.analyzer.compute_spectrum_1d(
-            i=2, j=2, k=0, ts=config.t_step, num_tlvl=num_tlvl, band_width=10, band_growth='exp', exp=0.5
+            i=2, j=2, k=0, ts=config.t_step, num_tlvl=num_tlvl, band_width=3, band_growth='exp', exp=0.6
         )
         self.analyzer.plot_spectrum_1d(
             u_spec, v_spec, w_spec, Spec1DMode.F_MODE, plot_all=False,
@@ -246,7 +246,7 @@ class Tester2D:
                 config_plots.fname_templ.format(base=config_plots.spec_2d_fname_base, method=self.method,
                                                 params=self.dict_to_str(self.params))
             ),
-            show=False
+            show=True
         )
 
 

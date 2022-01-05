@@ -6,22 +6,24 @@ STG_lib_name = 'libstg'
 #  параметра ось (x или y) и задавать в нормализованном виде распределения или считывать их из файлов)
 
 # Число узлов
-num_nodes = 51
+num_nodes_x = 51
+num_nodes_y = 51
 # Размер области
-length = 1
+length_x = 1
+length_y = length_x / (num_nodes_x - 1) * (num_nodes_y - 1)
 u_av = (0.3, 0, 0)
 
 # Масштабы
-k_ls = 0.05 / length
-ls_ux = k_ls * length
-ls_uy = k_ls * length
-ls_uz = k_ls * length
-ls_vx = k_ls * length
-ls_vy = k_ls * length
-ls_vz = k_ls * length
-ls_wx = k_ls * length
-ls_wy = k_ls * length
-ls_wz = k_ls * length
+k_ls = 0.05 / length_x
+ls_ux = k_ls * length_x
+ls_uy = k_ls * length_x
+ls_uz = k_ls * length_x
+ls_vx = k_ls * length_x
+ls_vy = k_ls * length_x
+ls_vz = k_ls * length_x
+ls_wx = k_ls * length_x
+ls_wy = k_ls * length_x
+ls_wz = k_ls * length_x
 ls_i = (ls_ux + ls_uy + ls_vx + ls_vy + ls_wx + ls_wy) / 6
 
 u_abs = (u_av[0]**2 + u_av[1]**2 + u_av[2]**2)**0.5
@@ -33,11 +35,11 @@ ts_i = (ts_u + ts_v + ts_w) / 3
 
 
 # Шаг по времени
-t_step = 0.2 * ts_i
+t_step = ts_i / 50
 # Интервал для проб скорости
-t_end_vel = 500 * t_step
+t_end_vel = 1000 * t_step
 # Интервал осреднения для расчета статистики
-t_av = 500 * t_step
+t_av = 5000 * t_step
 # Число шагов между концами интервала, на котором расчитывается автокорреляции
 num_dt_acor = 50
 

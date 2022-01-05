@@ -17,6 +17,10 @@ vmin_vel_2d = -2
 vmax_vel_2d = 2
 num_levels_vel_2d = 30
 
+spec_1d_band_width = 3
+spec_1d_band_growth = 'exp'
+spec_1d_exp = 0.6
+
 # настроки осей для всех графиков, кроме профиля сокрости и спектра
 axes_plot = (0.11, 0.14, 0.86, 0.84)
 # настройки осей для профиля сокрости

@@ -5,5 +5,6 @@
   "tests.py::TestOriginalSEM2D::test_plot_two_point_space_correlation[x]",
   "tests.py::TestOriginalSEM2D::test_plot_two_point_space_correlation[y]",
   "tests.py::TestOriginalSEM2D::test_plot_two_point_time_correlation",
-  "tests.py::TestOriginalSEM2D::test_plot_spectrum_2d"
+  "tests.py::TestOriginalSEM2D::test_plot_spectrum_2d",
+  "tests.py::TestOriginalSEM2D::test_plot_spectrum_1d"
 ]
